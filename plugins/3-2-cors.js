@@ -11,7 +11,6 @@ module.exports = fp(async function (fastify, opts) {
   fastify.log.info("loading fastify-cors");
   fastify.register(
     require("fastify-cors"),
-    // Example disables the `contentSecurityPolicy` middleware but keeps the rest.
-    { origin: false }
+    { origin: '*' }
   );
 });
