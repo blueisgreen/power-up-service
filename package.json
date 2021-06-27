@@ -10,11 +10,11 @@
     "url": "https://github.com/blueisgreen/power-up-project"
   },
   "scripts": {
-    "help": "fastify help",
-    "docs": "fastify docs",
-    "test": "tap \"test/**/*.test.js\"",
     "start": "fastify start -l info app.js",
     "dev": "fastify start -w -l info -P app.js",
+    "test": "tap \"test/**/*.test.js\"",
+    "docs": "fastify docs",
+    "help": "fastify help",
     "standalone": "node server.js"
   },
   "keywords": [],
