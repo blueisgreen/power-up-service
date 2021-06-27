@@ -13,8 +13,8 @@
     "help": "fastify help",
     "docs": "fastify docs",
     "test": "tap \"test/**/*.test.js\"",
-    "start": "fastify start -l info -o app.js",
-    "dev": "fastify start -w -l info -o -P app.js",
+    "start": "fastify start -l info app.js",
+    "dev": "fastify start -w -l info -P app.js",
     "standalone": "node server.js"
   },
   "keywords": [],

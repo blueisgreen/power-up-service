@@ -12,7 +12,7 @@ const options = {
       "PG_USER",
       "PG_PASS",
       "PG_DB",
-      "PG_CONNECTION",
+      // "PG_CONNECTION",
     ],
     properties: {
       PORT: {
@@ -31,9 +31,9 @@ const options = {
       PG_DB: {
         type: "string",
       },
-      PG_CONNECTION: {
-        type: "string",
-      },
+      // PG_CONNECTION: {
+      //   type: "string",
+      // },
     },
   },
 };
