@@ -8,32 +8,16 @@ const options = {
     type: "object",
     required: [
       "PORT",
-      "PG_HOST",
-      "PG_USER",
-      "PG_PASS",
-      "PG_DB",
-      // "PG_CONNECTION",
+      "DATABASE_URL",
     ],
     properties: {
       PORT: {
         type: "string",
         default: 3000,
       },
-      PG_HOST: {
+      DATABASE_URL: {
         type: "string",
       },
-      PG_USER: {
-        type: "string",
-      },
-      PG_PASS: {
-        type: "string",
-      },
-      PG_DB: {
-        type: "string",
-      },
-      // PG_CONNECTION: {
-      //   type: "string",
-      // },
     },
   },
 };
