@@ -16,8 +16,6 @@ module.exports = async function (fastify, opts) {
     options: Object.assign({}, opts)
   })
 
-  fastify.log.info('port: ' + process.env.PORT)
-
   // This loads all plugins defined in routes
   // define your routes in one of these
   fastify.register(AutoLoad, {
