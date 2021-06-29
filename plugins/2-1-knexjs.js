@@ -8,7 +8,6 @@ const fp = require("fastify-plugin");
  * @see https://github.com/smartiniOnGitHub/fastify-knexjs
  */
 module.exports = fp(async function (fastify, opts) {
-  const { DATABASE_URL } = fastify.config;
   fastify.log.info("loading fastify-knexjs");
   fastify.register(
     require("fastify-knexjs"),
@@ -16,7 +15,7 @@ module.exports = fp(async function (fastify, opts) {
       client: "pg",
       debug: true,
       version: "8.6",
-      connection: DATABASE_URL,
+      connection: process.env.DATABASE_URL,
     },
     (err) => {
       fastify.log.error(err);
