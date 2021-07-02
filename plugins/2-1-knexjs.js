@@ -16,7 +16,8 @@ module.exports = fp(async function (fastify, opts) {
       debug: true,
       version: "8.6",
       connection: process.env.DATABASE_URL,
-      ssl: true
+      ssl: true,
+      sslmode: true,
     },
     (err) => {
       fastify.log.error(err);
