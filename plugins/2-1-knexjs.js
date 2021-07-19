@@ -15,7 +15,7 @@ module.exports = fp(async function (fastify, opts) {
       client: "pg",
       debug: true,
       version: "8.6",
-      connection: process.env.DATABASE_URL + '?sslmode=require',
+      connection: process.env.DATABASE_URL,
       ssl: {
         rejectUnauthorized: false,
       }
