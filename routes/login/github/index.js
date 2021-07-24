@@ -1,7 +1,7 @@
 'use strict'
 
 module.exports = async function (fastify, opts) {
-  fastify.get('/github/callback', async function (request, reply) {
+  fastify.get('/callback', async function (request, reply) {
     const token =
       await this.githubOAuth2.getAccessTokenFromAuthorizationCodeFlow(request)
     fastify.log.info(token.access_token)
@@ -24,6 +24,9 @@ module.exports = async function (fastify, opts) {
     reply.send({ message: 'Hello, Blargy' })
     // reply.redirect('http://localhost:8080/')
 
-    // use access_token to create jwt
+    // check database for user; add if missing and store profile info, including access_token
+
+    // create jwt and return (forward? redirect?)
+
   })
 }
