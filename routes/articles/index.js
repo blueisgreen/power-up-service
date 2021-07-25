@@ -18,21 +18,6 @@ module.exports = async function (fastify, opts) {
     'archived_at as archivedAt',
   ]
 
-  fastify.get('/dropcreate', async (req, reply) => {
-    await knex.schema.dropTableIfExists(tableName)
-    await knex.schema.createTable(tableName, (table) => {
-      table.increments('id')
-      table.string('headline')
-      table.string('byline')
-      table.text('content')
-      table.timestamp('created_at').defaultTo(knex.fn.now())
-      table.timestamp('updated_at').defaultTo(knex.fn.now())
-      table.timestamp('published_at')
-      table.timestamp('archived_at')
-    })
-    reply.send('Dropped and created articles table.')
-  })
-
   fastify.get('/', async (req, reply) => {
     const articles = await knex(tableName)
       .whereNull('archived_at')
