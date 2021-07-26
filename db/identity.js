@@ -47,7 +47,7 @@ module.exports = {
 }
 
 const sampleFromGithub = {
-  access_token: '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',
+  access_token: 'bad-idea-to-save-this',
   login: 'blueisgreen',
   id: 74470787,
   node_id: 'MDQ6VXNlcjc0NDcwNzg3',
