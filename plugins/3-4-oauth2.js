@@ -20,7 +20,7 @@ module.exports = fp(async function (fastify, opts) {
       auth: oauthPlugin.GITHUB_CONFIGURATION,
     },
     startRedirectPath: '/login/github',
-    callbackUri: `http://localhost:${port}/login/github/callback`,
+    callbackUri: `http://localhost:3000/login/github/callback`,
   })
 
   // set up more OAuth providers below

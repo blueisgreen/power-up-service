@@ -33,8 +33,9 @@ module.exports = async function (fastify, opts) {
     // create jwt and return (forward? redirect?)
 
     reply.header('x-access-blargy', token.access_token)
-    reply.send({ message: 'Hello, Blargy' })
-    // reply.redirect('http://localhost:8080/')
+    reply.redirect(
+      `http://localhost:8080/calculators?token=${token.access_token}&goTo=home`
+    )
 
   })
 }
