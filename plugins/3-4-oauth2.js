@@ -5,7 +5,7 @@ const https = require('https')
 
 const clientId = process.env.OAUTH_GITHUB_CLIENT_ID
 const clientSecret = process.env.OAUTH_GITHUB_CLIENT_SECRET
-const port = process.env.PORT || 3000
+const port = process.env.PORT
 
 module.exports = fp(async function (fastify, opts) {
   fastify.log.info('loading fastify-oauth2')
