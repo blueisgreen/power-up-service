@@ -28,9 +28,7 @@ const options = {
 };
 
 /**
- * This plugins adds some utilities to handle http errors
- *
- * @see https://github.com/fastify/fastify-sensible
+ * @see https://github.com/fastify/fastify-env
  */
 module.exports = fp(async function (fastify, opts) {
   fastify.log.info("loading fastify-env");
