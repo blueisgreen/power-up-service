@@ -33,7 +33,7 @@ module.exports = async function (fastify, opts) {
 
     reply.header('x-access-blargy', sessionToken)
     reply.redirect(
-      `http://localhost:8080/login/landing?session=${sessionToken}&goTo=home`
+      `${process.env.SPA_LANDING_URL}?session=${sessionToken}&goTo=home`
     )
 
   })
