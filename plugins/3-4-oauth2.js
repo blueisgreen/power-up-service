@@ -5,7 +5,7 @@ const https = require('https')
 
 const clientId = process.env.OAUTH_GITHUB_CLIENT_ID
 const clientSecret = process.env.OAUTH_GITHUB_CLIENT_SECRET
-const port = process.env.PORT || 3000
+const port = process.env.PORT
 
 module.exports = fp(async function (fastify, opts) {
   fastify.log.info('loading fastify-oauth2')
@@ -20,7 +20,7 @@ module.exports = fp(async function (fastify, opts) {
       auth: oauthPlugin.GITHUB_CONFIGURATION,
     },
     startRedirectPath: '/login/github',
-    callbackUri: `http://localhost:${port}/login/github/callback`,
+    callbackUri: `http://localhost:3000/login/github/callback`,
   })
 
   // set up more OAuth providers below

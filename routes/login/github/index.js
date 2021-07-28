@@ -19,11 +19,6 @@ module.exports = async function (fastify, opts) {
 
     // check database for user; add if missing and store profile info, including access_token
 
-    const { knex } = fastify
-    // const socialUserId = knex('social_profiles')
-    //   .select('user_id')
-    //   .join('system_codes', 'social_profiles.') // system_codes.public_id = 'github' and system_codes.id = social_profiles.social_platform_id
-    //   .where({ social_id: ? }, [userInfo.id])
 
     // knex('social_profiles').insert()
 
@@ -33,8 +28,9 @@ module.exports = async function (fastify, opts) {
     // create jwt and return (forward? redirect?)
 
     reply.header('x-access-blargy', token.access_token)
-    reply.send({ message: 'Hello, Blargy' })
-    // reply.redirect('http://localhost:8080/')
+    reply.redirect(
+      `http://localhost:8080/calculators?token=${token.access_token}&goTo=home`
+    )
 
   })
 }

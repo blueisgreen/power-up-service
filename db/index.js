@@ -1,6 +1,6 @@
-const system = require('./system.js')
-const identity = require('./identity.js')
-const articles = require('./articles.js')
+const system = require('./schema/system.js')
+const identity = require('./schema/identity.js')
+const articles = require('./schema/articles.js')
 
 const rebuildSchema = async (fastify) => {
   await system.rebuildSchema(fastify)
