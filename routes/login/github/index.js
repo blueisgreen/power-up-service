@@ -14,7 +14,6 @@ module.exports = async function (fastify, opts) {
         Authorization: `token ${token.access_token}`,
       },
     })
-    fastify.log.info('found user info')
     fastify.log.info(JSON.stringify(userInfo.data))
 
     // check database for user; add if missing and store profile info, including access_token
@@ -27,9 +26,14 @@ module.exports = async function (fastify, opts) {
 
     // create jwt and return (forward? redirect?)
 
-    reply.header('x-access-blargy', token.access_token)
+    const sessionToken = fastify.jwt.sign({
+      user: 'asdfg-qwert-yuiop-hjklm',
+      roles: ['member', 'support', 'editor', 'admin']
+    })
+
+    reply.header('x-access-blargy', sessionToken)
     reply.redirect(
-      `http://localhost:8080/login/landing?token=${token.access_token}&goTo=home`
+      `http://localhost:8080/login/landing?session=${sessionToken}&goTo=home`
     )
 
   })

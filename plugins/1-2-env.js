@@ -9,6 +9,7 @@ const options = {
     required: [
       "PORT",
       "DATABASE_URL",
+      "JWT_SECRET",
     ],
     properties: {
       PORT: {
@@ -17,7 +18,11 @@ const options = {
       },
       DATABASE_URL: {
         type: "string",
+        default: 'noDB'
       },
+      JWT_SECRET: {
+        type: "string"
+      }
     },
   },
 };
