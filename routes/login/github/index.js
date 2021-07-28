@@ -29,7 +29,7 @@ module.exports = async function (fastify, opts) {
 
     reply.header('x-access-blargy', token.access_token)
     reply.redirect(
-      `http://localhost:8080/calculators?token=${token.access_token}&goTo=home`
+      `http://localhost:8080/login/landing?token=${token.access_token}&goTo=home`
     )
 
   })
