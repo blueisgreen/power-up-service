@@ -20,11 +20,11 @@ const findUser = async (fastify, providerPlatform, socialId) => {
     .where({ social_id: socialId })
     .andWhere('social_platform_id', '=', platformId[0].id)
 
-  if (result.length === 0) {
-    result = await knex('users').insert()
+  if (result.length < 1) {
+    return null
   }
 
-  return result[0].user_id
+  return getUser(fastify, result[0].user_id)
 }
 
 const getUser = async (fastify, publicId) => {
@@ -41,7 +41,7 @@ const registerUser = async (fastify, providerPlatform, socialProfile) => {
   const platformRecord = await knex('system_codes')
     .select('id')
     .where({ public_id: providerPlatform })
-  if (!platformId) {
+  if (platformRecord.length < 1) {
     throw 'Unsupported social platform'
   }
   log.info(`rows: ${platformRecord.length}`)
@@ -59,18 +59,20 @@ const registerUser = async (fastify, providerPlatform, socialProfile) => {
   const userPublicId = userRecord[0].public_id
 
   // create social record
-  const socialRecord = await knex('social_profile')
+  const socialRecord = await knex('social_profiles')
     .insert({
       user_id: userRecord[0].public_id,
       social_id: socialProfile.id,
       social_platform_id: platformId,
       social_user_info: socialProfile,
     })
-  
+
   // return user with guest permissions
   return getUser(fastify, userPublicId)
 }
 
 module.exports = {
   findUser,
+  getUser,
+  registerUser,
 }
