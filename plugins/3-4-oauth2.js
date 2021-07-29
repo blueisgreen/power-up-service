@@ -17,7 +17,7 @@ module.exports = fp(async function (fastify, opts) {
       auth: oauthPlugin.GITHUB_CONFIGURATION,
     },
     startRedirectPath: '/login/github',
-    callbackUri: `${process.env.OAUTH_CALLBACK_BASE}/login/github/callback`,
+    callbackUri: `${process.env.OAUTH_CALLBACK_URL_BASE}/login/github/callback`,
   })
 
   // TODO set up more OAuth providers below

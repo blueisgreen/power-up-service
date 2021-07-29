@@ -18,10 +18,11 @@ module.exports = async function (fastify, opts) {
     fastify.log.info(JSON.stringify(userInfo.data))
 
     // find or register user using authentication data
-    let user = identity.findUser(fastify, 'github', userInfo.data.id)
+    let user = await identity.findUser(fastify, 'github', userInfo.data.id)
     if (!user) {
-      user = identity.registerUser(fastify, 'github', token.access_token, userInfo.data)
+      user = await identity.registerUser(fastify, 'github', token.access_token, userInfo.data)
     }
+    fastify.log.info(`found user ${user}`)
 
     // to refresh token at some point, use
     // const newToken = await this.getNewAccessTokenUsingRefreshToken(token.refresh_token)
