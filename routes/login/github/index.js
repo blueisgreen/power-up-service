@@ -1,4 +1,5 @@
 'use strict'
+const identity = require('../../../db/identity')
 
 module.exports = async function (fastify, opts) {
   fastify.get('/callback', async function (request, reply) {
@@ -16,20 +17,22 @@ module.exports = async function (fastify, opts) {
     })
     fastify.log.info(JSON.stringify(userInfo.data))
 
-    // check database for user; add if missing and store profile info, including access_token
-
-
-    // knex('social_profiles').insert()
+    // find or register user using authentication data
+    let user = identity.findUser(fastify, 'github', userInfo.data.id)
+    if (!user) {
+      user = identity.registerUser(fastify, 'github', token.access_token, userInfo.data)
+    }
 
     // to refresh token at some point, use
     // const newToken = await this.getNewAccessTokenUsingRefreshToken(token.refresh_token)
 
     // create jwt and return (forward? redirect?)
-
     const sessionToken = fastify.jwt.sign({
-      user: 'asdfg-qwert-yuiop-hjklm',
-      roles: ['member', 'support', 'editor', 'admin']
+      user: user.public_id,
+      roles: ['guest']
     })
+
+    // TODO store session token
 
     reply.header('x-access-blargy', sessionToken)
     reply.redirect(
