@@ -3,7 +3,7 @@
 const fp = require('fastify-plugin')
 
 /**
- * This plugin handles things in the header.
+ * This plugin handles helps enable CORS.
  *
  * @see https://github.com/fastify/fastify-cors
  */

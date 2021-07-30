@@ -9,6 +9,7 @@ const options = {
     required: [
       "PORT",
       "DATABASE_URL",
+      "JWT_SECRET",
     ],
     properties: {
       PORT: {
@@ -17,15 +18,17 @@ const options = {
       },
       DATABASE_URL: {
         type: "string",
+        default: 'noDB'
       },
+      JWT_SECRET: {
+        type: "string"
+      }
     },
   },
 };
 
 /**
- * This plugins adds some utilities to handle http errors
- *
- * @see https://github.com/fastify/fastify-sensible
+ * @see https://github.com/fastify/fastify-env
  */
 module.exports = fp(async function (fastify, opts) {
   fastify.log.info("loading fastify-env");

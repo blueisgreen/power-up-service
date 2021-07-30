@@ -4,8 +4,6 @@ const fp = require('fastify-plugin')
 const db = require('../db')
 
 /**
- * This plugin handles favicon service.
- *
  * @see https://github.com/smartiniOnGitHub/fastify-knexjs
  */
 module.exports = fp(async function (fastify, opts) {

@@ -8,7 +8,7 @@ const createUsersTable = async (fastify) => {
   await knex.schema.dropTableIfExists(usersTableName)
   await knex.schema.createTable(usersTableName, (table) => {
     table.increments('id') // never expose this
-    table.uuid('public_id') // used to identify the user; might want to index
+    table.uuid('public_id').defaultTo(knex.raw('uuid_generate_v4()'))  // use externally to identify user
     table.string('screen_name') // nicer way to identify, enforce uniqueness in code?
     table.string('email') // need more around verification
     table.string('avatar_url')
