@@ -19,8 +19,10 @@ module.exports = async function (fastify, opts) {
 
     // find or register user using authentication data
     let user = await identity.findUser(fastify, 'github', userInfo.data.id)
+    let goTo = 'home'
     if (!user) {
       user = await identity.registerUser(fastify, 'github', token.access_token, userInfo.data)
+      goTo = 'register'
     }
     fastify.log.info(`found user ${user}`)
 
@@ -37,7 +39,7 @@ module.exports = async function (fastify, opts) {
 
     reply.header('x-access-blargy', sessionToken)
     reply.redirect(
-      `${process.env.SPA_LANDING_URL}?session=${sessionToken}&goTo=home`
+      `${process.env.SPA_LANDING_URL}?session=${sessionToken}&goTo=${goTo}`
     )
 
   })
