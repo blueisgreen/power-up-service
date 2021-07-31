@@ -28,11 +28,12 @@ module.exports = async function (fastify, opts) {
 
     // to refresh token at some point, use
     // const newToken = await this.getNewAccessTokenUsingRefreshToken(token.refresh_token)
+    const roles = await identity.getUserRoles(fastify, user.id)
 
     // create jwt and return (forward? redirect?)
     const sessionToken = fastify.jwt.sign({
       user: user.public_id,
-      roles: ['guest']
+      roles
     })
 
     // TODO store session token

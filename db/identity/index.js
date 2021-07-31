@@ -67,8 +67,19 @@ const registerUser = async (fastify, providerCode, accessToken, socialProfile) =
   return getUser(fastify, userPublicId)
 }
 
+const getUserRoles = async (fastify, userId) => {
+  const { knex } = fastify
+  const roleRecords = await knex('system_codes')
+    .select('system_codes.public_id')
+    .join('user_roles', 'user_roles.role_id', '=', 'system_codes.id')
+    .where({user_id: userId})
+  const roles = roleRecords.map(record => record.public_id)
+  return roles
+}
+
 module.exports = {
   findUser,
   getUser,
   registerUser,
+  getUserRoles,
 }
