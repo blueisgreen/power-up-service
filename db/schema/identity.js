@@ -28,7 +28,7 @@ const createSocialProfileTable = async (fastify) => {
   const { knex, log } = fastify
   await knex.schema.dropTableIfExists(socialProfilesTableName)
   await knex.schema.createTable(socialProfilesTableName, (table) => {
-    table.uuid('user_id') // foreign key to users
+    table.uuid('user_id') // foreign key to users FIXME rename to user_public_id or use a contraint to make the connection obvious
     table.string('social_id')
     table.integer('social_platform_id') // foreign key to system_codes
     table.string('access_token') // keep this handy; might want to check freshness
@@ -37,8 +37,21 @@ const createSocialProfileTable = async (fastify) => {
   log.info(`created ${socialProfilesTableName}`)
 }
 
+const createUserRolesTable = async (fastify) => {
+  const userRolesTable = 'user_roles'
+  const { knex, log } = fastify
+  await knex.schema.dropTableIfExists(userRolesTable)
+  await knex.schema.createTable(userRolesTable, (table) => {
+    table.integer('user_id')  // foreign key to users
+    table.integer('role_id')  // foreign key to system_codes
+    table.timestamp('granted_at').defaultTo(knex.fn.now())
+    table.primary(['user_id', 'role_id'])
+  })
+}
+
 const rebuildSchema = async (fastify) => {
   await createUsersTable(fastify)
+  await createUserRolesTable(fastify)
   await createSocialProfileTable(fastify)
 }
 

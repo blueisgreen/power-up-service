@@ -22,9 +22,9 @@ const createSystemCodesTable = async (fastify) => {
     [
       {public_id: 'admin', display_name: 'System Administrator', parent_id: roleCat.id },
       {public_id: 'editorInChief', display_name: 'Editor in Chief', parent_id: roleCat.id },
-      {public_id: 'editor', display_name: 'Editor', parent_id: roleCat.id },
       {public_id: 'member', display_name: 'Member', parent_id: roleCat.id },
-      {public_id: 'guest', display_name: 'Guest', parent_id: roleCat.id },
+      {public_id: 'author', display_name: 'Author', parent_id: roleCat.id },
+      {public_id: 'editor', display_name: 'Editor', parent_id: roleCat.id },
     ]
   )
   const accountStatusCat = categories.find(cat => cat.public_id === 'accountStatus')

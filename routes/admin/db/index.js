@@ -8,7 +8,10 @@ module.exports = async function (fastify, opts) {
   fastify.put('/rebuildSchema', async (req, reply) => {
     let msgOut = { message: 'Unknown status', code: 500 }
     try {
-      if (process.env.REBUILD_SCHEMA) {
+      if (
+        process.env.REBUILD_SCHEMA === 'true' ||
+        process.env.REBUILD_SCHEMA === '1'
+      ) {
         await rebuildSchema(fastify)
         msgOut = {
           message: 'Created shiny new schema.',

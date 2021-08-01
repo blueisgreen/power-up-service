@@ -1,6 +1,6 @@
 'use strict'
 
-const { findUser, getUser, registerUser } = require('../../db/identity')
+const { findUser, getUser, getUserRoles } = require('../../db/identity')
 
 module.exports = async function (fastify, opts) {
   fastify.get('/findUser', async function (request, reply) {
@@ -21,22 +21,10 @@ module.exports = async function (fastify, opts) {
     }
   })
 
-  fastify.post('/blarp', async function (request, reply) {
-    const user = await registerUser(
-      fastify,
-      'github',
-      'github-access_token_goes_here',
-      {
-        id: 12345,
-        email: 'badoongyface@blargy.com',
-        name: 'Badoongy Face',
-        avatar_url: 'http://avatarsrus.com/badoongy',
-        extra: 'abc 123',
-        fun_fact: 'love exploring dormant underwater volcanos caverns',
-      }
-    )
-    if (user) {
-      reply.send(user)
+  fastify.get('/blarp', async function (request, reply) {
+    const roles = await getUserRoles(fastify, 1)
+    if (roles) {
+      reply.send(roles)
     } else {
       reply.code(500).send('Something is off')
     }
