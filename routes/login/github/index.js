@@ -32,7 +32,7 @@ module.exports = async function (fastify, opts) {
 
     // create jwt and return (forward? redirect?)
     const sessionToken = fastify.jwt.sign({
-      user: user.public_id,
+      userId: user.public_id,
       roles
     })
 
