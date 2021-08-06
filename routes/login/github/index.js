@@ -33,6 +33,7 @@ module.exports = async function (fastify, opts) {
     // create jwt and return (forward? redirect?)
     const sessionToken = fastify.jwt.sign({
       userId: user.public_id,
+      screenName: user.screen_name,
       roles
     })
 
@@ -40,7 +41,7 @@ module.exports = async function (fastify, opts) {
 
     reply.header('x-access-blargy', sessionToken)
     reply.redirect(
-      `${process.env.SPA_LANDING_URL}?session=${sessionToken}&goTo=${goTo}`
+      `${process.env.SPA_LANDING_URL}?token=${sessionToken}&goTo=${goTo}`
     )
 
   })
