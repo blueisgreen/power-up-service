@@ -21,7 +21,12 @@ module.exports = async function (fastify, opts) {
     let user = await identity.findUser(fastify, 'github', userInfo.data.id)
     let goTo = 'home'
     if (!user) {
-      user = await identity.registerUser(fastify, 'github', token.access_token, userInfo.data)
+      user = await identity.registerUser(
+        fastify,
+        'github',
+        token.access_token,
+        userInfo.data
+      )
       goTo = 'register'
     }
     fastify.log.info(`found user ${user}`)
@@ -32,10 +37,11 @@ module.exports = async function (fastify, opts) {
 
     // create jwt and return (forward? redirect?)
     const sessionToken = fastify.jwt.sign({
-      userId: user.public_id,
-      screenName: user.screen_name,
-      roles,
-      iss: 'HappySpiritPublishing.com',
+      user: {
+        publicId: user.public_id,
+        screenName: user.screen_name,
+        roles,
+      },
     })
 
     // TODO store session token
@@ -44,6 +50,5 @@ module.exports = async function (fastify, opts) {
     reply.redirect(
       `${process.env.SPA_LANDING_URL}?token=${sessionToken}&goTo=${goTo}`
     )
-
   })
 }
