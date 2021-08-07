@@ -34,7 +34,8 @@ module.exports = async function (fastify, opts) {
     const sessionToken = fastify.jwt.sign({
       userId: user.public_id,
       screenName: user.screen_name,
-      roles
+      roles,
+      iss: 'HappySpiritPublishing.com',
     })
 
     // TODO store session token

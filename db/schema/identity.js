@@ -13,8 +13,7 @@ const createUsersTable = async (fastify) => {
     table.string('email') // need more around verification
     table.string('avatar_url')
     table.string('session_token') // jwt; might want to index
-    table.timestamp('created_at').defaultTo(knex.fn.now())
-    table.timestamp('updated_at').defaultTo(knex.fn.now())
+    table.timestamps(true, true)
     table.timestamp('terms_accepted_at')
     table.timestamp('cookies_accepted_at')
     table.timestamp('email_comms_accepted_at')
@@ -33,6 +32,7 @@ const createSocialProfileTable = async (fastify) => {
     table.integer('social_platform_id') // foreign key to system_codes
     table.string('access_token') // keep this handy; might want to check freshness
     table.text('social_user_info') // public user info from id provider
+    table.timestamps(true, true)
   })
   log.info(`created ${socialProfilesTableName}`)
 }
