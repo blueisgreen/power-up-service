@@ -38,7 +38,12 @@ const getUser = async (fastify, publicId) => {
 }
 
 // social profile includes: socialId, name, alias, email, avatarUrl
-const registerUser = async (fastify, providerCode, accessToken, socialProfile) => {
+const registerUser = async (
+  fastify,
+  providerCode,
+  accessToken,
+  socialProfile
+) => {
   const { knex } = fastify
 
   const authProviderId = await getAuthProviderId(fastify, providerCode)
@@ -72,9 +77,69 @@ const getUserRoles = async (fastify, userId) => {
   const roleRecords = await knex('system_codes')
     .select('system_codes.public_id')
     .join('user_roles', 'user_roles.role_id', '=', 'system_codes.id')
-    .where({user_id: userId})
-  const roles = roleRecords.map(record => record.public_id)
+    .where({ user_id: userId })
+  const roles = roleRecords.map((record) => record.public_id)
   return roles
+}
+
+// TODO load role map (and other system tables) when registering db plug-ins
+
+const grantRoles = async (fastify, userPublicId, roles) => {
+  const { knex } = fastify
+  const roleMap = await knex('system_codes as a')
+    .join('system_codes as b', 'a.parent_id', '=', 'b.id')
+    .where('b.public_id', '=', 'role')
+    .select('a.*')
+  console.log(roleMap)
+  const roleIdsToGrant = roles.map((role) => {
+    const roleToUse = roleMap.find((element) => element.public_id === role)
+    return roleToUse.id
+  })
+  const userId = await knex('users')
+    .where('public_id', '=', userPublicId)
+    .select('id')
+
+  roleIdsToGrant.forEach(async (roleId) => {
+    await knex('user_roles').insert({ user_id: userId[0].id, role_id: roleId })
+  })
+
+  return true
+}
+
+const agreeToTerms = async (fastify, publicId) => {
+  const { knex } = fastify
+  const now = new Date()
+  await knex('users').where('public_id', '=', publicId).update({
+    terms_accepted_at: now,
+    updated_at: now,
+  })
+  return true
+}
+
+const agreeToCookies = async (fastify, publicId) => {
+  const { knex } = fastify
+  const now = new Date()
+  await knex('users').where('public_id', '=', publicId).update({
+    cookies_accepted_at: now,
+    updated_at: now,
+  })
+  return true
+}
+
+const agreeToEmailComms = async (fastify, publicId) => {
+  const { knex } = fastify
+  const now = new Date()
+  await knex('users').where('public_id', '=', publicId).update({
+    email_comms_accepted_at: now,
+    updated_at: now,
+  })
+  return true
+}
+
+const updateUser = async (fastify, userChanges) => {
+  const { knex } = fastify
+
+  return getUser(fastify, userPublicId)
 }
 
 module.exports = {
@@ -82,4 +147,9 @@ module.exports = {
   getUser,
   registerUser,
   getUserRoles,
+  grantRoles,
+  agreeToTerms,
+  agreeToCookies,
+  agreeToEmailComms,
+  updateUser,
 }
