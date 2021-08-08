@@ -1,3 +1,4 @@
+const identity = require('../identity')
 
 /**
  * This will recreate the database table 'users'. Any existing data will be lost.
@@ -49,10 +50,16 @@ const createUserRolesTable = async (fastify) => {
   })
 }
 
+const loadAdminUser = async (fastify) => {
+  await identity.registerUser(fastify, 'github', 'fakeAccessToken', sampleFromGithub)
+  
+}
+
 const rebuildSchema = async (fastify) => {
   await createUsersTable(fastify)
   await createUserRolesTable(fastify)
   await createSocialProfileTable(fastify)
+  await loadAdminUser(fastify)
 }
 
 module.exports = {
@@ -60,7 +67,6 @@ module.exports = {
 }
 
 const sampleFromGithub = {
-  access_token: 'bad-idea-to-save-this',
   login: 'blueisgreen',
   id: 74470787,
   node_id: 'MDQ6VXNlcjc0NDcwNzg3',

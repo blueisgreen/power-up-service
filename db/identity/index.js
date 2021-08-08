@@ -82,6 +82,25 @@ const getUserRoles = async (fastify, userId) => {
   return roles
 }
 
+// TODO load role map (and other system tables) when registering db plug-ins
+
+const grantRoles = async (fastify, userPublicId, roles) => {
+  const { knex } = fastify
+  const roleMap = await knex('system_codes as a')
+    .join('system_codes as b', 'a.parent_id', '=', 'b.id')
+    .where('b.public_id', '=', 'role')
+    .select('a.*')
+  console.log(roleMap);
+  const roleIdsToGrant = roles.map(role => {
+    const roleToUse = roleMap.find((element) => element.public_id === role)
+    return roleToUse.id
+  })
+
+  // await knex('user_roles')
+  //   .insert()
+  return roleIdsToGrant
+}
+
 const agreeToTerms = async (fastify, publicId) => {
   const { knex } = fastify
   const now = new Date()
@@ -123,6 +142,7 @@ module.exports = {
   getUser,
   registerUser,
   getUserRoles,
+  grantRoles,
   agreeToTerms,
   agreeToCookies,
   agreeToEmailComms,
