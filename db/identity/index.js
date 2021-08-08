@@ -90,15 +90,20 @@ const grantRoles = async (fastify, userPublicId, roles) => {
     .join('system_codes as b', 'a.parent_id', '=', 'b.id')
     .where('b.public_id', '=', 'role')
     .select('a.*')
-  console.log(roleMap);
-  const roleIdsToGrant = roles.map(role => {
+  console.log(roleMap)
+  const roleIdsToGrant = roles.map((role) => {
     const roleToUse = roleMap.find((element) => element.public_id === role)
     return roleToUse.id
   })
+  const userId = await knex('users')
+    .where('public_id', '=', userPublicId)
+    .select('id')
 
-  // await knex('user_roles')
-  //   .insert()
-  return roleIdsToGrant
+  roleIdsToGrant.forEach(async (roleId) => {
+    await knex('user_roles').insert({ user_id: userId[0].id, role_id: roleId })
+  })
+
+  return true
 }
 
 const agreeToTerms = async (fastify, publicId) => {

@@ -51,8 +51,9 @@ const createUserRolesTable = async (fastify) => {
 }
 
 const loadAdminUser = async (fastify) => {
-  await identity.registerUser(fastify, 'github', 'fakeAccessToken', sampleFromGithub)
-  
+  const user = await identity.registerUser(fastify, 'github', 'fakeAccessToken', sampleFromGithub)
+  await identity.grantRoles(fastify, user.public_id, ['admin', 'editor'])
+
 }
 
 const rebuildSchema = async (fastify) => {

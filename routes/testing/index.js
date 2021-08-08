@@ -22,11 +22,11 @@ module.exports = async function (fastify, opts) {
   // })
 
   fastify.get('/blargy', async function (request, reply) {
-    const roles = await grantRoles(fastify, 'abcde-12345-abcde-12345-whaaa', [
-      'member',
-      'editorInChief',
-      'admin',
-    ])
+    const roles = await grantRoles(
+      fastify,
+      '596b3081-6073-476c-bc9d-d9273ba70f0e',
+      ['member', 'editorInChief', 'admin']
+    )
     console.log(roles)
     if (roles) {
       reply.send(roles)
