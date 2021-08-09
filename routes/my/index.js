@@ -23,7 +23,7 @@ module.exports = async function (fastify, opts) {
       preValidation: fastify.preValidation,
     },
     async (request, reply) => {
-      const user = await identity.getUser(fastify, request.user.userId)
+      const user = await identity.getUser(fastify, request.user.publicId)
       reply.send(user)
     }
   )
@@ -34,7 +34,7 @@ module.exports = async function (fastify, opts) {
     },
     async (request, reply) => {
       try {
-        await identity.agreeToTerms(fastify, request.user.userId)
+        await identity.agreeToTerms(fastify, request.user.publicId)
         reply.code(204).send()
       } catch (err) {
         fastify.log.error(err)
@@ -49,7 +49,7 @@ module.exports = async function (fastify, opts) {
     },
     async (request, reply) => {
       try {
-        await identity.agreeToCookies(fastify, request.user.userId)
+        await identity.agreeToCookies(fastify, request.user.publicId)
         reply.code(204).send()
       } catch (err) {
         reply.code(500).send({ error: ERROR_MESSAGE })
@@ -63,7 +63,7 @@ module.exports = async function (fastify, opts) {
     },
     async (request, reply) => {
       try {
-        await identity.agreeToEmailComms(fastify, request.user.userId)
+        await identity.agreeToEmailComms(fastify, request.user.publicId)
         reply.code(204).send()
       } catch (err) {
         reply.code(500).send({ error: ERROR_MESSAGE })
