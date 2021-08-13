@@ -30,7 +30,7 @@ module.exports = fp(async function (fastify, opts) {
       const payload = await request.jwtVerify()
       request.user = payload.user
     } catch (err) {
-      return err
+      reply.send(err)
     }
   })
 
