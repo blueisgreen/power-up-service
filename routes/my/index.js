@@ -28,6 +28,16 @@ module.exports = async function (fastify, opts) {
     }
   )
   fastify.put(
+    '/profile',
+    {
+      preValidation: fastify.preValidation,
+    },
+    async (request, reply) => {
+      const user = await identity.updateUser(fastify, request.user.publicId)
+      reply.send(user)
+    }
+  )
+  fastify.put(
     '/termsOK',
     {
       preValidation: fastify.preValidation,
