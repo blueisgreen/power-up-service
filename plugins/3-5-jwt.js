@@ -28,10 +28,9 @@ module.exports = fp(async function (fastify, opts) {
   fastify.addHook('preValidation', async (request, reply) => {
     try {
       const payload = await request.jwtVerify()
-      request.user = payload
-      console.log('payload', payload)
+      request.user = payload.user
     } catch (err) {
-      return err
+      // reply.send(err)
     }
   })
 
