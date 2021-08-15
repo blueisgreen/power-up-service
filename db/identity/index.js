@@ -147,13 +147,13 @@ const updateUser = async (fastify, userPublicId, changes) => {
     avatar_url: changes.avatarUrl,
     updated_at: now
   })
-  if (!userBefore.terms_accepted_at && changes.acceptTerms) {
+  if (!userBefore.terms_accepted_at && changes.agreeToTerms) {
     userAfter.terms_accepted_at = now
   }
-  if (!userBefore.cookies_accepted_at && changes.acceptCookies) {
+  if (!userBefore.cookies_accepted_at && changes.agreeToCookies) {
     userAfter.cookies_accepted_at = now
   }
-  if (!userBefore.email_comms_accepted_at && changes.acceptEmailComms) {
+  if (!userBefore.email_comms_accepted_at && changes.agreeToEmailComms) {
     userAfter.email_comms_accepted_at = now
   }
   await knex('users').where('public_id', '=', userPublicId).update(userAfter)
