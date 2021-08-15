@@ -136,10 +136,31 @@ const agreeToEmailComms = async (fastify, publicId) => {
   return true
 }
 
-const updateUser = async (fastify, userChanges) => {
+// FIXME
+const updateUser = async (fastify, userPublicId, changes) => {
   const { knex } = fastify
+  const now = new Date()
+  const userBefore = await getUser(fastify, userPublicId)
+  const userAfter = Object.assign({}, userBefore, {
+    screen_name: changes.screenName,
+    email: changes.email,
+    avatar_url: changes.avatarUrl,
+    updated_at: now
+  })
+  if (!userBefore.terms_accepted_at && changes.acceptTerms) {
+    userAfter.terms_accepted_at = now
+  }
+  if (!userBefore.cookies_accepted_at && changes.acceptCookies) {
+    userAfter.cookies_accepted_at = now
+  }
+  if (!userBefore.email_comms_accepted_at && changes.acceptEmailComms) {
+    userAfter.email_comms_accepted_at = now
+  }
+  await knex('users').where('public_id', '=', userPublicId).update(userAfter)
 
-  return getUser(fastify, userPublicId)
+  // TODO assign member role if terms accepted and not already assigned
+
+  return await getUser(fastify, userPublicId)
 }
 
 module.exports = {

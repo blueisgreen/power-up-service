@@ -33,7 +33,30 @@ module.exports = async function (fastify, opts) {
       preValidation: fastify.preValidation,
     },
     async (request, reply) => {
-      const user = await identity.updateUser(fastify, request.user.publicId)
+      const userId = request.user.publicId
+      const updates = request.body
+
+      if (userId === null) {
+        reply.code(400).send({
+          error: {
+            message: 'User must be making the request',
+          },
+        })
+      } else if (updates === null) {
+        reply.code(400).send({
+          error: {
+            message: 'Profile updates are required',
+          },
+        })
+      } else if (updates.userId && updates.userId !== userId) {
+        reply.code(400).send({
+          error: {
+            message: 'User must be changing own profile',
+          },
+        })
+      }
+
+      const user = await identity.updateUser(fastify, userId, updates)
       reply.send(user)
     }
   )
