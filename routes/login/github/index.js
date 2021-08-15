@@ -27,13 +27,17 @@ module.exports = async function (fastify, opts) {
         token.access_token,
         userInfo.data
       )
-      goTo = 'register'
+      // goTo = 'register'
     }
     fastify.log.info(`found user ${user}`)
 
     // to refresh token at some point, use
     // const newToken = await this.getNewAccessTokenUsingRefreshToken(token.refresh_token)
     const roles = await identity.getUserRoles(fastify, user.id)
+
+    if (!roles.find((item) => item === 'member')) {
+      goTo = 'register'
+    }
 
     // create jwt and return (forward? redirect?)
     const sessionToken = fastify.jwt.sign({

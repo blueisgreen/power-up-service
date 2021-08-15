@@ -6,6 +6,9 @@ const ERROR_MESSAGE =
   'Oh my, something went dreadfully wrong. This was not your fault.'
 
 module.exports = async function (fastify, opts) {
+  /**
+   * Get all account information for the logged in user.
+   */
   fastify.get(
     '/',
     {
@@ -17,6 +20,9 @@ module.exports = async function (fastify, opts) {
       return request.user
     }
   )
+  /**
+   * Get profile for the logged in user.
+   */
   fastify.get(
     '/profile',
     {
@@ -27,6 +33,45 @@ module.exports = async function (fastify, opts) {
       reply.send(user)
     }
   )
+  /**
+   * Update profile of the logged in user.
+   */
+  fastify.put(
+    '/profile',
+    {
+      preValidation: fastify.preValidation,
+    },
+    async (request, reply) => {
+      const userId = request.user.publicId
+      const updates = request.body
+
+      if (userId === null) {
+        reply.code(400).send({
+          error: {
+            message: 'User must be making the request',
+          },
+        })
+      } else if (updates === null) {
+        reply.code(400).send({
+          error: {
+            message: 'Profile updates are required',
+          },
+        })
+      } else if (updates.userId && updates.userId !== userId) {
+        reply.code(400).send({
+          error: {
+            message: 'User must be changing own profile',
+          },
+        })
+      }
+
+      const user = await identity.updateUser(fastify, userId, updates)
+      reply.send(user)
+    }
+  )
+  /**
+   * Set flag to agree to terms and conditions.
+   */
   fastify.put(
     '/termsOK',
     {
@@ -42,6 +87,9 @@ module.exports = async function (fastify, opts) {
       }
     }
   )
+  /**
+   * Set flag to agree to cookies.
+   */
   fastify.put(
     '/cookiesOK',
     {
@@ -56,6 +104,9 @@ module.exports = async function (fastify, opts) {
       }
     }
   )
+  /**
+   * Set flag to agree to receive email communication.
+   */
   fastify.put(
     '/emailCommsOK',
     {
