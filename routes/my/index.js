@@ -6,6 +6,9 @@ const ERROR_MESSAGE =
   'Oh my, something went dreadfully wrong. This was not your fault.'
 
 module.exports = async function (fastify, opts) {
+  /**
+   * Get all account information for the logged in user.
+   */
   fastify.get(
     '/',
     {
@@ -17,6 +20,9 @@ module.exports = async function (fastify, opts) {
       return request.user
     }
   )
+  /**
+   * Get profile for the logged in user.
+   */
   fastify.get(
     '/profile',
     {
@@ -27,6 +33,9 @@ module.exports = async function (fastify, opts) {
       reply.send(user)
     }
   )
+  /**
+   * Update profile of the logged in user.
+   */
   fastify.put(
     '/profile',
     {
@@ -60,6 +69,9 @@ module.exports = async function (fastify, opts) {
       reply.send(user)
     }
   )
+  /**
+   * Set flag to agree to terms and conditions.
+   */
   fastify.put(
     '/termsOK',
     {
@@ -75,6 +87,9 @@ module.exports = async function (fastify, opts) {
       }
     }
   )
+  /**
+   * Set flag to agree to cookies.
+   */
   fastify.put(
     '/cookiesOK',
     {
@@ -89,6 +104,9 @@ module.exports = async function (fastify, opts) {
       }
     }
   )
+  /**
+   * Set flag to agree to receive email communication.
+   */
   fastify.put(
     '/emailCommsOK',
     {

@@ -100,7 +100,10 @@ const grantRoles = async (fastify, userPublicId, roles) => {
     .select('id')
 
   roleIdsToGrant.forEach(async (roleId) => {
-    await knex('user_roles').insert({ user_id: userId[0].id, role_id: roleId })
+    await knex('user_roles')
+      .insert({ user_id: userId[0].id, role_id: roleId })
+      .onConflict()
+      .ignore()
   })
 
   return true
@@ -145,7 +148,7 @@ const updateUser = async (fastify, userPublicId, changes) => {
     screen_name: changes.screenName,
     email: changes.email,
     avatar_url: changes.avatarUrl,
-    updated_at: now
+    updated_at: now,
   })
   if (!userBefore.terms_accepted_at && changes.agreeToTerms) {
     userAfter.terms_accepted_at = now
@@ -159,6 +162,9 @@ const updateUser = async (fastify, userPublicId, changes) => {
   await knex('users').where('public_id', '=', userPublicId).update(userAfter)
 
   // TODO assign member role if terms accepted and not already assigned
+  if (changes.agreeToTerms) {
+    await grantRoles(fastify, userPublicId, ['member'])
+  }
 
   return await getUser(fastify, userPublicId)
 }
