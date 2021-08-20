@@ -1,7 +1,7 @@
 'use strict'
 
 const fp = require('fastify-plugin')
-const db = require('../db')
+const db = require('../db/schema')
 
 /**
  * @see https://github.com/smartiniOnGitHub/fastify-knexjs
