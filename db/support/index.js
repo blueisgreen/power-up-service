@@ -36,10 +36,10 @@ const createInquiry = async (fastify, inquiry, user_id, relates_to) => {
     message: inquiry.message,
   }
   if (user_id) {
-    data[user_id] = user_id
+    data['user_id'] = user_id
   }
   if (relates_to) {
-    data[relates_to] = relates_to
+    data['relates_to'] = relates_to
   }
   const inquiryRecord = await knex('inquiries')
     .returning([

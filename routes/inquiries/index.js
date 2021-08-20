@@ -1,6 +1,7 @@
 'use strict'
 
 const support = require('../../db/support')
+const identity = require('../../db/identity')
 
 const ERROR_MESSAGE =
   'Oh my, something went dreadfully wrong. This was not your fault.'
@@ -17,12 +18,25 @@ module.exports = async function (fastify, opts) {
   /**
    * Get all inquiries. TODO: needs to limit return set
    */
-  fastify.post('/', async (request, reply) => {
-    // TODO see if logged in
-
-    const inquiry = await support.createInquiry(fastify, request.body)
-    reply.send(inquiry)
-  })
+  fastify.post(
+    '/',
+    {
+      preValidation: fastify.preValidation,
+    },
+    async (request, reply) => {
+      let userId = null
+      if (request.user) {
+        const user = await identity.getUser(fastify, request.user.publicId)
+        if (user) {
+          userId = user.id
+        } else {
+          console.log('weird, logged in user not found');
+        }
+      }
+      const inquiry = await support.createInquiry(fastify, request.body, userId)
+      reply.send(inquiry)
+    }
+  )
 
   /**
    * Create a new inquiry record.
