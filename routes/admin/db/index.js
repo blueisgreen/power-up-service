@@ -1,6 +1,6 @@
 'use strict'
 
-const { rebuildSchema } = require('../../../db')
+const { rebuildSchema } = require('../../../db/schema')
 
 module.exports = async function (fastify, opts) {
   const { log } = fastify
