@@ -1,5 +1,5 @@
 'use strict'
-const identity = require('../../../db/identity')
+const identity = require('../../../db/access/identity')
 
 module.exports = async function (fastify, opts) {
   fastify.get('/callback', async function (request, reply) {

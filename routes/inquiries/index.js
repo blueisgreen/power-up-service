@@ -1,7 +1,7 @@
 'use strict'
 
-const support = require('../../db/support')
-const identity = require('../../db/identity')
+const support = require('../../db/access/support')
+const identity = require('../../db/access/identity')
 
 const ERROR_MESSAGE =
   'Oh my, something went dreadfully wrong. This was not your fault.'

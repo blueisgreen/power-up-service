@@ -1,4 +1,4 @@
-const identity = require('../identity')
+const identity = require('../access/identity')
 
 /**
  * This will recreate the database table 'users'. Any existing data will be lost.
