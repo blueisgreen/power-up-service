@@ -1,6 +1,6 @@
 'use strict'
 
-const { findUser, getUser, grantRoles } = require('../../db/identity')
+const { findUser, getUser, grantRoles } = require('../../db/access/identity')
 
 module.exports = async function (fastify, opts) {
   // fastify.get('/findUser', async function (request, reply) {

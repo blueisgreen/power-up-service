@@ -1,6 +1,6 @@
 'use strict'
 
-const identity = require('../../db/identity')
+const identity = require('../../db/access/identity')
 
 const ERROR_MESSAGE =
   'Oh my, something went dreadfully wrong. This was not your fault.'
