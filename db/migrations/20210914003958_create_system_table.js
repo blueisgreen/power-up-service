@@ -1,14 +1,12 @@
 exports.up = function (knex) {
   return knex.schema
     .createTable('system_codes', function (table) {
-      console.log('defining table')
       table.increments()
       table.string('public_id').notNullable()
       table.string('display_name').notNullable()
       table.integer('parent_id').references('id').inTable('system_codes')
     })
     .then(() => {
-      console.log('loading base data')
       return knex('system_codes')
         .insert(
           [
@@ -25,14 +23,6 @@ exports.up = function (knex) {
           )
           const socialPlatformCat = rows.find(
             (cat) => cat.public_id === 'socialPlatform'
-          )
-          console.log(
-            'role',
-            roleCat,
-            'account',
-            accountStatusCat,
-            'social',
-            socialPlatformCat
           )
           return knex('system_codes').insert([
             {
