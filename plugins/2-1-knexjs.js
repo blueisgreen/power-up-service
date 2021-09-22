@@ -1,7 +1,6 @@
 'use strict'
 
 const fp = require('fastify-plugin')
-const db = require('../db/schema')
 
 /**
  * @see https://github.com/smartiniOnGitHub/fastify-knexjs
@@ -23,5 +22,4 @@ module.exports = fp(async function (fastify, opts) {
       fastify.log.error(err)
     }
   )
-  // if (process.env.REBUILD_SCHEMA) db.rebuildSchema()
 })
