@@ -131,6 +131,25 @@ module.exports = async function (fastify, opts) {
     }
   })
 
+  fastify.put('/:id/revive', async (req, reply) => {
+    try {
+      const result = await knex(tableName)
+        .where('id', req.params.id)
+        .update({
+          archived_at: null,
+        })
+        .returning(columnsToReturn)
+      if (result.length > 0) {
+        reply.send(result[0])
+      } else {
+        reply.code(404).send()
+      }
+    } catch (err) {
+      fastify.log.error(err)
+      reply.code(500).send(genericErrorMsg)
+    }
+  })
+
   fastify.delete('/:id', async (req, reply) => {
     try {
       const now = new Date()
@@ -138,7 +157,6 @@ module.exports = async function (fastify, opts) {
         .where('id', req.params.id)
         .update({
           archived_at: now,
-          published_at: null,
         })
         .returning(columnsToReturn)
       if (result.length > 0) {
