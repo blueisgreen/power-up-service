@@ -112,7 +112,7 @@ module.exports = async function (fastify, opts) {
     }
   })
 
-  fastify.put('/:id/unpublish', async (req, reply) => {
+  fastify.put('/:id/retract', async (req, reply) => {
     try {
       const result = await knex(tableName)
         .where('id', req.params.id)
