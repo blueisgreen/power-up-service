@@ -21,6 +21,7 @@ module.exports = async function (fastify, opts) {
   fastify.get('/', async (req, reply) => {
     const articles = await knex(tableName)
       .select(columnsToReturn)
+      .orderBy('created_at', 'desc')
     reply.send(articles)
   })
 
@@ -29,6 +30,7 @@ module.exports = async function (fastify, opts) {
       .whereNull('archived_at')
       .whereNotNull('published_at')
       .select(columnsToReturn)
+      .orderBy('created_at', 'desc')
     reply.send(articles)
   })
 
@@ -36,6 +38,7 @@ module.exports = async function (fastify, opts) {
     const articles = await knex(tableName)
       .whereNotNull('archived_at')
       .select(columnsToReturn)
+      .orderBy('created_at', 'desc')
     reply.send(articles)
   })
 
