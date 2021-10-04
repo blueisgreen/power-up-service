@@ -43,9 +43,19 @@ module.exports = async function (fastify, opts) {
   })
 
   fastify.post('/', async (req, reply) => {
+    // look up pen name, alias, screen name, whatever a good default value for byline would be
+    // const author = req.user | 'Lord of the Galaxy'
+    const author = 'Lord of the Galaxy'
+    console.log(author)
+    // const screenName = await knex('users')
+    //   .select('screen_name')
+    //   .where('public_id', '=', author.public_id)
+    // console.log('screen name', screenName)
+
     const given = req.body
     const row = {
       ...given,
+      byline: author,
     }
     delete row.id
     try {
