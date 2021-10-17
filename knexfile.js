@@ -1,7 +1,7 @@
 module.exports = {
   development: {
     client: 'pg',
-    connection: process.env.DATABASE_URL,
+    connection: 'postgres://powerup_admin:blue!$Green@localhost/powerup_db-test',
     migrations: {
       directory: __dirname + '/db/migrations',
     },
