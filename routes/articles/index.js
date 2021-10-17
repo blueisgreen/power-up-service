@@ -11,6 +11,8 @@ module.exports = async function (fastify, opts) {
     'id',
     'headline',
     'byline',
+    'cover_art_url as coverArtUrl',
+    'synopsis',
     'content',
     'created_at as createdAt',
     'updated_at as updatedAt',
@@ -90,6 +92,8 @@ module.exports = async function (fastify, opts) {
         .update({
           headline: given.headline,
           byline: given.byline,
+          cover_art_url: given.coverArtUrl,
+          synopsis: given.synopsis,
           content: given.content,
           updated_at: now,
         })
