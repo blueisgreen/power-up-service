@@ -15,6 +15,13 @@ module.exports = async function (fastify, opts) {
     reply.send(inquiries)
   })
 
+  // FIXME - figure out better way to get user ID
+  fastify.get('/user/:id', async (request, reply) => {
+    const id = request.params.id
+    const inquiries = await support.getInquiriesByUser(fastify, id)
+    reply.send(inquiries)
+  })
+
   /**
    * Get all inquiries. TODO: needs to limit return set
    */
@@ -30,7 +37,7 @@ module.exports = async function (fastify, opts) {
         if (user) {
           userId = user.id
         } else {
-          console.log('weird, logged in user not found');
+          console.log('weird, logged in user not found')
         }
       }
       const inquiry = await support.createInquiry(fastify, request.body, userId)
