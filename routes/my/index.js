@@ -1,6 +1,7 @@
 'use strict'
 
 const identity = require('../../db/access/identity')
+const support = require('../../db/access/support')
 
 const ERROR_MESSAGE =
   'Oh my, something went dreadfully wrong. This was not your fault.'
@@ -119,6 +120,20 @@ module.exports = async function (fastify, opts) {
       } catch (err) {
         reply.code(500).send({ error: ERROR_MESSAGE })
       }
+    }
+  )
+
+  fastify.get(
+    '/inquiries',
+    {
+      preValidation: fastify.preValidation,
+    },
+    async (request, reply) => {
+      const inquiries = await support.getInquiriesByUser(
+        fastify,
+        request.user.publicId
+      )
+      reply.send(inquiries)
     }
   )
 }

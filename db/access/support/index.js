@@ -1,32 +1,36 @@
-const rowToPayload = (row) => {
-  return {
-    id: row.id,
-    userId: row.user_id,
-    createdAt: row.created_at,
-    relatesTo: row.relates_to,
-    purpose: row.purpose,
-    message: row.message,
-  }
-}
+const columnsToReturn = [
+  'inquiries.id',
+  'inquiries.user_id as userId',
+  'inquiries.created_at as createdAt',
+  'inquiries.relates_to as relatesTo',
+  'purpose',
+  'message',
+]
 
 const getInquiries = async (fastify) => {
   const { knex } = fastify
-  const userRecord = await knex('inquiries').select()
-  let result = []
-  if (userRecord.length > 0) {
-    result = userRecord.map((row) => rowToPayload(row))
-  }
-  return result
+  const inquiries = await knex('inquiries')
+    .select(columnsToReturn)
+    .orderBy('created_at', 'desc')
+  return inquiries
+}
+
+const getInquiriesByUser = async (fastify, userPublicId) => {
+  const { knex } = fastify
+  const inquiries = await knex('inquiries')
+    .select(columnsToReturn)
+    .join('users', 'users.id', '=', 'inquiries.user_id')
+    .where('users.public_id', '=', userPublicId)
+    .orderBy('inquiries.created_at', 'desc')
+  return inquiries
 }
 
 const getInquiry = async (fastify, id) => {
   const { knex } = fastify
-  const userRecord = await knex('inquiries').select().where('id', '=', id)
-  let result = null
-  if (userRecord.length > 0) {
-    result = rowToPayload(userRecord[0])
-  }
-  return result
+  const inquiry = await knex('inquiries')
+    .select(columnsToReturn)
+    .where('id', '=', id)
+  return inquiry
 }
 
 const createInquiry = async (fastify, inquiry, user_id, relates_to) => {
@@ -42,21 +46,14 @@ const createInquiry = async (fastify, inquiry, user_id, relates_to) => {
     data['relates_to'] = relates_to
   }
   const inquiryRecord = await knex('inquiries')
-    .returning([
-      'id',
-      'user_id',
-      'created_at',
-      'relates_to',
-      'purpose',
-      'message',
-    ])
+    .returning(columnsToReturn)
     .insert(data)
-
-  return rowToPayload(inquiryRecord[0])
+  return inquiryRecord[0]
 }
 
 module.exports = {
   getInquiries,
+  getInquiriesByUser,
   getInquiry,
   createInquiry,
 }
