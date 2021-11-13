@@ -32,6 +32,7 @@ const getRelatedInquiries = async (fastify, relatedId) => {
     .select(columnsToReturn)
     .where('relates_to', '=', relatedId)
     .orderBy('inquiries.created_at', 'asc')
+  return related
 }
 
 const getInquiry = async (fastify, id) => {
