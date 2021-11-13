@@ -136,4 +136,18 @@ module.exports = async function (fastify, opts) {
       reply.send(inquiries)
     }
   )
+
+  fastify.get(
+    '/inquiries/related/:id',
+    {
+      preValidation: fastify.preValidation,
+    },
+    async (request, reply) => {
+      const inquiries = await support.getRelatedInquiries(
+        fastify,
+        request.params.id
+      )
+      reply.send(inquiries)
+    }
+  )
 }
