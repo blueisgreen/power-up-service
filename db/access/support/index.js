@@ -21,8 +21,18 @@ const getInquiriesByUser = async (fastify, userPublicId) => {
     .select(columnsToReturn)
     .join('users', 'users.id', '=', 'inquiries.user_id')
     .where('users.public_id', '=', userPublicId)
+    .whereNull('relates_to')
     .orderBy('inquiries.created_at', 'desc')
   return inquiries
+}
+
+const getRelatedInquiries = async (fastify, relatedId) => {
+  const { knex } = fastify
+  const related = await knex('inquiries')
+    .select(columnsToReturn)
+    .where('relates_to', '=', relatedId)
+    .orderBy('inquiries.created_at', 'asc')
+  return related
 }
 
 const getInquiry = async (fastify, id) => {
@@ -54,6 +64,7 @@ const createInquiry = async (fastify, inquiry, user_id, relates_to) => {
 module.exports = {
   getInquiries,
   getInquiriesByUser,
+  getRelatedInquiries,
   getInquiry,
   createInquiry,
 }
