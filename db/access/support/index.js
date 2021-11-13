@@ -21,7 +21,7 @@ const getInquiriesByUser = async (fastify, userPublicId) => {
     .select(columnsToReturn)
     .join('users', 'users.id', '=', 'inquiries.user_id')
     .where('users.public_id', '=', userPublicId)
-    .whereIsNull('relates_to')
+    .whereNull('relates_to')
     .orderBy('inquiries.created_at', 'desc')
   return inquiries
 }
