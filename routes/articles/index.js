@@ -71,7 +71,9 @@ module.exports = async function (fastify, opts) {
 
   fastify.get('/:id', async (req, reply) => {
     try {
-      const result = await knex(tableName).select().where('id', req.params.id)
+      const result = await knex(tableName)
+        .select(columnsToReturn)
+        .where('id', req.params.id)
       if (result.length > 0) {
         reply.send(result[0])
       } else {
