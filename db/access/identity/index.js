@@ -169,6 +169,15 @@ const updateUser = async (fastify, userPublicId, changes) => {
   return await getUser(fastify, userPublicId)
 }
 
+const setSessionToken = async (fastify, userId, sessionToken) => {
+  const { knex } = fastify
+  const now = new Date()
+  await knex('users').where('id', '=', userId).insert({
+    session_token: sessionToken,
+    updated_at: now,
+  })
+}
+
 module.exports = {
   findUser,
   getUser,
@@ -179,4 +188,5 @@ module.exports = {
   agreeToCookies,
   agreeToEmailComms,
   updateUser,
+  setSessionToken,
 }

@@ -49,8 +49,12 @@ module.exports = async function (fastify, opts) {
     })
 
     // TODO store session token
+    identity.setSessionToken(fastify, user.id, sessionToken)
 
-    reply.header('x-access-blargy', sessionToken)
+    reply.setCookie('sessionToken', sessionToken, {
+      domain: 'powerupmagazine.com',
+      path: '/',
+    })
     reply.redirect(
       `${process.env.SPA_LANDING_URL}?token=${sessionToken}&goTo=${goTo}`
     )

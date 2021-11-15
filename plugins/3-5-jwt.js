@@ -29,6 +29,7 @@ module.exports = fp(async function (fastify, opts) {
     try {
       const payload = await request.jwtVerify()
       request.user = payload.user
+      // fastify.log.info('user ' + payload.user)
     } catch (err) {
       // reply.send(err)
     }

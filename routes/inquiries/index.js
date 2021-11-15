@@ -8,14 +8,16 @@ const ERROR_MESSAGE =
 
 module.exports = async function (fastify, opts) {
   /**
-   * Get all inquiries. TODO: needs to limit return set
+   * Get all inquiries.
    */
   fastify.get('/', async (request, reply) => {
     const inquiries = await support.getInquiries(fastify)
     reply.send(inquiries)
   })
 
-  // FIXME - figure out better way to get user ID
+  /**
+   * Get inquiries for a given user.
+   */
   fastify.get('/user/:id', async (request, reply) => {
     const id = request.params.id
     const inquiries = await support.getInquiriesByUser(fastify, id)
@@ -23,7 +25,7 @@ module.exports = async function (fastify, opts) {
   })
 
   /**
-   * Get all inquiries. TODO: needs to limit return set
+   * Create an inquiry.
    */
   fastify.post(
     '/',
@@ -46,14 +48,30 @@ module.exports = async function (fastify, opts) {
   )
 
   /**
-   * Create a new inquiry record.
+   * Get a specific inquiry.
    */
   fastify.get('/:id', async (request, reply) => {
-    const id = request.params.id
-    const inquiry = await support.getInquiry(fastify, id)
+    const inquiry = await support.getInquiry(fastify, request.params.id)
     if (!inquiry) {
       reply.code(404).send()
     }
     reply.send(inquiry)
   })
+
+  /**
+   * Get responses to a given inquiry.
+   */
+  fastify.get(
+    '/related/:id',
+    {
+      preValidation: fastify.preValidation,
+    },
+    async (request, reply) => {
+      const inquiries = await support.getRelatedInquiries(
+        fastify,
+        request.params.id
+      )
+      reply.send(inquiries)
+    }
+  )
 }
