@@ -172,7 +172,7 @@ const updateUser = async (fastify, userPublicId, changes) => {
 const setSessionToken = async (fastify, userId, sessionToken) => {
   const { knex } = fastify
   const now = new Date()
-  await knex('users').where('id', '=', userId).insert({
+  await knex('users').where('id', '=', userId).update({
     session_token: sessionToken,
     updated_at: now,
   })
