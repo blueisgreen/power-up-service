@@ -29,7 +29,9 @@ module.exports = async function (fastify, opts) {
       )
       // goTo = 'register'
     }
-    fastify.log.info(`found user ${user}`)
+    // fastify.log.info('found user')
+    // fastify.log.info(JSON.stringify(user))
+    console.log('found user', user)
 
     // to refresh token at some point, use
     // const newToken = await this.getNewAccessTokenUsingRefreshToken(token.refresh_token)
@@ -40,6 +42,7 @@ module.exports = async function (fastify, opts) {
     }
 
     // create jwt and return (forward? redirect?)
+    // console.log(user)
     const sessionToken = fastify.jwt.sign({
       user: {
         publicId: user.public_id,
@@ -48,13 +51,20 @@ module.exports = async function (fastify, opts) {
       },
     })
 
-    // TODO store session token
     identity.setSessionToken(fastify, user.id, sessionToken)
 
-    reply.setCookie('sessionToken', sessionToken, {
-      domain: 'powerupmagazine.com',
+    const cookieOptions = {
+      domain: 'localhost',
       path: '/',
-    })
+      sameSite: 'Strict',
+    }
+    const sessionCookieOptions = Object.assign({}, cookieOptions, { httpOnly: true })
+
+    reply.setCookie('user_id', user.public_id, cookieOptions)
+    reply.setCookie('token', sessionToken, sessionCookieOptions)
+
+    reply.header('Authorization', `Bearer ${sessionToken}`)
+
     reply.redirect(
       `${process.env.SPA_LANDING_URL}?token=${sessionToken}&goTo=${goTo}`
     )

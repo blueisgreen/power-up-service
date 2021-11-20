@@ -150,4 +150,22 @@ module.exports = async function (fastify, opts) {
       reply.send(inquiries)
     }
   )
+
+  fastify.get(
+    '/cookies',
+    {
+      preValidation: fastify.preValidation,
+    },
+    async (request, reply) => {
+      console.log(request.cookies)
+      console.log('hostname', request.hostname)
+      const cookieOptions = {
+        path: '/',
+        sameSite: 'Strict',
+      }
+
+      reply.setCookie('last-contact', new Date(), cookieOptions)
+      reply.send(request.cookies)
+    }
+  )
 }
