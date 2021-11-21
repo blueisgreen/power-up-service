@@ -1,8 +1,5 @@
 const fp = require('fastify-plugin')
 const cookiePlugin = require('fastify-cookie')
-const uuidv4 = require('uuid').v4
-
-const anonPrefix = 'jd-'
 
 module.exports = fp(async function (fastify, opts) {
   fastify.log.info('loading fastify-cookie')
@@ -29,20 +26,16 @@ module.exports = fp(async function (fastify, opts) {
 
     // look for a cookie that IDs the user
     let userId = request.cookies.who
-
-    // create an ID for anonymous users
-    if (!userId) {
-      fastify.log.info('unknown user - creating ID')
-      userId = uuidv4()
-      reply.setCookie('who', `${anonPrefix}${userId}`, fastify.cookieOptions)
-    }
-    request.userID = userId
-    if (userId.startsWith(anonPrefix)) {
+    if (userId) {
+      fastify.log.info(`user is ${userId}`)
+      request.anonymous = false
+      request.userId = userId
+    } else {
+      // handle anonymous
+      fastify.log.info('anonymous user')
       request.anonymous = true
     }
 
     reply.setCookie('latestApiCall', new Date(), fastify.cookieOptionsForUI)
-
-    fastify.log.info(`user ID is ${userId}`)
   })
 })

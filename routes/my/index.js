@@ -152,6 +152,7 @@ module.exports = async function (fastify, opts) {
   )
 
   fastify.get('/cookies', {}, async (request, reply) => {
+    reply.setCookie('who', '3002a7d3-f58a-4afa-965b-c69b08bf888f', fastify.cookieOptions)
     reply.send(request.cookies)
   })
 }

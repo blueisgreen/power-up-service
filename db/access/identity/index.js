@@ -29,6 +29,31 @@ const findUser = async (fastify, providerCode, socialId) => {
   return getUser(fastify, profileRecord[0].user_id)
 }
 
+/**
+ * Looks for user based on auth provider info. Returns public ID.
+ */
+const findUserWithIdProvider = async (fastify, providerCode, userPublicId) => {
+  const { knex, log } = fastify
+
+  // FIXME use a join instead of 2 queries
+  const authProviderId = await getAuthProviderId(fastify, providerCode)
+
+  // FIXME use count or 'exists' or something
+  let profileRecord = await knex('social_profiles')
+    .select('user_id')
+    .where({ user_id: userPublicId })
+    .andWhere('social_platform_id', '=', authProviderId)
+
+  if (profileRecord.length < 1) {
+    log.info(
+      `profile not found for user ${userPublicId} using identity provider ${providerCode}`
+    )
+    return null
+  }
+
+  return getUser(fastify, profileRecord[0].user_id)
+}
+
 const getUser = async (fastify, publicId) => {
   const { knex } = fastify
   const userRecord = await knex('users')
@@ -43,7 +68,7 @@ const registerUser = async (
   providerCode,
   accessToken,
   socialProfile,
-  userId,
+  userId
 ) => {
   const { knex } = fastify
 
@@ -53,14 +78,12 @@ const registerUser = async (
   // FIXME put this in cookie plugin
   const userPublicId = userId.startsWith('jd-') ? userId.substr(3) : userId
 
-  const userRecord = await knex('users').insert(
-    {
-      public_id: userPublicId,
-      screen_name: socialProfile.name,
-      email: socialProfile.email,
-      avatar_url: socialProfile.avatar_url,
-    }
-  )
+  const userRecord = await knex('users').insert({
+    public_id: userPublicId,
+    screen_name: socialProfile.name,
+    email: socialProfile.email,
+    avatar_url: socialProfile.avatar_url,
+  })
 
   // create social record
   const socialRecord = await knex('social_profiles').insert({
@@ -183,6 +206,7 @@ const setSessionToken = async (fastify, userId, sessionToken) => {
 
 module.exports = {
   findUser,
+  findUserWithIdProvider,
   getUser,
   registerUser,
   getUserRoles,
