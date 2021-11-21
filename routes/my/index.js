@@ -152,17 +152,6 @@ module.exports = async function (fastify, opts) {
   )
 
   fastify.get('/cookies', {}, async (request, reply) => {
-    console.log(
-      'user public ID',
-      request.userID,
-      'all cookies',
-      request.cookies
-    )
-    const cookieOptions = {
-      path: '/',
-      sameSite: 'Strict',
-    }
-    reply.setCookie('last_contact', new Date(), cookieOptions)
     reply.send(request.cookies)
   })
 }

@@ -14,6 +14,15 @@ module.exports = fp(async function (fastify, opts) {
 
   fastify.decorateRequest('userID', '')
   fastify.decorateRequest('anonymous', false)
+  fastify.decorate('cookieOptions', {
+    path: '/',
+    sameSite: 'Strict',
+    httpOnly: true,
+  })
+  fastify.decorate('cookieOptionsForUI', {
+    path: '/',
+    sameSite: 'Strict',
+  })
 
   fastify.addHook('onRequest', async (request, reply) => {
     fastify.log.info('evaluating cookies')
@@ -24,21 +33,16 @@ module.exports = fp(async function (fastify, opts) {
     // create an ID for anonymous users
     if (!userId) {
       fastify.log.info('unknown user - creating ID')
-      userId = `${anonPrefix}${uuidv4()}`
-      const cookieOptions = {
-        path: '/',
-        sameSite: 'Strict',
-        httpOnly: true,
-      }
-      reply.setCookie('who', userId, cookieOptions)
+      userId = uuidv4()
+      reply.setCookie('who', `${anonPrefix}${userId}`, fastify.cookieOptions)
     }
-
-    // see if user is anonymous
+    request.userID = userId
     if (userId.startsWith(anonPrefix)) {
       request.anonymous = true
     }
 
-    request.userID = userId
+    reply.setCookie('latestApiCall', new Date(), fastify.cookieOptionsForUI)
+
     fastify.log.info(`user ID is ${userId}`)
   })
 })
