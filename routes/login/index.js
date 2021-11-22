@@ -1,6 +1,7 @@
 'use strict'
 
 const { findUserWithIdProvider } = require('../../db/access/identity')
+const GOTO_HOME = 'home'
 
 module.exports = async function (fastify, opts) {
   fastify.get('/', async function (request, reply) {
@@ -21,18 +22,24 @@ module.exports = async function (fastify, opts) {
         if (token) {
           fastify.log.info(`found session token ${token}`)
 
-          // is it still valid?
-
-          reply.setCookie('token', token, fastify.cookieOptions)
-          reply.send({ token })
-          return
-
-          // FIXME need to refresh?
+          // FIXME is it still valid?
+          const validToken = fastify.jwt.verify(token)
+          if (validToken) {
+            reply.setCookie('token', token, fastify.cookieOptions)
+            reply.header('Authorization', `Bearer ${token}`)
+            reply.redirect(
+              `${process.env.SPA_LANDING_URL}?token=${token}&goTo=${GOTO_HOME}`
+            )
+            return
+          } else {
+            fastify.log.warn('jwt token not valid')
+            fastify.log.warn(validToken)
+          }
         }
 
-        // no token or not valid (i.e., refresh didn't work)?
+        // FIXME no token or not valid (i.e., refresh didn't work)?
 
-          // redirect to authenticate
+        // redirect to authenticate
 
         reply.send({ user: user })
       }
