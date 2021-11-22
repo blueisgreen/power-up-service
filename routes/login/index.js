@@ -23,8 +23,10 @@ module.exports = async function (fastify, opts) {
           fastify.log.info(`found session token ${token}`)
 
           // FIXME is it still valid?
-          const validToken = fastify.jwt.verify(token)
+          const validToken = await fastify.jwt.verify(token)
           if (validToken) {
+            fastify.log.info(validToken)
+
             reply.setCookie('token', token, fastify.cookieOptions)
             reply.header('Authorization', `Bearer ${token}`)
             reply.redirect(
