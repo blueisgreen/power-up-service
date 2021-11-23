@@ -15,7 +15,7 @@ module.exports = async function (fastify, opts) {
         request.userId
       )
       if (user !== null) {
-        fastify.log.info(`found user ${user}`)
+        fastify.log.info(`found user ${JSON.stringify(user)}`)
 
         // do i have a session token?
         const token = user.session_token
@@ -27,6 +27,7 @@ module.exports = async function (fastify, opts) {
           if (validToken) {
             fastify.log.info(validToken)
 
+            reply.setCookie('who', user.public_id, fastify.cookieOptions)
             reply.setCookie('token', token, fastify.cookieOptions)
             reply.header('Authorization', `Bearer ${token}`)
             reply.redirect(

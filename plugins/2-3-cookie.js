@@ -9,16 +9,21 @@ module.exports = fp(async function (fastify, opts) {
     parseOptions: {}, // options for parsing cookies
   })
 
+  let expDate = new Date()
+  expDate.setDate(expDate.getDate() + 30)
+
   fastify.decorateRequest('userID', '')
   fastify.decorateRequest('anonymous', false)
   fastify.decorate('cookieOptions', {
     path: '/',
     sameSite: 'Strict',
     httpOnly: true,
+    expires: expDate,
   })
   fastify.decorate('cookieOptionsForUI', {
     path: '/',
     sameSite: 'Strict',
+    expires: expDate,
   })
 
   fastify.addHook('onRequest', async (request, reply) => {
