@@ -1,10 +1,13 @@
+const ARTICLES = 'articles'
+const ARTICLE_HITS = 'article_hits' // TODO track times an article is accessed
+
 exports.up = function (knex) {
-  return knex.schema.createTable('articles', (table) => {
+  return knex.schema.createTable(ARTICLES, (table) => {
     table.increments('id')
     table.string('headline')
     table.string('byline')
-    table.string('synopsis')
-    table.string('cover_art_url')
+    table.text('synopsis') // FIXME longer than default
+    table.string('cover_art_url') // FIXME longer than default
     table.text('content')
     table.timestamps(true, true)
     table.timestamp('published_at')
@@ -13,5 +16,5 @@ exports.up = function (knex) {
 }
 
 exports.down = function (knex) {
-  return knex.schema.dropTableIfExists('articles')
+  return knex.schema.dropTableIfExists(ARTICLES)
 }
