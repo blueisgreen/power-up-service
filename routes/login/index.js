@@ -6,26 +6,27 @@ const validProviderIds = ['github']
 
 module.exports = async function (fastify, opts) {
   fastify.get('/', async function (request, reply) {
+    const { log } = fastify
+    const pid = request.query.pid
+
     if (!request.anonymous) {
-      fastify.log.info(`sign in ${request.userId}`)
+      log.info(`sign in ${request.userId}`)
 
       // find user with given ID and identity provider
-      const user = await findUserWithIdProvider(
-        fastify,
-        request.query.pid,
-        request.userId
-      )
+      const user = await findUserWithIdProvider(fastify, pid, request.userId)
       if (user !== null) {
-        fastify.log.info(`found user ${JSON.stringify(user)}`)
+        log.info(`found user ${JSON.stringify(user)}`)
 
         // do i have a session token?
         const token = user.session_token
         if (token) {
-          fastify.log.info(`found session token ${token}`)
+          log.info(`found session token ${token}`)
 
           const validToken = fastify.jwt.verify(token)
+
+          // FIXME verify that who in token matches user id in request (from cookie)
           if (validToken) {
-            fastify.log.info(JSON.stringify(validToken))
+            log.info(JSON.stringify(validToken))
             const who = validToken.who
 
             reply.setCookie('who', who, fastify.cookieOptions)
@@ -36,33 +37,28 @@ module.exports = async function (fastify, opts) {
             )
             return
           } else {
-            fastify.log.warn('jwt token not valid')
-            fastify.log.warn(validToken)
+            log.warn(`stored token not valid: ${JSON.stringify(token)}`)
           }
+        } else {
+          log.info('no token found')
         }
-
-        // FIXME no token or not valid (i.e., refresh didn't work)?
-
-        // redirect to authenticate
-
-        reply.send({ user: user })
       }
+    }
+
+    // if not handled, fall through to last resort
+    log.info('sign in unknown user')
+    const isSupportedProvider = validProviderIds.includes(pid)
+
+    if (isSupportedProvider) {
+      log.info(`authenticate with provider: ${pid}`)
+      reply.redirect(`/login/${pid}`)
+      return
     } else {
-      fastify.log.info('sign in unknown user')
-      const providerId = request.query.pid
-      const isSupportedProvider = validProviderIds.includes(providerId)
-
-      if (isSupportedProvider) {
-        fastify.log.info(`authenticate with provider: ${providerId}`)
-        reply.redirect(`/login/${providerId}`)
-        return
-      } else {
-        const errorMsg = 'unsupported identity provider: ' + providerId
-        fastify.log.error(errorMsg)
-        reply.code(500)
-        reply.send(errorMsg)
-        return
-      }
+      const errorMsg = 'unsupported identity provider: ' + pid
+      log.error(errorMsg)
+      reply.code(500)
+      reply.send(errorMsg)
+      return
     }
   })
 }

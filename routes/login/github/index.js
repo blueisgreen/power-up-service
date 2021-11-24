@@ -54,21 +54,17 @@ module.exports = async function (fastify, opts) {
     }
 
     // create jwt and return (forward? redirect?)
-    // FIXME clean up after porting UI to use who instead of publicId and alias instead of screenName
-    const sessionToken = fastify.jwt.sign({
+    const token = fastify.jwt.sign({
       user: {
-        publicId: user.public_id,
         who: user.public_id,
-        screenName: user.screen_name,
         alias: user.screen_name,
         roles,
       },
     })
-    identity.setSessionToken(fastify, user.id, sessionToken)
-
-    reply.header('Authorization', `Bearer ${sessionToken}`)
-    reply.redirect(
-      `${process.env.SPA_LANDING_URL}?token=${sessionToken}&goTo=${goTo}`
-    )
+    identity.setSessionToken(fastify, user.id, token)
+    reply.setCookie('who', user.public_id, fastify.cookieOptions)
+    reply.setCookie('token', token, fastify.cookieOptions)
+    reply.header('Authorization', `Bearer ${token}`)
+    reply.redirect(`${process.env.SPA_LANDING_URL}?token=${token}&goTo=${goTo}`)
   })
 }
