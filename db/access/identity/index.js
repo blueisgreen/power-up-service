@@ -29,6 +29,31 @@ const findUser = async (fastify, providerCode, socialId) => {
   return getUser(fastify, profileRecord[0].user_id)
 }
 
+/**
+ * Looks for user based on auth provider info. Returns public ID.
+ */
+const findUserWithIdProvider = async (fastify, providerCode, userPublicId) => {
+  const { knex, log } = fastify
+
+  // FIXME use a join instead of 2 queries
+  const authProviderId = await getAuthProviderId(fastify, providerCode)
+
+  // FIXME use count or 'exists' or something
+  let profileRecord = await knex('social_profiles')
+    .select('user_id')
+    .where({ user_id: userPublicId })
+    .andWhere('social_platform_id', '=', authProviderId)
+
+  if (profileRecord.length < 1) {
+    log.info(
+      `profile not found for user ${userPublicId} using identity provider ${providerCode}`
+    )
+    return null
+  }
+
+  return getUser(fastify, profileRecord[0].user_id)
+}
+
 const getUser = async (fastify, publicId) => {
   const { knex } = fastify
   const userRecord = await knex('users')
@@ -42,26 +67,24 @@ const registerUser = async (
   fastify,
   providerCode,
   accessToken,
-  socialProfile
+  socialProfile,
+  userId
 ) => {
   const { knex } = fastify
 
   const authProviderId = await getAuthProviderId(fastify, providerCode)
 
   // create user record
-  const userRecord = await knex('users').insert(
-    {
-      screen_name: socialProfile.name,
-      email: socialProfile.email,
-      avatar_url: socialProfile.avatar_url,
-    },
-    ['public_id']
-  ) // return value to use in next query
-  const userPublicId = userRecord[0].public_id
+  const userRecord = await knex('users').insert({
+    public_id: userId,
+    screen_name: socialProfile.name,
+    email: socialProfile.email,
+    avatar_url: socialProfile.avatar_url,
+  })
 
   // create social record
   const socialRecord = await knex('social_profiles').insert({
-    user_id: userRecord[0].public_id,
+    user_id: userId,
     social_id: socialProfile.id,
     social_platform_id: authProviderId,
     access_token: accessToken,
@@ -69,7 +92,7 @@ const registerUser = async (
   })
 
   // return user with guest permissions
-  return getUser(fastify, userPublicId)
+  return getUser(fastify, userId)
 }
 
 const getUserRoles = async (fastify, userId) => {
@@ -169,8 +192,18 @@ const updateUser = async (fastify, userPublicId, changes) => {
   return await getUser(fastify, userPublicId)
 }
 
+const setSessionToken = async (fastify, userId, sessionToken) => {
+  const { knex } = fastify
+  const now = new Date()
+  await knex('users').where('id', '=', userId).update({
+    session_token: sessionToken,
+    updated_at: now,
+  })
+}
+
 module.exports = {
   findUser,
+  findUserWithIdProvider,
   getUser,
   registerUser,
   getUserRoles,
@@ -179,4 +212,5 @@ module.exports = {
   agreeToCookies,
   agreeToEmailComms,
   updateUser,
+  setSessionToken,
 }

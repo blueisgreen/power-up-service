@@ -3,6 +3,7 @@ exports.up = function (knex) {
     table.increments('id')
     table.string('headline')
     table.string('byline')
+    table.string('synopsis')
     table.string('cover_art_url')
     table.text('content')
     table.timestamps(true, true)

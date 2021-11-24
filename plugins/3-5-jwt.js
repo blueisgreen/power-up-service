@@ -15,6 +15,9 @@ module.exports = fp(async function (fastify, opts) {
     verify: {
       issuer: 'HappySpiritPublishing.com',
     },
+    cookie: {
+      cookieName: 'token',
+    },
   })
 
   // fastify.addHook('onRequest', async (request, reply) => {

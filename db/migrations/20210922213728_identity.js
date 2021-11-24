@@ -11,7 +11,7 @@ exports.up = function (knex) {
         table.string('screen_name') // nicer way to identify, enforce uniqueness in code?
         table.string('email') // need more around verification
         table.string('avatar_url')
-        table.string('session_token') // jwt; might want to index
+        table.text('session_token') // jwt; might want to index
         table.timestamps(true, true)
         table.timestamp('terms_accepted_at')
         table.timestamp('cookies_accepted_at')
