@@ -75,11 +75,8 @@ const registerUser = async (
   const authProviderId = await getAuthProviderId(fastify, providerCode)
 
   // create user record
-  // FIXME put this in cookie plugin
-  const userPublicId = userId.startsWith('jd-') ? userId.substr(3) : userId
-
   const userRecord = await knex('users').insert({
-    public_id: userPublicId,
+    public_id: userId,
     screen_name: socialProfile.name,
     email: socialProfile.email,
     avatar_url: socialProfile.avatar_url,
@@ -87,7 +84,7 @@ const registerUser = async (
 
   // create social record
   const socialRecord = await knex('social_profiles').insert({
-    user_id: userPublicId,
+    user_id: userId,
     social_id: socialProfile.id,
     social_platform_id: authProviderId,
     access_token: accessToken,
@@ -95,7 +92,7 @@ const registerUser = async (
   })
 
   // return user with guest permissions
-  return getUser(fastify, userPublicId)
+  return getUser(fastify, userId)
 }
 
 const getUserRoles = async (fastify, userId) => {

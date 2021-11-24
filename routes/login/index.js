@@ -2,11 +2,12 @@
 
 const { findUserWithIdProvider } = require('../../db/access/identity')
 const GOTO_HOME = 'home'
+const validProviderIds = ['github']
 
 module.exports = async function (fastify, opts) {
   fastify.get('/', async function (request, reply) {
     if (!request.anonymous) {
-      fastify.log.info(`i see you ${request.userId}`)
+      fastify.log.info(`sign in ${request.userId}`)
 
       // find user with given ID and identity provider
       const user = await findUserWithIdProvider(
@@ -22,12 +23,12 @@ module.exports = async function (fastify, opts) {
         if (token) {
           fastify.log.info(`found session token ${token}`)
 
-          // FIXME is it still valid?
-          const validToken = await fastify.jwt.verify(token)
+          const validToken = fastify.jwt.verify(token)
           if (validToken) {
-            fastify.log.info(validToken)
+            fastify.log.info(JSON.stringify(validToken))
+            const who = validToken.who
 
-            reply.setCookie('who', user.public_id, fastify.cookieOptions)
+            reply.setCookie('who', who, fastify.cookieOptions)
             reply.setCookie('token', token, fastify.cookieOptions)
             reply.header('Authorization', `Bearer ${token}`)
             reply.redirect(
@@ -47,10 +48,21 @@ module.exports = async function (fastify, opts) {
         reply.send({ user: user })
       }
     } else {
+      fastify.log.info('sign in unknown user')
       const providerId = request.query.pid
-      fastify.log.info(`identity provider to use ${providerId}`)
+      const isSupportedProvider = validProviderIds.includes(providerId)
 
-      reply.send({ isAnonymous: request.anonymous })
+      if (isSupportedProvider) {
+        fastify.log.info(`authenticate with provider: ${providerId}`)
+        reply.redirect(`/login/${providerId}`)
+        return
+      } else {
+        const errorMsg = 'unsupported identity provider: ' + providerId
+        fastify.log.error(errorMsg)
+        reply.code(500)
+        reply.send(errorMsg)
+        return
+      }
     }
   })
 }
