@@ -162,7 +162,7 @@ const agreeToEmailComms = async (fastify, publicId) => {
   return true
 }
 
-// FIXME
+// FIXME:
 const updateUser = async (fastify, userPublicId, changes) => {
   const { knex } = fastify
   const now = new Date()
@@ -200,6 +200,11 @@ const setSessionToken = async (fastify, userId, sessionToken) => {
     updated_at: now,
   })
 }
+
+/**
+ * TODO: Set and return account status - match on id but return code
+ * TODO: Move session token to separate table for better indexing, keep it out of user profile
+ */
 
 module.exports = {
   findUser,
