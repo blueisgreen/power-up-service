@@ -3,16 +3,16 @@ const identity = require('../../../db/access/identity')
 
 module.exports = async function (fastify, opts) {
   fastify.get('/callback', async function (request, reply) {
-    const token =
+    const authToken =
       await this.githubOAuth2.getAccessTokenFromAuthorizationCodeFlow(request)
-    fastify.log.info(token.access_token)
+    fastify.log.info(authToken.access_token)
 
     // try to get user info from GitHub
     const userInfo = await fastify.axios.request({
       url: 'https://api.github.com/user',
       method: 'get',
       headers: {
-        Authorization: `token ${token.access_token}`,
+        Authorization: `token ${authToken.access_token}`,
       },
     })
     fastify.log.info(JSON.stringify(userInfo.data))
