@@ -20,10 +20,10 @@ exports.up = function (knex) {
       table.string('action_code')
       table.text('details')
       table.uuid('user_public_id')
-      table.foreign('user_public_id').references(public_id).inTable(USERS)
+      table.foreign('user_public_id').references('public_id').inTable(USERS)
     })
 }
 
 exports.down = function (knex) {
-  return knex.schema.dropTableIfExists('inquiries')
+  return knex.schema.dropTableIfExists(INQUIRIES).dropTableIfExists(ACTIVITIES)
 }
