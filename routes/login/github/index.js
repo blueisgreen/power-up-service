@@ -57,7 +57,7 @@ module.exports = async function (fastify, opts) {
     const token = fastify.jwt.sign({
       user: {
         who: user.public_id,
-        alias: user.screen_name,
+        alias: user.alias,
         roles,
       },
     })

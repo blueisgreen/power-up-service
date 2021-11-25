@@ -77,7 +77,7 @@ const registerUser = async (
   // create user record
   const userRecord = await knex('users').insert({
     public_id: userId,
-    screen_name: socialProfile.name,
+    alias: socialProfile.name,
     email: socialProfile.email,
     avatar_url: socialProfile.avatar_url,
   })
@@ -168,7 +168,7 @@ const updateUser = async (fastify, userPublicId, changes) => {
   const now = new Date()
   const userBefore = await getUser(fastify, userPublicId)
   const userAfter = Object.assign({}, userBefore, {
-    screen_name: changes.screenName,
+    alias: changes.alias,
     email: changes.email,
     avatar_url: changes.avatarUrl,
     updated_at: now,

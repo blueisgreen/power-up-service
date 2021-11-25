@@ -13,7 +13,6 @@ exports.up = function (knex) {
           .uuid('public_id')
           .defaultTo(knex.raw('uuid_generate_v4()'))
           .unique()
-        table.string('screen_name') // FIXME: switch code to use alias
         table.string('alias', 42).unique()
         table.string('email', 254)
         table.text('avatar_url')
