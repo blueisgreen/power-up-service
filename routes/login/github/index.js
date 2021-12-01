@@ -1,5 +1,6 @@
 'use strict'
 const identity = require('../../../db/access/identity')
+const uuidv4 = require('uuid').v4
 
 module.exports = async function (fastify, opts) {
   fastify.get('/callback', async function (request, reply) {
@@ -29,12 +30,13 @@ module.exports = async function (fastify, opts) {
 
     // user not found; set up new user
     if (!user) {
+      const publicId = uuidv4()
       user = await identity.registerUser(
         fastify,
         'github',
-        token.access_token,
+        authToken.access_token,
         userInfo.data,
-        request.userId
+        publicId
       )
       // no longer anonymous
       request.anonymous = false
@@ -53,7 +55,6 @@ module.exports = async function (fastify, opts) {
       goTo = 'register'
     }
 
-    // create jwt and return (forward? redirect?)
     const token = fastify.jwt.sign({
       user: {
         who: user.public_id,
@@ -61,7 +62,9 @@ module.exports = async function (fastify, opts) {
         roles,
       },
     })
-    identity.setSessionToken(fastify, user.id, token)
+    identity.setSessionToken(fastify, user.public_id, token)
+
+    // send things back to client
     reply.setCookie('who', user.public_id, fastify.cookieOptions)
     reply.setCookie('token', token, fastify.cookieOptions)
     reply.header('Authorization', `Bearer ${token}`)

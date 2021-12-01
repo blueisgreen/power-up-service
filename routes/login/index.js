@@ -1,6 +1,6 @@
 'use strict'
 
-const { findUserWithIdProvider } = require('../../db/access/identity')
+const { findUserWithIdProvider, findSessionToken } = require('../../db/access/identity')
 const GOTO_HOME = 'home'
 const validProviderIds = ['github']
 
@@ -18,7 +18,7 @@ module.exports = async function (fastify, opts) {
         log.info(`found user ${JSON.stringify(user)}`)
 
         // do i have a session token?
-        const token = user.session_token
+        const token = await findSessionToken(user.public_id)
         if (token) {
           log.info(`found session token ${token}`)
 

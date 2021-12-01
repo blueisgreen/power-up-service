@@ -1,8 +1,21 @@
+const userReturnColumns = [
+  'id',
+  'public_id',
+  'alias',
+  'email',
+  'created_at as createdAt',
+  'updated_at as updatedAt',
+  'terms_accepted_at as termsAcceptedAt',
+  'cookies_accepted_at as cookiesAcceptedAt',
+  'email_comms_accepted_at as emailCommsAcceptedAt',
+  'account_status_id',
+]
+
 const getAuthProviderId = async (fastify, providerCode) => {
   const { knex } = fastify
   const platformRecord = await knex('system_codes')
     .select('id')
-    .where({ public_id: providerCode })
+    .where({ code: providerCode })
   if (platformRecord.length < 1) {
     throw 'Unsupported social platform'
   }
@@ -35,10 +48,10 @@ const findUser = async (fastify, providerCode, socialId) => {
 const findUserWithIdProvider = async (fastify, providerCode, userPublicId) => {
   const { knex, log } = fastify
 
-  // FIXME use a join instead of 2 queries
+  // FIXME: use a join instead of 2 queries
   const authProviderId = await getAuthProviderId(fastify, providerCode)
 
-  // FIXME use count or 'exists' or something
+  // FIXME: use count or 'exists' or something
   let profileRecord = await knex('social_profiles')
     .select('user_id')
     .where({ user_id: userPublicId })
@@ -59,6 +72,7 @@ const getUser = async (fastify, publicId) => {
   const userRecord = await knex('users')
     .select()
     .where('public_id', '=', publicId)
+    .returns(userReturnColumns)
   return userRecord.length > 0 ? userRecord[0] : null
 }
 
@@ -74,48 +88,51 @@ const registerUser = async (
 
   const authProviderId = await getAuthProviderId(fastify, providerCode)
 
-  // create user record
-  const userRecord = await knex('users').insert({
-    public_id: userId,
-    alias: socialProfile.name,
-    email: socialProfile.email,
-    avatar_url: socialProfile.avatar_url,
-  })
+  const userRecord = await knex('users').insert(
+    {
+      public_id: userId,
+      alias: socialProfile.name,
+      email: socialProfile.email,
+      avatar_url: socialProfile.avatar_url,
+    },
+    userReturnColumns
+  )
 
-  // create social record
+  fastify.log.info('user record ==V')
+  fastify.log.info(JSON.stringify(userRecord))
+
   const socialRecord = await knex('social_profiles').insert({
-    user_id: userId,
+    user_id: userRecord.id,
     social_id: socialProfile.id,
     social_platform_id: authProviderId,
     access_token: accessToken,
     social_user_info: socialProfile,
   })
 
-  // return user with guest permissions
   return getUser(fastify, userId)
 }
 
 const getUserRoles = async (fastify, userId) => {
   const { knex } = fastify
   const roleRecords = await knex('system_codes')
-    .select('system_codes.public_id')
+    .select('system_codes.code')
     .join('user_roles', 'user_roles.role_id', '=', 'system_codes.id')
     .where({ user_id: userId })
   const roles = roleRecords.map((record) => record.public_id)
   return roles
 }
 
-// TODO load role map (and other system tables) when registering db plug-ins
+// TODO: load role map (and other system tables) when registering db plug-ins
 
 const grantRoles = async (fastify, userPublicId, roles) => {
   const { knex } = fastify
   const roleMap = await knex('system_codes as a')
     .join('system_codes as b', 'a.parent_id', '=', 'b.id')
-    .where('b.public_id', '=', 'role')
+    .where('b.code', '=', 'role')
     .select('a.*')
   console.log(roleMap)
   const roleIdsToGrant = roles.map((role) => {
-    const roleToUse = roleMap.find((element) => element.public_id === role)
+    const roleToUse = roleMap.find((element) => element.code === role)
     return roleToUse.id
   })
   const userId = await knex('users')
@@ -192,18 +209,27 @@ const updateUser = async (fastify, userPublicId, changes) => {
   return await getUser(fastify, userPublicId)
 }
 
-const setSessionToken = async (fastify, userId, sessionToken) => {
+const setSessionToken = async (fastify, userPublicId, sessionToken) => {
   const { knex } = fastify
   const now = new Date()
-  await knex('users').where('id', '=', userId).update({
-    session_token: sessionToken,
-    updated_at: now,
-  })
+  await knex('user_sessions')
+    .insert({
+      user_public_id: userPublicId,
+      auth_token: sessionToken,
+    })
+    .onConflict()
+    .merge()
+}
+
+const findSessionToken = async (fastify, userPublicId) => {
+  return await fastify
+    .knex('user_sessions')
+    .select('auth_token')
+    .where('user_public_id', '=', userPublicId)
 }
 
 /**
  * TODO: Set and return account status - match on id but return code
- * TODO: Move session token to separate table for better indexing, keep it out of user profile
  */
 
 module.exports = {
@@ -218,4 +244,5 @@ module.exports = {
   agreeToEmailComms,
   updateUser,
   setSessionToken,
+  findSessionToken,
 }

@@ -13,10 +13,9 @@ exports.up = function (knex) {
           .uuid('public_id')
           .defaultTo(knex.raw('uuid_generate_v4()'))
           .unique()
-        table.string('alias', 42).unique()
+        table.string('alias', 42)
         table.string('email', 254)
         table.text('avatar_url')
-        table.text('session_token') // FIXME: move to separate table for indexing and to keep it out of user profile
         table.timestamps(true, true)
         table.timestamp('terms_accepted_at')
         table.timestamp('cookies_accepted_at')
@@ -28,15 +27,14 @@ exports.up = function (knex) {
           .inTable(SYSTEM_CODES)
       })
       .createTable(SOCIAL_PROFILES, (table) => {
-        table.uuid('user_id') // FIXME: update code to use user_public_id (below) and remove this
-        table.uuid('user_public_id') // FIXME: transition queries to this; clean up above
+        table.uuid('user_id')
         table.integer('social_platform_id')
         table.string('social_id')
         table.string('access_token') // from auth provider; hold for future processing
         table.text('social_user_info') // public user info from id provider
         table.timestamps(true, true)
         table.primary(['user_id', 'social_platform_id'])
-        table.foreign('user_public_id').references('public_id').inTable(USERS)
+        table.foreign('user_id').references('public_id').inTable(USERS)
         table
           .foreign('social_platform_id')
           .references('id')
@@ -52,7 +50,7 @@ exports.up = function (knex) {
       })
       .createTable(USER_SESSIONS, (table) => {
         table.uuid('user_public_id')
-        table.text('auth_token')
+        table.text('auth_token')  // created and managed by app
         table.timestamps(true, true)
         table.primary('user_public_id')
         table.foreign('user_public_id').references('public_id').inTable(USERS)
