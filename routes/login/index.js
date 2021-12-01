@@ -24,7 +24,7 @@ module.exports = async function (fastify, opts) {
 
           const validToken = fastify.jwt.verify(token)
 
-          // FIXME verify that who in token matches user id in request (from cookie)
+          // TODO: verify that who in token matches user id in request (from cookie)
           if (validToken) {
             log.info(JSON.stringify(validToken))
             const who = validToken.who

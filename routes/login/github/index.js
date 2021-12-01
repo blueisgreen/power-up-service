@@ -43,7 +43,7 @@ module.exports = async function (fastify, opts) {
 
     fastify.log.info(`found user: ${JSON.stringify(user)}`)
 
-    // FIXME check age of token and refresh if too old; use something like next line
+    // TODO: check age of token and refresh if too old; use something like next line
     // const newToken = await this.getNewAccessTokenUsingRefreshToken(token.refresh_token)
 
     const roles = await identity.getUserRoles(fastify, user.id)
