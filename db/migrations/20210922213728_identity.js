@@ -27,14 +27,14 @@ exports.up = function (knex) {
           .inTable(SYSTEM_CODES)
       })
       .createTable(SOCIAL_PROFILES, (table) => {
-        table.uuid('user_id')
+        table.integer('user_id')
         table.integer('social_platform_id')
         table.string('social_id')
         table.string('access_token') // from auth provider; hold for future processing
         table.text('social_user_info') // public user info from id provider
         table.timestamps(true, true)
         table.primary(['user_id', 'social_platform_id'])
-        table.foreign('user_id').references('public_id').inTable(USERS)
+        table.foreign('user_id').references('id').inTable(USERS)
         table
           .foreign('social_platform_id')
           .references('id')

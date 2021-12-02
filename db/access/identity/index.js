@@ -67,12 +67,19 @@ const findUserWithIdProvider = async (fastify, providerCode, userPublicId) => {
   return getUser(fastify, profileRecord[0].user_id)
 }
 
-const getUser = async (fastify, publicId) => {
+const getUser = async (fastify, userPublicId) => {
   const { knex } = fastify
   const userRecord = await knex('users')
-    .select()
+    .returning(userReturnColumns)
     .where('public_id', '=', publicId)
-    .returns(userReturnColumns)
+  return userRecord.length > 0 ? userPublicId[0] : null
+}
+
+const getUserById = async (fastify, userId) => {
+  const { knex } = fastify
+  const userRecord = await knex('users')
+    .returning(userReturnColumns)
+    .where('id', '=', userId)
   return userRecord.length > 0 ? userRecord[0] : null
 }
 
@@ -88,21 +95,18 @@ const registerUser = async (
 
   const authProviderId = await getAuthProviderId(fastify, providerCode)
 
-  const userRecord = await knex('users').insert(
-    {
-      public_id: userId,
-      alias: socialProfile.name,
-      email: socialProfile.email,
-      avatar_url: socialProfile.avatar_url,
-    },
-    userReturnColumns
-  )
+  const userRecord = await knex('users').returning(userReturnColumns).insert({
+    public_id: userId,
+    alias: socialProfile.name,
+    email: socialProfile.email,
+    avatar_url: socialProfile.avatar_url,
+  })
 
   fastify.log.info('user record ==V')
-  fastify.log.info(JSON.stringify(userRecord))
+  fastify.log.info(JSON.stringify(userRecord[0]))
 
   const socialRecord = await knex('social_profiles').insert({
-    user_id: userRecord.id,
+    user_id: userRecord[0].id,
     social_id: socialProfile.id,
     social_platform_id: authProviderId,
     access_token: accessToken,
@@ -124,7 +128,7 @@ const getUserRoles = async (fastify, userId) => {
 
 // TODO: load role map (and other system tables) when registering db plug-ins
 
-const grantRoles = async (fastify, userPublicId, roles) => {
+const grantRoles = async (fastify, userId, roles) => {
   const { knex } = fastify
   const roleMap = await knex('system_codes as a')
     .join('system_codes as b', 'a.parent_id', '=', 'b.id')
@@ -135,13 +139,9 @@ const grantRoles = async (fastify, userPublicId, roles) => {
     const roleToUse = roleMap.find((element) => element.code === role)
     return roleToUse.id
   })
-  const userId = await knex('users')
-    .where('public_id', '=', userPublicId)
-    .select('id')
-
   roleIdsToGrant.forEach(async (roleId) => {
     await knex('user_roles')
-      .insert({ user_id: userId[0].id, role_id: roleId })
+      .insert({ user_id: userId, role_id: roleId })
       .onConflict()
       .ignore()
   })
@@ -199,14 +199,18 @@ const updateUser = async (fastify, userPublicId, changes) => {
   if (!userBefore.email_comms_accepted_at && changes.agreeToEmailComms) {
     userAfter.email_comms_accepted_at = now
   }
-  await knex('users').where('public_id', '=', userPublicId).update(userAfter)
+  const result = await knex('users')
+    .where('public_id', '=', userPublicId)
+    .update(userAfter, ['id'])
+
+  const userId = result[0].id
 
   // TODO assign member role if terms accepted and not already assigned
   if (changes.agreeToTerms) {
-    await grantRoles(fastify, userPublicId, ['member'])
+    await grantRoles(fastify, userId, ['member'])
   }
 
-  return await getUser(fastify, userPublicId)
+  return await getUserById(fastify, userId)
 }
 
 const setSessionToken = async (fastify, userPublicId, sessionToken) => {
@@ -217,7 +221,7 @@ const setSessionToken = async (fastify, userPublicId, sessionToken) => {
       user_public_id: userPublicId,
       auth_token: sessionToken,
     })
-    .onConflict()
+    .onConflict('user_public_id')
     .merge()
 }
 

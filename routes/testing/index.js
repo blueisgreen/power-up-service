@@ -1,16 +1,16 @@
 'use strict'
 
-const { findUser, getUser, grantRoles } = require('../../db/access/identity')
+const { findUser, grantRoles } = require('../../db/access/identity')
 
 module.exports = async function (fastify, opts) {
-  // fastify.get('/findUser', async function (request, reply) {
-  //   const user = await findUser(fastify, 'github', '12345')
-  //   if (user) {
-  //     reply.send(user)
-  //   } else {
-  //     reply.code(404).send('User not found')
-  //   }
-  // })
+  fastify.get('/query', async function (request, reply) {
+    const user = await findUser(fastify, 'github', '12345')
+    if (user) {
+      reply.send(user)
+    } else {
+      reply.code(404).send('User not found')
+    }
+  })
 
   // fastify.get('/getUser', async function (request, reply) {
   //   const user = await getUser(fastify, 'c90249e3-9b4f-4dc3-8cc9-daa2ef0a806d')
