@@ -11,78 +11,6 @@ const userReturnColumns = [
   'account_status_id',
 ]
 
-const getAuthProviderId = async (fastify, providerCode) => {
-  const { knex } = fastify
-  const platformRecord = await knex('system_codes')
-    .select('id')
-    .where({ code: providerCode })
-  if (platformRecord.length < 1) {
-    throw 'Unsupported social platform'
-  }
-  return platformRecord[0].id
-}
-
-/**
- * Looks for user based on auth provider info. Returns public ID.
- */
-const findUser = async (fastify, providerCode, socialId) => {
-  const { knex, log } = fastify
-
-  const authProviderId = await getAuthProviderId(fastify, providerCode)
-
-  let profileRecord = await knex('social_profiles')
-    .select('user_id')
-    .where({ social_id: socialId })
-    .andWhere('social_platform_id', '=', authProviderId)
-
-  if (profileRecord.length < 1) {
-    return null
-  }
-
-  return getUser(fastify, profileRecord[0].user_id)
-}
-
-/**
- * Looks for user based on auth provider info. Returns public ID.
- */
-const findUserWithIdProvider = async (fastify, providerCode, userPublicId) => {
-  const { knex, log } = fastify
-
-  // FIXME: use a join instead of 2 queries
-  const authProviderId = await getAuthProviderId(fastify, providerCode)
-
-  // FIXME: use count or 'exists' or something
-  let profileRecord = await knex('social_profiles')
-    .select('user_id')
-    .where({ user_id: userPublicId })
-    .andWhere('social_platform_id', '=', authProviderId)
-
-  if (profileRecord.length < 1) {
-    log.info(
-      `profile not found for user ${userPublicId} using identity provider ${providerCode}`
-    )
-    return null
-  }
-
-  return getUser(fastify, profileRecord[0].user_id)
-}
-
-const getUser = async (fastify, userPublicId) => {
-  const { knex } = fastify
-  const userRecord = await knex('users')
-    .returning(userReturnColumns)
-    .where('public_id', '=', publicId)
-  return userRecord.length > 0 ? userPublicId[0] : null
-}
-
-const getUserById = async (fastify, userId) => {
-  const { knex } = fastify
-  const userRecord = await knex('users')
-    .returning(userReturnColumns)
-    .where('id', '=', userId)
-  return userRecord.length > 0 ? userRecord[0] : null
-}
-
 // social profile includes: socialId, name, alias, email, avatarUrl
 const registerUser = async (
   fastify,
@@ -237,9 +165,6 @@ const findSessionToken = async (fastify, userPublicId) => {
  */
 
 module.exports = {
-  findUser,
-  findUserWithIdProvider,
-  getUser,
   registerUser,
   getUserRoles,
   grantRoles,
