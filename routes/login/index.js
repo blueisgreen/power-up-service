@@ -13,20 +13,19 @@ module.exports = async function (fastify, opts) {
       log.info(`sign in ${request.userId}`)
 
       // find user with given ID and identity provider
-      const user = fastify.data.identity.findUser(request.userId, pid)
+      const user = await fastify.data.identity.findUser(request.userId, pid)
       if (user !== null) {
-        log.info(`found user ${JSON.stringify(user)}`)
+        log.debug(`found user ${JSON.stringify(user)}`)
 
         // do i have a session token?
-        const token = await findSessionToken(user.public_id)
+        const token = await fastify.data.identity.findSessionToken(
+          user.public_id
+        )
         if (token) {
-          log.info(`found session token ${token}`)
-
+          log.debug(`found session token ${token}`)
           const validToken = fastify.jwt.verify(token)
-
-          // TODO: verify that who in token matches user id in request (from cookie)
           if (validToken) {
-            log.info(JSON.stringify(validToken))
+            log.debug(`session token found: ${JSON.stringify(validToken)}`)
             const who = validToken.who
 
             reply.setCookie('who', who, fastify.cookieOptions)
@@ -37,10 +36,10 @@ module.exports = async function (fastify, opts) {
             )
             return
           } else {
-            log.warn(`stored token not valid: ${JSON.stringify(token)}`)
+            log.warn(`stored session token not valid: ${JSON.stringify(token)}`)
           }
         } else {
-          log.info('no token found')
+          log.debug(`no session token found for ${request.userId}`)
         }
       }
     }
@@ -50,7 +49,8 @@ module.exports = async function (fastify, opts) {
     const isSupportedProvider = validProviderIds.includes(pid)
 
     if (isSupportedProvider) {
-      log.info(`authenticate with provider: ${pid}`)
+      log.debug(`authenticate with provider: ${pid}`)
+      reply.clearCookie('who')
       reply.redirect(`/login/${pid}`)
       return
     } else {

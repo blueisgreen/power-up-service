@@ -16,21 +16,15 @@ module.exports = async function (fastify, options, next) {
 
   fastify.log.info('loading power up data access')
   const identity = {
-    blargy,
     getUser,
     findUser,
+    findSessionToken,
   }
   fastify.decorate('data', { identity })
   next()
 
-  function blargy() {
-    const msg = 'identity plugin: hello blargy'
-    fastify.log.info(msg)
-    return { message: msg }
-  }
-
   async function getUser(userId) {
-    log.info('identity plugin: getUser')
+    log.debug('identity plugin: getUser')
     const userRecord = await knex('users')
       .returning(userReturnColumns)
       .where('id', '=', userId)
@@ -38,7 +32,7 @@ module.exports = async function (fastify, options, next) {
   }
 
   async function findUser(userPublicId, providerCode) {
-    log.info('identity plugin: findUser')
+    log.debug('identity plugin: findUser')
     const platformId = fastify.lookups.findPlatform(providerCode).id
 
     let profileRecord = await knex('social_profiles')
@@ -55,5 +49,12 @@ module.exports = async function (fastify, options, next) {
     }
 
     return getUser(profileRecord[0].userId)
+  }
+
+  async function findSessionToken(userPublicId) {
+    log.debug('identity plugin: findSessionToken')
+    return await knex('user_sessions')
+      .select('auth_token')
+      .where('user_public_id', '=', userPublicId)
   }
 }

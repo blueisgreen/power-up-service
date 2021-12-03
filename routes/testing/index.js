@@ -4,12 +4,9 @@ const { findUser, grantRoles } = require('../../db/access/identity')
 
 module.exports = async function (fastify, opts) {
   fastify.get('/doit', async function (request, reply) {
-    // await fastify.data.identity.blargy()
     // const result = await fastify.data.identity.getUser(request.userId)
-
-    fastify.log.info(fastify.lookups.findPlatform('google').id)
-    reply.send(JSON.stringify(fastify.lookups.platforms))
-
+    // fastify.log.info(fastify.lookups.findPlatform('google').id)
+    // reply.send(JSON.stringify(fastify.lookups.platforms))
     // if (result) {
     //   reply.send(result)
     // } else {
@@ -17,14 +14,14 @@ module.exports = async function (fastify, opts) {
     // }
   })
 
-  // fastify.get('/getUser', async function (request, reply) {
-  //   const user = await getUser(fastify, 'c90249e3-9b4f-4dc3-8cc9-daa2ef0a806d')
-  //   if (user) {
-  //     reply.send(user)
-  //   } else {
-  //     reply.code(404).send('User not found')
-  //   }
-  // })
+  fastify.get('/getUser', async function (request, reply) {
+    const user = await fastify.data.identity.getUser('c90249e3-9b4f-4dc3-8cc9-daa2ef0a806d')
+    if (user) {
+      reply.send(user)
+    } else {
+      reply.code(404).send('User not found')
+    }
+  })
 
   fastify.get('/blargy', async function (request, reply) {
     const roles = await grantRoles(
