@@ -1,6 +1,5 @@
 'use strict'
 
-const identity = require('../../db/access/identity')
 const support = require('../../db/access/support')
 
 const ERROR_MESSAGE =
@@ -30,7 +29,8 @@ module.exports = async function (fastify, opts) {
       preValidation: fastify.preValidation,
     },
     async (request, reply) => {
-      const user = await identity.getUser(fastify, request.user.publicId)
+      // FIXME: lost with public ID
+      const user = await fastify.data.identity.getUser(request.user.publicId)
       reply.send(user)
     }
   )
@@ -66,7 +66,7 @@ module.exports = async function (fastify, opts) {
         })
       }
 
-      const user = await identity.updateUser(fastify, userId, updates)
+      const user = await fastify.data.identity.updateUser(userId, updates)
       reply.send(user)
     }
   )
@@ -80,7 +80,7 @@ module.exports = async function (fastify, opts) {
     },
     async (request, reply) => {
       try {
-        await identity.agreeToTerms(fastify, request.user.publicId)
+        await fastify.data.identity.agreeToTerms(request.user.publicId)
         reply.code(204).send()
       } catch (err) {
         fastify.log.error(err)
@@ -98,7 +98,7 @@ module.exports = async function (fastify, opts) {
     },
     async (request, reply) => {
       try {
-        await identity.agreeToCookies(fastify, request.user.publicId)
+        await fastify.data.identity.agreeToCookies(request.user.publicId)
         reply.code(204).send()
       } catch (err) {
         reply.code(500).send({ error: ERROR_MESSAGE })
@@ -115,7 +115,7 @@ module.exports = async function (fastify, opts) {
     },
     async (request, reply) => {
       try {
-        await identity.agreeToEmailComms(fastify, request.user.publicId)
+        await fastify.data.agreeToEmailComms(request.user.publicId)
         reply.code(204).send()
       } catch (err) {
         reply.code(500).send({ error: ERROR_MESSAGE })
@@ -152,7 +152,11 @@ module.exports = async function (fastify, opts) {
   )
 
   fastify.get('/cookies', {}, async (request, reply) => {
-    reply.setCookie('who', '3002a7d3-f58a-4afa-965b-c69b08bf888f', fastify.cookieOptions)
+    reply.setCookie(
+      'who',
+      '3002a7d3-f58a-4afa-965b-c69b08bf888f',
+      fastify.cookieOptions
+    )
     reply.send(request.cookies)
   })
 }

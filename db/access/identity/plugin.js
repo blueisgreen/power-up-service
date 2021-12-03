@@ -21,6 +21,11 @@ module.exports = async function (fastify, options, next) {
     findUserFromSocialProfile,
     registerUser,
     getUserRoles,
+    grantRoles,
+    agreeToTerms,
+    agreeToCookies,
+    agreeToEmailComms,
+    updateUser,
     findSessionToken,
     setSessionToken,
   }
@@ -116,6 +121,88 @@ module.exports = async function (fastify, options, next) {
     return roles
   }
 
+  async function grantRoles(userId, roles) {
+    log.debug('identity plugin: grantRoles')
+    const roleMap = await knex('system_codes as a')
+      .join('system_codes as b', 'a.parent_id', '=', 'b.id')
+      .where('b.code', '=', 'role')
+      .select('a.*')
+    info.debug(roleMap)
+    const roleIdsToGrant = roles.map((role) => {
+      const roleToUse = roleMap.find((element) => element.code === role)
+      return roleToUse.id
+    })
+    roleIdsToGrant.forEach(async (roleId) => {
+      await knex('user_roles')
+        .insert({ user_id: userId, role_id: roleId })
+        .onConflict()
+        .ignore()
+    })
+    return true
+  }
+
+  async function agreeToTerms(publicId) {
+    log.debug('identity plugin: agreeToTerms')
+    const now = new Date()
+    await knex('users').where('public_id', '=', publicId).update({
+      terms_accepted_at: now,
+      updated_at: now,
+    })
+    return true
+  }
+
+  async function agreeToCookies(publicId) {
+    log.debug('identity plugin: agreeToCookies')
+    const now = new Date()
+    await knex('users').where('public_id', '=', publicId).update({
+      cookies_accepted_at: now,
+      updated_at: now,
+    })
+    return true
+  }
+
+  async function agreeToEmailComms(publicId) {
+    log.debug('identity plugin: agreeToEmailComms')
+    const now = new Date()
+    await knex('users').where('public_id', '=', publicId).update({
+      email_comms_accepted_at: now,
+      updated_at: now,
+    })
+    return true
+  }
+
+  async function updateUser(userPublicId, changes) {
+    log.debug('identity plugin: updateUser')
+    const now = new Date()
+    const userBefore = await getUser(fastify, userPublicId)
+    const userAfter = Object.assign({}, userBefore, {
+      alias: changes.alias,
+      email: changes.email,
+      avatar_url: changes.avatarUrl,
+      updated_at: now,
+    })
+    if (!userBefore.terms_accepted_at && changes.agreeToTerms) {
+      userAfter.terms_accepted_at = now
+    }
+    if (!userBefore.cookies_accepted_at && changes.agreeToCookies) {
+      userAfter.cookies_accepted_at = now
+    }
+    if (!userBefore.email_comms_accepted_at && changes.agreeToEmailComms) {
+      userAfter.email_comms_accepted_at = now
+    }
+    const result = await knex('users')
+      .where('public_id', '=', userPublicId)
+      .update(userAfter, ['id'])
+
+    const userId = result[0].id
+
+    if (changes.agreeToTerms) {
+      await grantRoles(userId, ['member'])
+    }
+
+    return await getUser(userId)
+  }
+
   async function findSessionToken(userPublicId) {
     log.debug('identity plugin: findSessionToken')
     return await knex('user_sessions')
@@ -125,7 +212,6 @@ module.exports = async function (fastify, options, next) {
 
   async function setSessionToken(userPublicId, sessionToken) {
     log.debug('identity plugin: setSessionToken')
-    const now = new Date()
     await knex('user_sessions')
       .insert({
         user_public_id: userPublicId,
