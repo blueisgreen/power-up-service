@@ -1,6 +1,5 @@
 'use strict'
 
-const { findSessionToken } = require('../../db/access/identity')
 const GOTO_HOME = 'home'
 const validProviderIds = ['github']
 
@@ -13,7 +12,10 @@ module.exports = async function (fastify, opts) {
       log.info(`sign in ${request.userId}`)
 
       // find user with given ID and identity provider
-      const user = await fastify.data.identity.findUser(request.userId, pid)
+      const user = await fastify.data.identity.findUserWithPublicId(
+        request.userId,
+        pid
+      )
       if (user !== null) {
         log.debug(`found user ${JSON.stringify(user)}`)
 

@@ -3,10 +3,12 @@ const identity = require('../../../db/access/identity')
 const uuidv4 = require('uuid').v4
 
 module.exports = async function (fastify, opts) {
+  const { log } = fastify
+
   fastify.get('/callback', async function (request, reply) {
     const authToken =
       await this.githubOAuth2.getAccessTokenFromAuthorizationCodeFlow(request)
-    fastify.log.info(authToken.access_token)
+    log.debug(authToken.access_token)
 
     // try to get user info from GitHub
     const userInfo = await fastify.axios.request({
@@ -16,10 +18,13 @@ module.exports = async function (fastify, opts) {
         Authorization: `token ${authToken.access_token}`,
       },
     })
-    fastify.log.info(JSON.stringify(userInfo.data))
+    log.debug(JSON.stringify(userInfo.data))
 
     // find or register user using authentication data
-    let user = await identity.findUser(fastify, 'github', userInfo.data.id)
+    let user = await fastify.data.identity.findUserFromSocialProfile(
+      'github',
+      userInfo.data.id
+    )
 
     // was anonymous but user was found; no longer anonymous
     if (request.anonymous && user) {
@@ -62,7 +67,7 @@ module.exports = async function (fastify, opts) {
         roles,
       },
     })
-    identity.setSessionToken(fastify, user.public_id, token)
+    await fastify.data.identity.setSessionToken(user.public_id, token)
 
     // send things back to client
     reply.setCookie('who', user.public_id, fastify.cookieOptions)

@@ -17,8 +17,10 @@ module.exports = async function (fastify, options, next) {
   fastify.log.info('loading power up data access')
   const identity = {
     getUser,
-    findUser,
+    findUserWithPublicId,
+    findUserFromSocialProfile,
     findSessionToken,
+    setSessionToken,
   }
   fastify.decorate('data', { identity })
   next()
@@ -31,10 +33,9 @@ module.exports = async function (fastify, options, next) {
     return userRecord.length > 0 ? userRecord[0] : null
   }
 
-  async function findUser(userPublicId, providerCode) {
+  async function findUserWithPublicId(userPublicId, platform) {
     log.debug('identity plugin: findUser')
-    const platformId = fastify.lookups.findPlatform(providerCode).id
-
+    const platformId = fastify.lookups.findPlatform(platform).id
     let profileRecord = await knex('social_profiles')
       .select('social_profiles.user_id as userId')
       .join('users', 'users.id', 'social_profiles.user_id')
@@ -43,7 +44,28 @@ module.exports = async function (fastify, options, next) {
 
     if (profileRecord.length < 1) {
       log.info(
-        `profile not found for user '${userPublicId}'' using identity provider '${providerCode}'`
+        `user not found with public ID '${userPublicId}' on platform '${platform}'`
+      )
+      return null
+    }
+
+    return getUser(profileRecord[0].userId)
+  }
+
+  async function findUserFromSocialProfile(platform, profileId) {
+    log.debug('identity plugin: findUserFromSocialProfile')
+
+    const platformId = fastify.lookups.findPlatform(platform).id
+    const profileRecord = await knex('social_profiles')
+      .select('user_id as userId')
+      .where({
+        social_platform_id: platformId,
+        social_id: profileId,
+      })
+
+    if (profileRecord.length < 1) {
+      log.info(
+        `user not found with social ID '${profileId}' on platform '${provider}'`
       )
       return null
     }
@@ -56,5 +78,17 @@ module.exports = async function (fastify, options, next) {
     return await knex('user_sessions')
       .select('auth_token')
       .where('user_public_id', '=', userPublicId)
+  }
+
+  async function setSessionToken(userPublicId, sessionToken) {
+    log.debug('identity plugin: setSessionToken')
+    const now = new Date()
+    await knex('user_sessions')
+      .insert({
+        user_public_id: userPublicId,
+        auth_token: sessionToken,
+      })
+      .onConflict('user_public_id')
+      .merge()
   }
 }

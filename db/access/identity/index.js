@@ -141,29 +141,6 @@ const updateUser = async (fastify, userPublicId, changes) => {
   return await getUserById(fastify, userId)
 }
 
-const setSessionToken = async (fastify, userPublicId, sessionToken) => {
-  const { knex } = fastify
-  const now = new Date()
-  await knex('user_sessions')
-    .insert({
-      user_public_id: userPublicId,
-      auth_token: sessionToken,
-    })
-    .onConflict('user_public_id')
-    .merge()
-}
-
-const findSessionToken = async (fastify, userPublicId) => {
-  return await fastify
-    .knex('user_sessions')
-    .select('auth_token')
-    .where('user_public_id', '=', userPublicId)
-}
-
-/**
- * TODO: Set and return account status - match on id but return code
- */
-
 module.exports = {
   registerUser,
   getUserRoles,
@@ -172,6 +149,4 @@ module.exports = {
   agreeToCookies,
   agreeToEmailComms,
   updateUser,
-  setSessionToken,
-  findSessionToken,
 }
