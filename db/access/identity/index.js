@@ -11,38 +11,6 @@ const userReturnColumns = [
   'account_status_id',
 ]
 
-// social profile includes: socialId, name, alias, email, avatarUrl
-const registerUser = async (
-  fastify,
-  providerCode,
-  accessToken,
-  socialProfile,
-  userId
-) => {
-  const { knex } = fastify
-
-  const authProviderId = await getAuthProviderId(fastify, providerCode)
-
-  const userRecord = await knex('users').returning(userReturnColumns).insert({
-    public_id: userId,
-    alias: socialProfile.name,
-    email: socialProfile.email,
-    avatar_url: socialProfile.avatar_url,
-  })
-
-  fastify.log.info('user record ==V')
-  fastify.log.info(JSON.stringify(userRecord[0]))
-
-  const socialRecord = await knex('social_profiles').insert({
-    user_id: userRecord[0].id,
-    social_id: socialProfile.id,
-    social_platform_id: authProviderId,
-    access_token: accessToken,
-    social_user_info: socialProfile,
-  })
-
-  return getUser(fastify, userId)
-}
 
 const getUserRoles = async (fastify, userId) => {
   const { knex } = fastify
@@ -142,7 +110,6 @@ const updateUser = async (fastify, userPublicId, changes) => {
 }
 
 module.exports = {
-  registerUser,
   getUserRoles,
   grantRoles,
   agreeToTerms,

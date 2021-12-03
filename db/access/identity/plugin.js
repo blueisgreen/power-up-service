@@ -19,6 +19,8 @@ module.exports = async function (fastify, options, next) {
     getUser,
     findUserWithPublicId,
     findUserFromSocialProfile,
+    registerUser,
+    getUserRoles,
     findSessionToken,
     setSessionToken,
   }
@@ -34,7 +36,7 @@ module.exports = async function (fastify, options, next) {
   }
 
   async function findUserWithPublicId(userPublicId, platform) {
-    log.debug('identity plugin: findUser')
+    log.debug('identity plugin: findUserWithPublicId')
     const platformId = fastify.lookups.findPlatform(platform).id
     let profileRecord = await knex('social_profiles')
       .select('social_profiles.user_id as userId')
@@ -71,6 +73,47 @@ module.exports = async function (fastify, options, next) {
     }
 
     return getUser(profileRecord[0].userId)
+  }
+
+  async function registerUser(
+    platform,
+    accessToken,
+    socialProfile,
+    userPublicId
+  ) {
+    log.debug('identity plugin: registerUser')
+
+    const platformId = fastify.lookups.findPlatform(platform).id
+    const userRecord = await knex('users').returning(userReturnColumns).insert({
+      public_id: userPublicId,
+      alias: socialProfile.name,
+      email: socialProfile.email,
+      avatar_url: socialProfile.avatar_url,
+    })
+
+    log.debug('user record ==V')
+    log.debug(JSON.stringify(userRecord[0]))
+    const id = userRecord[0].id
+
+    await knex('social_profiles').insert({
+      user_id: id,
+      social_id: socialProfile.id,
+      social_platform_id: platformId,
+      access_token: accessToken,
+      social_user_info: socialProfile,
+    })
+
+    return getUser(id)
+  }
+
+  async function getUserRoles(userId) {
+    log.debug('identity plugin: getUserRoles')
+    const roleRecords = await knex('system_codes')
+      .select('system_codes.code')
+      .join('user_roles', 'user_roles.role_id', '=', 'system_codes.id')
+      .where({ user_id: userId })
+    const roles = roleRecords.map((record) => record.code)
+    return roles
   }
 
   async function findSessionToken(userPublicId) {

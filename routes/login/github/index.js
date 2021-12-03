@@ -1,9 +1,8 @@
 'use strict'
-const identity = require('../../../db/access/identity')
-const uuidv4 = require('uuid').v4
 
 module.exports = async function (fastify, opts) {
   const { log } = fastify
+  const uuidv4 = require('uuid').v4
 
   fastify.get('/callback', async function (request, reply) {
     const authToken =
@@ -36,8 +35,7 @@ module.exports = async function (fastify, opts) {
     // user not found; set up new user
     if (!user) {
       const publicId = uuidv4()
-      user = await identity.registerUser(
-        fastify,
+      user = await fastify.data.identity.registerUser(
         'github',
         authToken.access_token,
         userInfo.data,
@@ -48,12 +46,12 @@ module.exports = async function (fastify, opts) {
       reply.setCookie('who', request.userId, fastify.cookieOptions)
     }
 
-    fastify.log.info(`found user: ${JSON.stringify(user)}`)
+    log.debug(`user: ${JSON.stringify(user)}`)
 
     // TODO: check age of token and refresh if too old; use something like next line
     // const newToken = await this.getNewAccessTokenUsingRefreshToken(token.refresh_token)
 
-    const roles = await identity.getUserRoles(fastify, user.id)
+    const roles = await fastify.data.identity.getUserRoles(user.id)
 
     let goTo = 'home'
     if (!roles.find((item) => item === 'member')) {
