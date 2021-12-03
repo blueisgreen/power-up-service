@@ -3,12 +3,13 @@
 const { findUser, grantRoles } = require('../../db/access/identity')
 
 module.exports = async function (fastify, opts) {
-  fastify.get('/query', async function (request, reply) {
-    const user = await findUser(fastify, 'github', '12345')
-    if (user) {
-      reply.send(user)
+  fastify.get('/doit', async function (request, reply) {
+    await fastify.data.identity.blargy()
+    const result = await fastify.data.identity.getUser(request.userId)
+    if (result) {
+      reply.send(result)
     } else {
-      reply.code(404).send('User not found')
+      reply.code(404).send('Not found')
     }
   })
 
