@@ -1,7 +1,5 @@
 'use strict'
 
-const { findUser, grantRoles } = require('../../db/access/identity')
-
 module.exports = async function (fastify, opts) {
   fastify.get('/doit', async function (request, reply) {
     // const result = await fastify.data.identity.getUser(request.userId)
@@ -24,8 +22,7 @@ module.exports = async function (fastify, opts) {
   })
 
   fastify.get('/blargy', async function (request, reply) {
-    const roles = await grantRoles(
-      fastify,
+    const roles = await fastify.data.grantRoles(
       '596b3081-6073-476c-bc9d-d9273ba70f0e',
       ['member', 'editorInChief', 'admin']
     )

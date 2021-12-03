@@ -1,7 +1,6 @@
 'use strict'
 
 const support = require('../../db/access/support')
-const identity = require('../../db/access/identity')
 
 const ERROR_MESSAGE =
   'Oh my, something went dreadfully wrong. This was not your fault.'
@@ -35,7 +34,8 @@ module.exports = async function (fastify, opts) {
     async (request, reply) => {
       let userId = null
       if (request.user) {
-        const user = await identity.getUser(fastify, request.user.publicId)
+        // FIXME: add function to get user by public ID
+        const user = await fastify.data.identity.getUser(request.user.publicId)
         if (user) {
           userId = user.id
         } else {
