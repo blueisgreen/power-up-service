@@ -2,8 +2,8 @@
 
 module.exports = async function (fastify, opts) {
   fastify.get('/doit', async function (request, reply) {
-    // const result = await fastify.data.identity.getUser(request.userId)
-    // fastify.log.info(fastify.lookups.findPlatform('google').id)
+    const result = await fastify.datatree.identity.findUserWithPublicId(request.userId, 'github')
+    fastify.log.info(fastify.datatree.support)
     // reply.send(JSON.stringify(fastify.lookups.platforms))
     // if (result) {
     //   reply.send(result)

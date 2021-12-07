@@ -11,28 +11,10 @@ const userReturnColumns = [
   'account_status_id',
 ]
 
-module.exports = async function (fastify, options, next) {
+module.exports = (fastify) => {
   const { knex, log } = fastify
 
-  fastify.log.info('loading power up data access')
-  const identity = {
-    getUser,
-    findUserWithPublicId,
-    findUserFromSocialProfile,
-    registerUser,
-    getUserRoles,
-    grantRoles,
-    agreeToTerms,
-    agreeToCookies,
-    agreeToEmailComms,
-    updateUser,
-    findSessionToken,
-    setSessionToken,
-  }
-  fastify.decorate('data', { identity })
-  next()
-
-  async function getUser(userId) {
+  const getUser = async (userId) => {
     log.debug('identity plugin: getUser')
     const userRecord = await knex('users')
       .returning(userReturnColumns)
@@ -40,7 +22,7 @@ module.exports = async function (fastify, options, next) {
     return userRecord.length > 0 ? userRecord[0] : null
   }
 
-  async function findUserWithPublicId(userPublicId, platform) {
+  const findUserWithPublicId = async (userPublicId, platform) => {
     log.debug('identity plugin: findUserWithPublicId')
     const platformId = fastify.lookups.findPlatform(platform).id
     let profileRecord = await knex('social_profiles')
@@ -59,7 +41,7 @@ module.exports = async function (fastify, options, next) {
     return getUser(profileRecord[0].userId)
   }
 
-  async function findUserFromSocialProfile(platform, profileId) {
+  const findUserFromSocialProfile = async (platform, profileId) => {
     log.debug('identity plugin: findUserFromSocialProfile')
 
     const platformId = fastify.lookups.findPlatform(platform).id
@@ -80,12 +62,12 @@ module.exports = async function (fastify, options, next) {
     return getUser(profileRecord[0].userId)
   }
 
-  async function registerUser(
+  const registerUser = async (
     platform,
     accessToken,
     socialProfile,
     userPublicId
-  ) {
+  ) => {
     log.debug('identity plugin: registerUser')
 
     const platformId = fastify.lookups.findPlatform(platform).id
@@ -111,7 +93,7 @@ module.exports = async function (fastify, options, next) {
     return getUser(id)
   }
 
-  async function getUserRoles(userId) {
+  const getUserRoles = async (userId) => {
     log.debug('identity plugin: getUserRoles')
     const roleRecords = await knex('system_codes')
       .select('system_codes.code')
@@ -121,7 +103,7 @@ module.exports = async function (fastify, options, next) {
     return roles
   }
 
-  async function grantRoles(userId, roles) {
+  const grantRoles = async (userId, roles) => {
     log.debug('identity plugin: grantRoles')
     const roleMap = await knex('system_codes as a')
       .join('system_codes as b', 'a.parent_id', '=', 'b.id')
@@ -141,7 +123,7 @@ module.exports = async function (fastify, options, next) {
     return true
   }
 
-  async function agreeToTerms(publicId) {
+  const agreeToTerms = async (publicId) => {
     log.debug('identity plugin: agreeToTerms')
     const now = new Date()
     await knex('users').where('public_id', '=', publicId).update({
@@ -151,7 +133,7 @@ module.exports = async function (fastify, options, next) {
     return true
   }
 
-  async function agreeToCookies(publicId) {
+  const agreeToCookies = async (publicId) => {
     log.debug('identity plugin: agreeToCookies')
     const now = new Date()
     await knex('users').where('public_id', '=', publicId).update({
@@ -161,7 +143,7 @@ module.exports = async function (fastify, options, next) {
     return true
   }
 
-  async function agreeToEmailComms(publicId) {
+  const agreeToEmailComms = async (publicId) => {
     log.debug('identity plugin: agreeToEmailComms')
     const now = new Date()
     await knex('users').where('public_id', '=', publicId).update({
@@ -171,7 +153,7 @@ module.exports = async function (fastify, options, next) {
     return true
   }
 
-  async function updateUser(userPublicId, changes) {
+  const updateUser = async (userPublicId, changes) => {
     log.debug('identity plugin: updateUser')
     const now = new Date()
     const userBefore = await getUser(fastify, userPublicId)
@@ -203,14 +185,14 @@ module.exports = async function (fastify, options, next) {
     return await getUser(userId)
   }
 
-  async function findSessionToken(userPublicId) {
+  const findSessionToken = async (userPublicId) => {
     log.debug('identity plugin: findSessionToken')
     return await knex('user_sessions')
       .select('auth_token')
       .where('user_public_id', '=', userPublicId)
   }
 
-  async function setSessionToken(userPublicId, sessionToken) {
+  const setSessionToken = async (userPublicId, sessionToken) => {
     log.debug('identity plugin: setSessionToken')
     await knex('user_sessions')
       .insert({
@@ -219,5 +201,20 @@ module.exports = async function (fastify, options, next) {
       })
       .onConflict('user_public_id')
       .merge()
+  }
+
+  return {
+    getUser,
+    findUserWithPublicId,
+    findUserFromSocialProfile,
+    registerUser,
+    getUserRoles,
+    grantRoles,
+    agreeToTerms,
+    agreeToCookies,
+    agreeToEmailComms,
+    updateUser,
+    findSessionToken,
+    setSessionToken,
   }
 }

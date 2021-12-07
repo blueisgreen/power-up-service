@@ -1,16 +1,11 @@
 'use strict'
 
-const support = require('../../db/access/support')
-
-const ERROR_MESSAGE =
-  'Oh my, something went dreadfully wrong. This was not your fault.'
-
 module.exports = async function (fastify, opts) {
   /**
    * Get all inquiries.
    */
   fastify.get('/', async (request, reply) => {
-    const inquiries = await support.getInquiries(fastify)
+    const inquiries = await fastify.data.support.getInquiries()
     reply.send(inquiries)
   })
 
@@ -19,7 +14,7 @@ module.exports = async function (fastify, opts) {
    */
   fastify.get('/user/:id', async (request, reply) => {
     const id = request.params.id
-    const inquiries = await support.getInquiriesByUser(fastify, id)
+    const inquiries = await fastify.data.support.getInquiriesByUser(id)
     reply.send(inquiries)
   })
 
@@ -42,7 +37,10 @@ module.exports = async function (fastify, opts) {
           console.log('weird, logged in user not found')
         }
       }
-      const inquiry = await support.createInquiry(fastify, request.body, userId)
+      const inquiry = await fastify.data.support.createInquiry(
+        request.body,
+        userId
+      )
       reply.send(inquiry)
     }
   )
@@ -51,7 +49,7 @@ module.exports = async function (fastify, opts) {
    * Get a specific inquiry.
    */
   fastify.get('/:id', async (request, reply) => {
-    const inquiry = await support.getInquiry(fastify, request.params.id)
+    const inquiry = await fastify.data.support.getInquiry(request.params.id)
     if (!inquiry) {
       reply.code(404).send()
     }
@@ -67,8 +65,7 @@ module.exports = async function (fastify, opts) {
       preValidation: fastify.preValidation,
     },
     async (request, reply) => {
-      const inquiries = await support.getRelatedInquiries(
-        fastify,
+      const inquiries = await fastify.data.support.getRelatedInquiries(
         request.params.id
       )
       reply.send(inquiries)
