@@ -29,8 +29,9 @@ module.exports = async function (fastify, opts) {
     async (request, reply) => {
       let userId = null
       if (request.user) {
-        // FIXME: add function to get user by public ID
-        const user = await fastify.data.identity.getUser(request.user.publicId)
+        const user = await fastify.data.identity.getUserByPublicId(
+          request.user.publicId
+        )
         if (user) {
           userId = user.id
         } else {

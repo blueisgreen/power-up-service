@@ -22,6 +22,14 @@ module.exports = (fastify) => {
     return userRecord.length > 0 ? userRecord[0] : null
   }
 
+  const getUserWithPublicId = async (userPublicId) => {
+    log.debug('identity plugin: getUserWithPublicId')
+    const userRecord = await knex('users')
+      .returning(userReturnColumns)
+      .where('public_id', '=', userPublicId)
+    return userRecord.length > 0 ? userRecord[0] : null
+  }
+
   const findUserWithPublicId = async (userPublicId, platform) => {
     log.debug('identity plugin: findUserWithPublicId')
     const platformId = fastify.lookups.findPlatform(platform).id
@@ -205,6 +213,7 @@ module.exports = (fastify) => {
 
   return {
     getUser,
+    getUserWithPublicId,
     findUserWithPublicId,
     findUserFromSocialProfile,
     registerUser,

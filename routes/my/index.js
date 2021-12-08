@@ -27,8 +27,7 @@ module.exports = async function (fastify, opts) {
       preValidation: fastify.preValidation,
     },
     async (request, reply) => {
-      // FIXME: lost with public ID
-      const user = await fastify.data.identity.getUser(request.user.publicId)
+      const user = await fastify.data.identity.getUserWithPublicId(request.user.publicId)
       reply.send(user)
     }
   )
@@ -41,10 +40,10 @@ module.exports = async function (fastify, opts) {
       preValidation: fastify.preValidation,
     },
     async (request, reply) => {
-      const userId = request.user.publicId
+      const userPublicId = request.user.publicId
       const updates = request.body
 
-      if (userId === null) {
+      if (userPublicId === null) {
         reply.code(400).send({
           error: {
             message: 'User must be making the request',
@@ -56,7 +55,7 @@ module.exports = async function (fastify, opts) {
             message: 'Profile updates are required',
           },
         })
-      } else if (updates.userId && updates.userId !== userId) {
+      } else if (updates.userId && updates.userId !== userPublicId) {
         reply.code(400).send({
           error: {
             message: 'User must be changing own profile',
@@ -64,7 +63,7 @@ module.exports = async function (fastify, opts) {
         })
       }
 
-      const user = await fastify.data.identity.updateUser(userId, updates)
+      const user = await fastify.data.identity.updateUser(userPublicId, updates)
       reply.send(user)
     }
   )
