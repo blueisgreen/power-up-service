@@ -62,7 +62,7 @@ module.exports = (fastify) => {
 
     if (profileRecord.length < 1) {
       log.info(
-        `user not found with social ID '${profileId}' on platform '${provider}'`
+        `user not found with social ID '${profileId}' on platform '${platform}'`
       )
       return null
     }
@@ -195,9 +195,11 @@ module.exports = (fastify) => {
 
   const findSessionToken = async (userPublicId) => {
     log.debug('identity plugin: findSessionToken')
-    return await knex('user_sessions')
+    const result = await knex('user_sessions')
       .select('auth_token')
       .where('user_public_id', '=', userPublicId)
+
+    return result[0].auth_token
   }
 
   const setSessionToken = async (userPublicId, sessionToken) => {
