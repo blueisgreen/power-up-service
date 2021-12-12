@@ -115,10 +115,7 @@ module.exports = (fastify) => {
 
   const grantRoles = async (userId, roles) => {
     log.debug('identity plugin: grantRoles')
-    const roleMap = await knex('system_codes as a')
-      .join('system_codes as b', 'a.parent_id', '=', 'b.id')
-      .where('b.code', '=', 'role')
-      .select('a.*')
+    const roleMap = fastify.lookups.roles
     info.debug(roleMap)
     const roleIdsToGrant = roles.map((role) => {
       const roleToUse = roleMap.find((element) => element.code === role)
@@ -188,7 +185,8 @@ module.exports = (fastify) => {
 
     const userId = result[0].id
 
-    if (changes.agreeToTerms) {
+    // if (changes.agreeToTerms) {
+    if (true) {
       await grantRoles(userId, ['member'])
     }
 
