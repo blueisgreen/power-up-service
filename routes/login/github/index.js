@@ -53,8 +53,11 @@ module.exports = async function (fastify, opts) {
 
     const roles = await fastify.data.identity.getUserRoles(user.id)
 
+    log.debug('figure out where to return')
+
     let goTo = 'home'
-    if (!roles.find((item) => item === 'member')) {
+    if (roles.length === 0 || !roles.find((item) => item === 'member')) {
+      log.debug('user needs to register to complete membership')
       goTo = 'register'
     }
 
@@ -71,6 +74,6 @@ module.exports = async function (fastify, opts) {
     reply.setCookie('who', user.public_id, fastify.cookieOptions)
     reply.setCookie('token', token, fastify.cookieOptions)
     reply.header('Authorization', `Bearer ${token}`)
-    reply.redirect(`${process.env.SPA_LANDING_URL}?token=${token}&goTo=${goTo}`)
+    reply.redirect(`${process.env.SPA_LANDING_URL}?goTo=${goTo}&token=${token}`)
   })
 }

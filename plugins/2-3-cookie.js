@@ -27,7 +27,7 @@ module.exports = fp(async function (fastify, opts) {
   })
 
   fastify.addHook('onRequest', async (request, reply) => {
-    fastify.log.info('evaluating cookies')
+    fastify.log.debug('evaluating cookies')
 
     // look for a cookie that IDs the user
     const userId = request.cookies.who
