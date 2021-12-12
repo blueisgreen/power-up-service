@@ -11,7 +11,7 @@
   },
   "scripts": {
     "start": "fastify start -l info app.js",
-    "dev": "fastify start -w -l debug -P app.js",
+    "dev": "fastify start -w -l info -P app.js",
     "test": "tap \"test/**/*.test.js\"",
     "docs": "fastify docs",
     "help": "fastify help",

@@ -1,6 +1,6 @@
 'use strict'
 
-const GOTO_HOME = 'home'
+const GOTO_HOME = 'home'  // FIXME: extract method from github login to determine redirect target
 const validProviderIds = ['github']
 
 module.exports = async function (fastify, opts) {

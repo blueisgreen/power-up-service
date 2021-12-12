@@ -166,7 +166,7 @@ module.exports = (fastify) => {
   const updateUser = async (userPublicId, changes) => {
     log.debug('identity plugin: updateUser')
     const now = new Date()
-    const userBefore = await getUser(fastify, userPublicId)
+    const userBefore = await getUserWithPublicId(userPublicId)
     const userAfter = Object.assign({}, userBefore, {
       alias: changes.alias,
       email: changes.email,

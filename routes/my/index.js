@@ -13,9 +13,10 @@ module.exports = async function (fastify, opts) {
       preValidation: fastify.preValidation,
     },
     async (request, reply) => {
-      const user = request.user
-      // const user = await identity.getUser(fastify, publicId)
-      return request.user
+      const user = await fastify.data.identity.getUserWithPublicId(
+        request.user.who
+      )
+      return user
     }
   )
   /**
@@ -27,9 +28,10 @@ module.exports = async function (fastify, opts) {
       preValidation: fastify.preValidation,
     },
     async (request, reply) => {
-      fastify.log.debug(JSON.stringify(request.user))
       fastify.log.info(`look up profile of user: ${request.user.who}`)
-      const user = await fastify.data.identity.getUserWithPublicId(request.user.who)
+      const user = await fastify.data.identity.getUserWithPublicId(
+        request.user.who
+      )
       reply.send(user)
     }
   )
@@ -42,7 +44,7 @@ module.exports = async function (fastify, opts) {
       preValidation: fastify.preValidation,
     },
     async (request, reply) => {
-      const userPublicId = request.user.publicId
+      const userPublicId = request.user.who
       const updates = request.body
 
       if (userPublicId === null) {
@@ -79,7 +81,7 @@ module.exports = async function (fastify, opts) {
     },
     async (request, reply) => {
       try {
-        await fastify.data.identity.agreeToTerms(request.user.publicId)
+        await fastify.data.identity.agreeToTerms(request.user.who)
         reply.code(204).send()
       } catch (err) {
         fastify.log.error(err)
@@ -97,7 +99,7 @@ module.exports = async function (fastify, opts) {
     },
     async (request, reply) => {
       try {
-        await fastify.data.identity.agreeToCookies(request.user.publicId)
+        await fastify.data.identity.agreeToCookies(request.user.who)
         reply.code(204).send()
       } catch (err) {
         reply.code(500).send({ error: ERROR_MESSAGE })
@@ -114,7 +116,7 @@ module.exports = async function (fastify, opts) {
     },
     async (request, reply) => {
       try {
-        await fastify.data.agreeToEmailComms(request.user.publicId)
+        await fastify.data.agreeToEmailComms(request.user.who)
         reply.code(204).send()
       } catch (err) {
         reply.code(500).send({ error: ERROR_MESSAGE })
@@ -129,7 +131,7 @@ module.exports = async function (fastify, opts) {
     },
     async (request, reply) => {
       const inquiries = await fastify.data.support.getInquiriesByUser(
-        request.user.publicId
+        request.user.who
       )
       reply.send(inquiries)
     }
