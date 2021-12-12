@@ -11,6 +11,8 @@ const userReturnColumns = [
   'account_status_id',
 ]
 
+// TODO: verify that userPublicId parameter is uuid or wrap query in try-catch and handle
+
 module.exports = (fastify) => {
   const { knex, log } = fastify
 

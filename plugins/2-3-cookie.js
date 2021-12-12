@@ -30,8 +30,8 @@ module.exports = fp(async function (fastify, opts) {
     fastify.log.info('evaluating cookies')
 
     // look for a cookie that IDs the user
-    let userId = request.cookies.who
-    if (!!userId) {
+    const userId = request.cookies.who
+    if (userId && userId !== 'undefined') {
       fastify.log.info(`user is ${userId}`)
       request.anonymous = false
       request.userId = userId

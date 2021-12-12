@@ -27,6 +27,7 @@ module.exports = async function (fastify, opts) {
       preValidation: fastify.preValidation,
     },
     async (request, reply) => {
+      fastify.log.info(`look up profile of user: ${request.user.publicId}`)
       const user = await fastify.data.identity.getUserWithPublicId(request.user.publicId)
       reply.send(user)
     }
