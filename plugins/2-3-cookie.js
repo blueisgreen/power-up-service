@@ -12,8 +12,6 @@ module.exports = fp(async function (fastify, opts) {
   let expDate = new Date()
   expDate.setDate(expDate.getDate() + 30)
 
-  fastify.decorateRequest('userID', '')
-  fastify.decorateRequest('anonymous', false)
   fastify.decorate('cookieOptions', {
     path: '/',
     sameSite: 'Strict',
@@ -25,16 +23,18 @@ module.exports = fp(async function (fastify, opts) {
     sameSite: 'Strict',
     expires: expDate,
   })
+  fastify.decorateRequest('userKey', '')  // user's public ID
+  fastify.decorateRequest('anonymous', true)
 
   fastify.addHook('onRequest', async (request, reply) => {
     fastify.log.debug('evaluating cookies')
 
     // look for a cookie that IDs the user
-    const userId = request.cookies.who
-    if (userId && userId !== 'undefined') {
-      fastify.log.info(`user is ${userId}`)
+    const userKey = request.cookies.who
+    if (userKey && userKey !== 'undefined') {
+      fastify.log.info(`user is ${userKey}`)
       request.anonymous = false
-      request.userId = userId
+      request.userKey = userKey
     } else {
       // handle anonymous
       fastify.log.info('anonymous user')

@@ -1,6 +1,6 @@
 const userReturnColumns = [
   'id',
-  'public_id',
+  'public_id as userKey',
   'alias',
   'email',
   'created_at as createdAt',
