@@ -16,7 +16,7 @@ module.exports = async function (fastify, opts) {
       const user = await fastify.data.identity.getUserWithPublicId(
         request.user.who
       )
-      return user
+      reply.send(user)
     }
   )
   /**
