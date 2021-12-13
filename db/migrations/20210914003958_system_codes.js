@@ -2,7 +2,7 @@ exports.up = function (knex) {
   return knex.schema
     .createTable('system_codes', function (table) {
       table.increments()
-      table.string('public_id').notNullable()
+      table.string('code').notNullable()
       table.string('display_name').notNullable()
       table.integer('parent_id').references('id').inTable('system_codes')
     })
@@ -10,83 +10,83 @@ exports.up = function (knex) {
       return knex('system_codes')
         .insert(
           [
-            { public_id: 'role', display_name: 'Role' },
-            { public_id: 'accountStatus', display_name: 'Account Status' },
-            { public_id: 'socialPlatform', display_name: 'Social Platform' },
+            { code: 'role', display_name: 'Role' },
+            { code: 'accountStatus', display_name: 'Account Status' },
+            { code: 'socialPlatform', display_name: 'Social Platform' },
           ],
-          ['id', 'public_id']
+          ['id', 'code']
         )
         .then((rows) => {
-          const roleCat = rows.find((cat) => cat.public_id === 'role')
+          const roleCat = rows.find((cat) => cat.code === 'role')
           const accountStatusCat = rows.find(
-            (cat) => cat.public_id === 'accountStatus'
+            (cat) => cat.code === 'accountStatus'
           )
           const socialPlatformCat = rows.find(
-            (cat) => cat.public_id === 'socialPlatform'
+            (cat) => cat.code === 'socialPlatform'
           )
           return knex('system_codes').insert([
             {
-              public_id: 'admin',
+              code: 'admin',
               display_name: 'System Administrator',
               parent_id: roleCat.id,
             },
             {
-              public_id: 'editorInChief',
+              code: 'editorInChief',
               display_name: 'Editor in Chief',
               parent_id: roleCat.id,
             },
             {
-              public_id: 'member',
+              code: 'member',
               display_name: 'Member',
               parent_id: roleCat.id,
             },
             {
-              public_id: 'author',
+              code: 'author',
               display_name: 'Author',
               parent_id: roleCat.id,
             },
             {
-              public_id: 'editor',
+              code: 'editor',
               display_name: 'Editor',
               parent_id: roleCat.id,
             },
             {
-              public_id: 'active',
+              code: 'active',
               display_name: 'Active',
               parent_id: accountStatusCat.id,
             },
             {
-              public_id: 'suspended',
+              code: 'suspended',
               display_name: 'Suspended',
               parent_id: accountStatusCat.id,
             },
             {
-              public_id: 'canceled',
+              code: 'canceled',
               display_name: 'Canceled',
               parent_id: accountStatusCat.id,
             },
             {
-              public_id: 'archived',
+              code: 'archived',
               display_name: 'Archived',
               parent_id: accountStatusCat.id,
             },
             {
-              public_id: 'github',
+              code: 'github',
               display_name: 'GitHub',
               parent_id: socialPlatformCat.id,
             },
             {
-              public_id: 'google',
+              code: 'google',
               display_name: 'Google',
               parent_id: socialPlatformCat.id,
             },
             {
-              public_id: 'linkedIn',
+              code: 'linkedIn',
               display_name: 'Linked In',
               parent_id: socialPlatformCat.id,
             },
             {
-              public_id: 'twitter',
+              code: 'twitter',
               display_name: 'Twitter',
               parent_id: socialPlatformCat.id,
             },

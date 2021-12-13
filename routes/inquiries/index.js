@@ -1,29 +1,25 @@
 'use strict'
 
-const support = require('../../db/access/support')
-const identity = require('../../db/access/identity')
-
-const ERROR_MESSAGE =
-  'Oh my, something went dreadfully wrong. This was not your fault.'
-
 module.exports = async function (fastify, opts) {
   /**
-   * Get all inquiries. TODO: needs to limit return set
+   * Get all inquiries.
    */
   fastify.get('/', async (request, reply) => {
-    const inquiries = await support.getInquiries(fastify)
-    reply.send(inquiries)
-  })
-
-  // FIXME - figure out better way to get user ID
-  fastify.get('/user/:id', async (request, reply) => {
-    const id = request.params.id
-    const inquiries = await support.getInquiriesByUser(fastify, id)
+    const inquiries = await fastify.data.support.getInquiries()
     reply.send(inquiries)
   })
 
   /**
-   * Get all inquiries. TODO: needs to limit return set
+   * Get inquiries for a given user.
+   */
+  fastify.get('/user/:id', async (request, reply) => {
+    const id = request.params.id
+    const inquiries = await fastify.data.support.getInquiriesByUser(id)
+    reply.send(inquiries)
+  })
+
+  /**
+   * Create an inquiry.
    */
   fastify.post(
     '/',
@@ -33,27 +29,47 @@ module.exports = async function (fastify, opts) {
     async (request, reply) => {
       let userId = null
       if (request.user) {
-        const user = await identity.getUser(fastify, request.user.publicId)
+        const user = await fastify.data.identity.getUserByPublicId(
+          request.user.publicId
+        )
         if (user) {
           userId = user.id
         } else {
           console.log('weird, logged in user not found')
         }
       }
-      const inquiry = await support.createInquiry(fastify, request.body, userId)
+      const inquiry = await fastify.data.support.createInquiry(
+        request.body,
+        userId
+      )
       reply.send(inquiry)
     }
   )
 
   /**
-   * Create a new inquiry record.
+   * Get a specific inquiry.
    */
   fastify.get('/:id', async (request, reply) => {
-    const id = request.params.id
-    const inquiry = await support.getInquiry(fastify, id)
+    const inquiry = await fastify.data.support.getInquiry(request.params.id)
     if (!inquiry) {
       reply.code(404).send()
     }
     reply.send(inquiry)
   })
+
+  /**
+   * Get responses to a given inquiry.
+   */
+  fastify.get(
+    '/related/:id',
+    {
+      preValidation: fastify.preValidation,
+    },
+    async (request, reply) => {
+      const inquiries = await fastify.data.support.getRelatedInquiries(
+        request.params.id
+      )
+      reply.send(inquiries)
+    }
+  )
 }

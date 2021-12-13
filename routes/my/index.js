@@ -1,8 +1,5 @@
 'use strict'
 
-const identity = require('../../db/access/identity')
-const support = require('../../db/access/support')
-
 const ERROR_MESSAGE =
   'Oh my, something went dreadfully wrong. This was not your fault.'
 
@@ -16,9 +13,10 @@ module.exports = async function (fastify, opts) {
       preValidation: fastify.preValidation,
     },
     async (request, reply) => {
-      const user = request.user
-      // const user = await identity.getUser(fastify, publicId)
-      return request.user
+      const user = await fastify.data.identity.getUserWithPublicId(
+        request.user.who
+      )
+      reply.send(user)
     }
   )
   /**
@@ -30,7 +28,10 @@ module.exports = async function (fastify, opts) {
       preValidation: fastify.preValidation,
     },
     async (request, reply) => {
-      const user = await identity.getUser(fastify, request.user.publicId)
+      fastify.log.info(`look up profile of user: ${request.user.who}`)
+      const user = await fastify.data.identity.getUserWithPublicId(
+        request.user.who
+      )
       reply.send(user)
     }
   )
@@ -43,10 +44,10 @@ module.exports = async function (fastify, opts) {
       preValidation: fastify.preValidation,
     },
     async (request, reply) => {
-      const userId = request.user.publicId
+      const userPublicId = request.user.who
       const updates = request.body
 
-      if (userId === null) {
+      if (userPublicId === null) {
         reply.code(400).send({
           error: {
             message: 'User must be making the request',
@@ -58,7 +59,7 @@ module.exports = async function (fastify, opts) {
             message: 'Profile updates are required',
           },
         })
-      } else if (updates.userId && updates.userId !== userId) {
+      } else if (updates.userId && updates.userId !== userPublicId) {
         reply.code(400).send({
           error: {
             message: 'User must be changing own profile',
@@ -66,7 +67,7 @@ module.exports = async function (fastify, opts) {
         })
       }
 
-      const user = await identity.updateUser(fastify, userId, updates)
+      const user = await fastify.data.identity.updateUser(userPublicId, updates)
       reply.send(user)
     }
   )
@@ -80,7 +81,7 @@ module.exports = async function (fastify, opts) {
     },
     async (request, reply) => {
       try {
-        await identity.agreeToTerms(fastify, request.user.publicId)
+        await fastify.data.identity.agreeToTerms(request.user.who)
         reply.code(204).send()
       } catch (err) {
         fastify.log.error(err)
@@ -98,7 +99,7 @@ module.exports = async function (fastify, opts) {
     },
     async (request, reply) => {
       try {
-        await identity.agreeToCookies(fastify, request.user.publicId)
+        await fastify.data.identity.agreeToCookies(request.user.who)
         reply.code(204).send()
       } catch (err) {
         reply.code(500).send({ error: ERROR_MESSAGE })
@@ -115,7 +116,7 @@ module.exports = async function (fastify, opts) {
     },
     async (request, reply) => {
       try {
-        await identity.agreeToEmailComms(fastify, request.user.publicId)
+        await fastify.data.agreeToEmailComms(request.user.who)
         reply.code(204).send()
       } catch (err) {
         reply.code(500).send({ error: ERROR_MESSAGE })
@@ -129,9 +130,8 @@ module.exports = async function (fastify, opts) {
       preValidation: fastify.preValidation,
     },
     async (request, reply) => {
-      const inquiries = await support.getInquiriesByUser(
-        fastify,
-        request.user.publicId
+      const inquiries = await fastify.data.support.getInquiriesByUser(
+        request.user.who
       )
       reply.send(inquiries)
     }
@@ -143,11 +143,19 @@ module.exports = async function (fastify, opts) {
       preValidation: fastify.preValidation,
     },
     async (request, reply) => {
-      const inquiries = await support.getRelatedInquiries(
-        fastify,
+      const inquiries = await fastify.data.support.getRelatedInquiries(
         request.params.id
       )
       reply.send(inquiries)
     }
   )
+
+  fastify.get('/cookies', {}, async (request, reply) => {
+    reply.setCookie(
+      'who',
+      '3002a7d3-f58a-4afa-965b-c69b08bf888f',
+      fastify.cookieOptions
+    )
+    reply.send(request.cookies)
+  })
 }
