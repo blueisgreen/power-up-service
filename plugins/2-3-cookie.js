@@ -27,17 +27,17 @@ module.exports = fp(async function (fastify, opts) {
   })
 
   fastify.addHook('onRequest', async (request, reply) => {
-    fastify.log.info('evaluating cookies')
+    fastify.log.debug('evaluating cookies')
 
     // look for a cookie that IDs the user
     let userId = request.cookies.who
     if (!!userId) {
-      fastify.log.info(`user is ${userId}`)
+      fastify.log.debug(`user is ${userId}`)
       request.anonymous = false
       request.userId = userId
     } else {
       // handle anonymous
-      fastify.log.info('anonymous user')
+      fastify.log.debug('anonymous user')
       request.anonymous = true
     }
 

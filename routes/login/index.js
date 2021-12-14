@@ -29,7 +29,7 @@ module.exports = async function (fastify, opts) {
           if (validToken) {
             log.debug(`session token found: ${JSON.stringify(validToken)}`)
             const who = validToken.who
-
+            log.debug(`user ID from token: ${who}`)
             reply.setCookie('who', who, fastify.cookieOptions)
             reply.setCookie('token', token, fastify.cookieOptions)
             reply.header('Authorization', `Bearer ${token}`)
