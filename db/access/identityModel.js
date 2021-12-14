@@ -1,6 +1,6 @@
 const userReturnColumns = [
   'id',
-  'public_id',
+  'public_id as userKey',
   'alias',
   'email',
   'created_at as createdAt',
@@ -10,6 +10,8 @@ const userReturnColumns = [
   'email_comms_accepted_at as emailCommsAcceptedAt',
   'account_status_id',
 ]
+
+// TODO: verify that userPublicId parameter is uuid or wrap query in try-catch and handle
 
 module.exports = (fastify) => {
   const { knex, log } = fastify
@@ -113,10 +115,7 @@ module.exports = (fastify) => {
 
   const grantRoles = async (userId, roles) => {
     log.debug('identity plugin: grantRoles')
-    const roleMap = await knex('system_codes as a')
-      .join('system_codes as b', 'a.parent_id', '=', 'b.id')
-      .where('b.code', '=', 'role')
-      .select('a.*')
+    const roleMap = fastify.lookups.roles
     info.debug(roleMap)
     const roleIdsToGrant = roles.map((role) => {
       const roleToUse = roleMap.find((element) => element.code === role)
@@ -164,7 +163,7 @@ module.exports = (fastify) => {
   const updateUser = async (userPublicId, changes) => {
     log.debug('identity plugin: updateUser')
     const now = new Date()
-    const userBefore = await getUser(fastify, userPublicId)
+    const userBefore = await getUserWithPublicId(userPublicId)
     const userAfter = Object.assign({}, userBefore, {
       alias: changes.alias,
       email: changes.email,
@@ -186,7 +185,8 @@ module.exports = (fastify) => {
 
     const userId = result[0].id
 
-    if (changes.agreeToTerms) {
+    // if (changes.agreeToTerms) {
+    if (true) {
       await grantRoles(userId, ['member'])
     }
 

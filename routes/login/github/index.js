@@ -28,8 +28,8 @@ module.exports = async function (fastify, opts) {
     // was anonymous but user was found; no longer anonymous
     if (request.anonymous && user) {
       request.anonymous = false
-      request.userId = user.public_id
-      reply.setCookie('who', user.public_id, fastify.cookieOptions)
+      request.userId = user.userKey
+      reply.setCookie('who', request.userId, fastify.cookieOptions)
     }
 
     // user not found; set up new user
@@ -43,7 +43,7 @@ module.exports = async function (fastify, opts) {
       )
       // no longer anonymous
       request.anonymous = false
-      reply.setCookie('who', request.userId, fastify.cookieOptions)
+      reply.setCookie('who', user.userKey, fastify.cookieOptions)
     }
 
     log.debug(`user: ${JSON.stringify(user)}`)
@@ -53,24 +53,27 @@ module.exports = async function (fastify, opts) {
 
     const roles = await fastify.data.identity.getUserRoles(user.id)
 
+    log.debug('figure out where to return')
+
     let goTo = 'home'
-    if (!roles.find((item) => item === 'member')) {
+    if (roles.length === 0 || !roles.find((item) => item === 'member')) {
+      log.debug('user needs to register to complete membership')
       goTo = 'register'
     }
 
     const token = fastify.jwt.sign({
       user: {
-        who: user.public_id,
+        who: user.userKey,
         alias: user.alias,
         roles,
       },
     })
-    await fastify.data.identity.setSessionToken(user.public_id, token)
+    await fastify.data.identity.setSessionToken(user.userKey, token)
 
     // send things back to client
-    reply.setCookie('who', user.public_id, fastify.cookieOptions)
+    reply.setCookie('who', user.userKey, fastify.cookieOptions)
     reply.setCookie('token', token, fastify.cookieOptions)
     reply.header('Authorization', `Bearer ${token}`)
-    reply.redirect(`${process.env.SPA_LANDING_URL}?token=${token}&goTo=${goTo}`)
+    reply.redirect(`${process.env.SPA_LANDING_URL}?goTo=${goTo}&token=${token}`)
   })
 }

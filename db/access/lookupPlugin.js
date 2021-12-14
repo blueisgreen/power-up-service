@@ -7,6 +7,10 @@ module.exports = async function (fastify, options, next) {
     findPlatform: (code) => {
       return fastify.lookups.platforms.find((item) => item.code === code)
     },
+    roles: await getCodes('role'),
+    findRole: (code) => {
+      return fastify.lookups.roles.find((item) => item.code === code)
+    },
   })
   next()
 

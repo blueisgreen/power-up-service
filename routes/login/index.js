@@ -1,6 +1,6 @@
 'use strict'
 
-const GOTO_HOME = 'home'
+const GOTO_HOME = 'home'  // FIXME: extract method from github login to determine redirect target
 const validProviderIds = ['github']
 
 module.exports = async function (fastify, opts) {
@@ -9,11 +9,11 @@ module.exports = async function (fastify, opts) {
     const pid = request.query.pid
 
     if (!request.anonymous) {
-      log.info(`sign in ${request.userId}`)
+      log.info(`sign in ${request.userKey}`)
 
       // find user with given ID and identity provider
       const user = await fastify.data.identity.findUserWithPublicId(
-        request.userId,
+        request.userKey,
         pid
       )
       if (user !== null) {
@@ -21,7 +21,7 @@ module.exports = async function (fastify, opts) {
 
         // do i have a session token?
         const token = await fastify.data.identity.findSessionToken(
-          user.public_id
+          user.userKey
         )
         if (token) {
           log.debug(`found session token ${token}`)
@@ -41,7 +41,7 @@ module.exports = async function (fastify, opts) {
             log.warn(`stored session token not valid: ${JSON.stringify(token)}`)
           }
         } else {
-          log.debug(`no session token found for ${request.userId}`)
+          log.debug(`no session token found for ${request.userKey}`)
         }
       }
     }
