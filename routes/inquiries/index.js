@@ -29,8 +29,8 @@ module.exports = async function (fastify, opts) {
     async (request, reply) => {
       let userId = null
       if (request.user) {
-        const user = await fastify.data.identity.getUserByPublicId(
-          request.user.publicId
+        const user = await fastify.data.identity.getUserWithPublicId(
+          request.user.who
         )
         if (user) {
           userId = user.id
@@ -38,6 +38,7 @@ module.exports = async function (fastify, opts) {
           console.log('weird, logged in user not found')
         }
       }
+      fastify.log.debug(JSON.stringify(request.body))
       const inquiry = await fastify.data.support.createInquiry(
         request.body,
         userId
