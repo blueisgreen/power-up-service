@@ -28,18 +28,21 @@ module.exports = async function (fastify, opts) {
     log.debug(`found user ${JSON.stringify(user)}`)
 
     // do i have a session token?
-    let token = await fastify.data.identity.findSessionToken(user.userKey)
+    let token = user.public_id
+      ? await fastify.data.identity.findSessionToken(user.public_id)
+      : null
 
     // nope, create one
     if (!token) {
+      const roles = ['member', 'author', 'editor', 'admin']
       token = fastify.jwt.sign({
         user: {
-          who: user.userKey,
+          who: user.public_id,
           alias: user.alias,
           roles,
         },
       })
-      await fastify.data.identity.setSessionToken(user.userKey, token)
+      await fastify.data.identity.setSessionToken(user.public_id, token)
     }
 
     reply.header('Authorization', `Bearer ${token}`)
