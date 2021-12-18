@@ -199,7 +199,7 @@ module.exports = (fastify) => {
       .select('auth_token')
       .where('user_public_id', '=', userPublicId)
 
-    return result[0].auth_token
+    return result.length ? result[0].auth_token : null
   }
 
   const setSessionToken = async (userPublicId, sessionToken) => {
