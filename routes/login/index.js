@@ -43,6 +43,7 @@ module.exports = async function (fastify, opts) {
         },
       })
       await fastify.data.identity.setSessionToken(user.public_id, token)
+      reply.setCookie('token', token, fastify.cookieOptions)
     }
 
     reply.header('Authorization', `Bearer ${token}`)
