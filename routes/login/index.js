@@ -28,23 +28,23 @@ module.exports = async function (fastify, opts) {
     log.debug(`found user ${JSON.stringify(user)}`)
 
     // do i have a session token?
-    let token = user.public_id
-      ? await fastify.data.identity.findSessionToken(user.public_id)
-      : null
+    // let token = user.public_id
+    //   ? await fastify.data.identity.findSessionToken(user.public_id)
+    //   : null
 
     // nope, create one
-    if (!token) {
-      const roles = ['member', 'author', 'editor', 'admin']
-      token = fastify.jwt.sign({
-        user: {
-          who: user.public_id,
-          alias: user.alias,
-          roles,
-        },
-      })
-      await fastify.data.identity.setSessionToken(user.public_id, token)
-      reply.setCookie('token', token, fastify.cookieOptions)
-    }
+    // if (!token) {
+    const roles = ['member', 'author', 'editor', 'admin']
+    const token = fastify.jwt.sign({
+      user: {
+        who: user.public_id,
+        alias: user.alias,
+        roles,
+      },
+    })
+    await fastify.data.identity.setSessionToken(user.public_id, token)
+    reply.setCookie('token', token, fastify.cookieOptionsForUI)
+    // }
 
     reply.header('Authorization', `Bearer ${token}`)
     reply.redirect(`${process.env.SPA_LANDING_URL}?goTo=home&token=${token}`)
