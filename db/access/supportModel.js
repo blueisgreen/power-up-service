@@ -1,25 +1,18 @@
-const columnsToReturn = [
-  'inquiries.id',
-  'inquiries.user_id as userId',
-  'inquiries.created_at as createdAt',
-  'inquiries.relates_to as relatesTo',
-  'purpose',
-  'message',
-]
+const { inquiryColumns } = require('./modelFieldMap')
 
 module.exports = (fastify) => {
   const { knex, log } = fastify
 
   const getInquiries = async () => {
     const inquiries = await knex('inquiries')
-      .select(columnsToReturn)
+      .select(inquiryColumns)
       .orderBy('created_at', 'desc')
     return inquiries
   }
 
   const getInquiriesByUser = async (userPublicId) => {
     const inquiries = await knex('inquiries')
-      .select(columnsToReturn)
+      .select(inquiryColumns)
       .join('users', 'users.id', '=', 'inquiries.user_id')
       .where('users.public_id', '=', userPublicId)
       .whereNull('relates_to')
@@ -29,7 +22,7 @@ module.exports = (fastify) => {
 
   const getRelatedInquiries = async (relatedId) => {
     const related = await knex('inquiries')
-      .select(columnsToReturn)
+      .select(inquiryColumns)
       .where('relates_to', '=', relatedId)
       .orderBy('inquiries.created_at', 'asc')
     return related
@@ -37,7 +30,7 @@ module.exports = (fastify) => {
 
   const getInquiry = async (id) => {
     const inquiry = await knex('inquiries')
-      .select(columnsToReturn)
+      .select(inquiryColumns)
       .where('id', '=', id)
     return inquiry
   }
@@ -54,7 +47,7 @@ module.exports = (fastify) => {
       data['relates_to'] = relates_to
     }
     const inquiryRecord = await knex('inquiries')
-      .returning(columnsToReturn)
+      .returning(inquiryColumns)
       .insert(data)
     return inquiryRecord[0]
   }

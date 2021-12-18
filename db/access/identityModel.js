@@ -1,15 +1,4 @@
-const userReturnColumns = [
-  'id',
-  'public_id as userKey',
-  'alias',
-  'email',
-  'created_at as createdAt',
-  'updated_at as updatedAt',
-  'terms_accepted_at as termsAcceptedAt',
-  'cookies_accepted_at as cookiesAcceptedAt',
-  'email_comms_accepted_at as emailCommsAcceptedAt',
-  'account_status_id',
-]
+const { userColumns } = require('./modelFieldMap')
 
 // TODO: verify that userPublicId parameter is uuid or wrap query in try-catch and handle
 
@@ -19,7 +8,7 @@ module.exports = (fastify) => {
   const getUser = async (userId) => {
     log.debug('identity plugin: getUser')
     const userRecord = await knex('users')
-      .returning(userReturnColumns)
+      .returning(userColumns)
       .where('id', '=', userId)
     return userRecord.length > 0 ? userRecord[0] : null
   }
@@ -27,7 +16,7 @@ module.exports = (fastify) => {
   const getUserWithPublicId = async (userPublicId) => {
     log.debug('identity plugin: getUserWithPublicId')
     const userRecord = await knex('users')
-      .returning(userReturnColumns)
+      .returning(userColumns)
       .where('public_id', '=', userPublicId)
     return userRecord.length > 0 ? userRecord[0] : null
   }
