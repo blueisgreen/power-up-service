@@ -71,6 +71,11 @@ exports.up = function (knex) {
               parent_id: accountStatusCat.id,
             },
             {
+              code: 'bypass',
+              display_name: 'Bypass',
+              parent_id: socialPlatformCat.id,
+            },
+            {
               code: 'github',
               display_name: 'GitHub',
               parent_id: socialPlatformCat.id,
