@@ -1,6 +1,7 @@
 const USERS = 'users'
 const INQUIRIES = 'inquiries'
-const ACTIVITIES = 'activities'
+const ACTIONS = 'actions'
+const ACTIVITIES = 'activities' // old name, replaced by Actions
 
 exports.up = function (knex) {
   return knex.schema
@@ -14,7 +15,7 @@ exports.up = function (knex) {
       table.foreign('user_id').references('id').inTable(USERS)
       table.foreign('relates_to').references('id').inTable(INQUIRIES)
     })
-    .createTable(ACTIVITIES, (table) => {
+    .createTable(ACTIONS, (table) => {
       table.increments('id')
       table.timestamp('created_at').defaultTo(knex.fn.now())
       table.string('action_code')
@@ -25,5 +26,8 @@ exports.up = function (knex) {
 }
 
 exports.down = function (knex) {
-  return knex.schema.dropTableIfExists(INQUIRIES).dropTableIfExists(ACTIVITIES)
+  return knex.schema
+    .dropTableIfExists(INQUIRIES)
+    .dropTableIfExists(ACTIONS)
+    .dropTableIfExists(ACTIVITIES)
 }
