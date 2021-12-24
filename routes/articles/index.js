@@ -47,7 +47,8 @@ module.exports = async function (fastify, opts) {
   fastify.post('/', async (req, reply) => {
     // look up alias or whatever a good default value for byline would be
     // const author = req.user | 'Lord of the Galaxy'
-    const author = 'Lord of the Galaxy'
+    const suggestedByline = req.user.alias
+    const author = suggestedByline || 'Lord of the Galaxy'
     console.log(author)
     // const alias = await knex('users')
     //   .select('alias')
