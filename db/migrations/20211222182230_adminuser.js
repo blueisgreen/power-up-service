@@ -24,6 +24,8 @@ exports.up = function (knex) {
           social_id: 'blargyblargypants',
           access_token: 'openthedoorandletmein-notbythehairofmychinnychinchin',
         })
+        .onConflict(['user_id', 'social_platform_id'])
+        .ignore()
       console.log('profile', profile)
     })
 }
