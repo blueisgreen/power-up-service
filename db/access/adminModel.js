@@ -1,4 +1,4 @@
-const { userColumns } = require('./modelFieldMap')
+const { userColumns, actionColumns } = require('./modelFieldMap')
 
 module.exports = (fastify) => {
   const { knex, log } = fastify
@@ -9,7 +9,17 @@ module.exports = (fastify) => {
     return users
   }
 
+  const getActions = async () => {
+    log.debug('adminModel.getActions')
+    const results = await knex('actions')
+      .select(actionColumns)
+      .orderBy('createdAt', 'desc')
+      .limit(100)
+    return results
+  }
+
   return {
     getUsers,
+    getActions,
   }
 }
