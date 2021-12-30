@@ -6,6 +6,8 @@ exports.up = function (knex) {
       alias: 'Zanzibar',
       email: 'zanzibar@happyspiritpublishing.com',
     })
+    .onConflict('alias')
+    .merge()
     .then(async (userRow) => {
       const zanzibar = userRow[0]
       const codeRow = await knex('system_codes')
@@ -27,16 +29,21 @@ exports.up = function (knex) {
 }
 
 exports.down = function (knex) {
-  return knex('social_profiles')
-    .where(
-      'access_token',
-      '=',
-      'openthedoorandletmein-notbythehairofmychinnychinchin'
-    )
-    .del()
-    .then(() => {
-      knex('users')
-        .where({ public_id: 'd25a4ac6-b1f2-4cc0-85f0-f85b9e5a703e' })
-        .del()
-    })
+  return async () => {
+    await knex('social_profiles')
+      .where(
+        'access_token',
+        '=',
+        'openthedoorandletmein-notbythehairofmychinnychinchin'
+      )
+      .del()
+
+    await knex('user_sessions')
+      .where('user_public_id', '=', 'd25a4ac6-b1f2-4cc0-85f0-f85b9e5a703e')
+      .del()
+
+    await knex('users')
+      .where('public_id', '=', 'd25a4ac6-b1f2-4cc0-85f0-f85b9e5a703e')
+      .del()
+  }
 }
