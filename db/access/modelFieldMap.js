@@ -20,7 +20,15 @@ const inquiryColumns = [
   'message',
 ]
 
+const actionColumns = [
+  'created_at as createdAt',
+  'action_code as actionCode',
+  'user_public_id as userKey',
+  'details',
+]
+
 module.exports = {
   userColumns,
   inquiryColumns,
+  actionColumns,
 }
