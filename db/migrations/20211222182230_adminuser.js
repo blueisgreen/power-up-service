@@ -27,7 +27,16 @@ exports.up = function (knex) {
 }
 
 exports.down = function (knex) {
-  return knex('users')
-    .where({ public_id: 'd25a4ac6-b1f2-4cc0-85f0-f85b9e5a703e' })
+  return knex('social_profiles')
+    .where(
+      'access_token',
+      '=',
+      'openthedoorandletmein-notbythehairofmychinnychinchin'
+    )
     .del()
+    .then(() => {
+      knex('users')
+        .where({ public_id: 'd25a4ac6-b1f2-4cc0-85f0-f85b9e5a703e' })
+        .del()
+    })
 }
