@@ -6,7 +6,7 @@ exports.up = function (knex) {
       alias: 'Zanzibar',
       email: 'zanzibar@happyspiritpublishing.com',
     })
-    .onConflict('alias')
+    .onConflict('public_id')
     .merge()
     .then(async (userRow) => {
       const zanzibar = userRow[0]
