@@ -1,6 +1,6 @@
 {
   "name": "power-up-service",
-  "version": "1.0.0",
+  "version": "0.5.0",
   "description": "Power Up interactive magazine service",
   "main": "app.js",
   "directories": {
