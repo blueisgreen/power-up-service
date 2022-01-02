@@ -16,8 +16,8 @@ module.exports = async function (fastify, opts) {
     // no go - unknown user and requesting ID provider that is not supported
     if (request.anonymous) {
       if (!isProviderSupported(pid)) {
-        reply.code(401)
         // FIXME: would be best to redirect to main URL; or don't redirect in the first place by handling this as an API call
+        reply.code(401)
         reply.send("I hear you knocking, but you can't come in.")
         return
       }

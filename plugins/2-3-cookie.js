@@ -25,30 +25,4 @@ module.exports = fp(async function (fastify, opts) {
     sameSite: 'Strict',
     expires: expDate,
   })
-  fastify.decorateRequest('userKey', '') // user's public ID
-  fastify.decorateRequest('anonymous', true)
-
-  fastify.addHook('onRequest', async (request, reply) => {
-    log.debug('evaluating cookies')
-
-    // look for a cookie that IDs the user
-    const userKey = request.cookies.who
-
-    if (userKey && userKey !== 'undefined') {
-      log.info(`user is ${userKey}`)
-      request.anonymous = false
-      request.userKey = userKey
-    } else {
-      // handle anonymous
-      log.debug('anonymous user')
-      request.anonymous = true
-    }
-
-    log.debug(`request: ${JSON.stringify(request.headers)}`)
-    if (sessionToken) {
-      request.tokenFromCookie = sessionToken
-    }
-
-    reply.setCookie('touched', new Date(), fastify.uiCookieOptions)
-  })
 })
