@@ -2,7 +2,7 @@
 
 const GOTO_HOME = 'home'
 const GOTO_REGISTER = 'register'
-const supportedIdentityProviders = ['github', 'bypass']
+const supportedIdentityProviders = ['github']
 
 const isProviderSupported = (pid) => {
   return supportedIdentityProviders.includes(pid)
@@ -42,18 +42,20 @@ module.exports = async function (fastify, opts) {
       return
     }
 
+    log.debug('able to skip identity provider')
+
     // refresh token
     const roles = await fastify.data.identity.getUserRoles(user.id)
     const token = fastify.jwt.sign({
       user: {
-        who: user.userKey,
+        who: user.public_id,
         alias: user.alias,
         roles,
       },
     })
     await fastify.data.identity.setSessionToken(user.public_id, token)
     reply.setCookie('token', token, fastify.secretCookieOptions)
-    reply.redirect(`${process.env.SPA_LANDING_URL}?goTo=home`)
+    reply.redirect(`${process.env.SPA_LANDING_URL}?goTo=home&token=${token}`)
   })
 }
 

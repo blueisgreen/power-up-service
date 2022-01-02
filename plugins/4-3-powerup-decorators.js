@@ -14,7 +14,7 @@ module.exports = fp(
       // TODO: expand to help track anonymous users
       try {
         await request.jwtVerify()
-        log.debug('found valid session token')
+        log.debug(`found valid session token ${JSON.stringify(request.user)}`)
         request.anonymous = false
         request.userKey = request.user.user.who
       } catch (err) {

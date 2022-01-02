@@ -21,13 +21,15 @@ module.exports = (fastify) => {
     return userRecord.length > 0 ? userRecord[0] : null
   }
 
-  const findUserWithPublicId = async (userPublicId, platform) => {
-    log.debug('identity plugin: findUserWithPublicId')
+  const findUserWithPublicId = async (userKey, platform) => {
+    log.debug(
+      `identity plugin: findUserWithPublicId using userKey ${userKey} on platform ${platform}`
+    )
     const platformId = fastify.lookups.findPlatform(platform).id
     let profileRecord = await knex('social_profiles')
       .select('social_profiles.user_id as userId')
       .join('users', 'users.id', 'social_profiles.user_id')
-      .where('users.public_id', '=', userPublicId)
+      .where('users.public_id', '=', userKey)
       .andWhere('social_profiles.social_platform_id', '=', platformId)
 
     if (profileRecord.length < 1) {
@@ -70,7 +72,7 @@ module.exports = (fastify) => {
     log.debug('identity plugin: registerUser')
 
     const platformId = fastify.lookups.findPlatform(platform).id
-    const userRecord = await knex('users').returning(userReturnColumns).insert({
+    const userRecord = await knex('users').returning(userColumns).insert({
       public_id: userPublicId,
       alias: socialProfile.name,
       email: socialProfile.email,
