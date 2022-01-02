@@ -34,7 +34,7 @@ module.exports = (fastify) => {
 
     if (profileRecord.length < 1) {
       log.info(
-        `user not found with public ID '${userPublicId}' on platform '${platform}'`
+        `user not found with public ID '${userKey}' on platform '${platform}'`
       )
       return null
     }
