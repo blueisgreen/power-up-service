@@ -154,7 +154,7 @@ module.exports = async function (fastify, opts) {
     reply.setCookie(
       'who',
       '3002a7d3-f58a-4afa-965b-c69b08bf888f',
-      fastify.cookieOptions
+      fastify.uiCookieOptions
     )
     reply.send(request.cookies)
   })

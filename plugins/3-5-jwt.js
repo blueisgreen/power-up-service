@@ -13,6 +13,7 @@ module.exports = fp(async function (fastify, opts) {
     secret: process.env.JWT_SECRET,
     sign: {
       issuer: 'HappySpiritPublishing.com',
+      expiresIn: '365d',
     },
     verify: {
       issuer: 'HappySpiritPublishing.com',
@@ -22,20 +23,18 @@ module.exports = fp(async function (fastify, opts) {
     },
   })
 
-  fastify.addHook('preValidation', async (request, reply) => {
-    try {
-      log.debug(`cookie token is: ${request.tokenFromCookie}`)
-      const payload = await request.jwtVerify()
-      log.debug(`payload: ${JSON.stringify(payload)}`)
-      request.user = payload.user
-    } catch (err) {
-      // reply.send(err)
-    }
-  })
+  // fastify.addHook('preValidation', async (request, reply) => {
+  //   try {
+  //     const payload = await request.jwtVerify()
+  //     log.debug(`payload: ${JSON.stringify(payload)}`)
+  //     request.user = payload.user
+  //   } catch (err) {
+  //     // reply.send(err)
+  //   }
+  // })
 
   fastify.decorate('authenticate', async function (request, reply) {
     try {
-      log.debug(`cookie token is: ${request.tokenFromCookie}`)
       await request.jwtVerify()
     } catch (err) {
       reply.send(err)
