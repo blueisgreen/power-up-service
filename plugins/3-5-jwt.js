@@ -24,7 +24,6 @@ module.exports = fp(async function (fastify, opts) {
 
   fastify.addHook('preValidation', async (request, reply) => {
     try {
-      log.debug(`cookie token is: ${request.tokenFromCookie}`)
       const payload = await request.jwtVerify()
       log.debug(`payload: ${JSON.stringify(payload)}`)
       request.user = payload.user
@@ -35,7 +34,6 @@ module.exports = fp(async function (fastify, opts) {
 
   fastify.decorate('authenticate', async function (request, reply) {
     try {
-      log.debug(`cookie token is: ${request.tokenFromCookie}`)
       await request.jwtVerify()
     } catch (err) {
       reply.send(err)

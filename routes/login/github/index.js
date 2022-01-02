@@ -29,7 +29,7 @@ module.exports = async function (fastify, opts) {
     if (request.anonymous && user) {
       request.anonymous = false
       request.userId = user.userKey
-      reply.setCookie('who', request.userId, fastify.cookieOptions)
+      reply.setCookie('who', request.userId, fastify.uiCookieOptions)
     }
 
     // user not found; set up new user
@@ -43,7 +43,7 @@ module.exports = async function (fastify, opts) {
       )
       // no longer anonymous
       request.anonymous = false
-      reply.setCookie('who', user.userKey, fastify.cookieOptions)
+      reply.setCookie('who', user.userKey, fastify.uiCookieOptions)
     }
 
     log.debug(`user: ${JSON.stringify(user)}`)
@@ -71,8 +71,8 @@ module.exports = async function (fastify, opts) {
     await fastify.data.identity.setSessionToken(user.userKey, token)
 
     // send things back to client
-    reply.setCookie('who', user.userKey, fastify.cookieOptions)
-    reply.setCookie('token', token, fastify.cookieOptions)
+    reply.setCookie('who', user.userKey, fastify.uiCookieOptions)
+    reply.setCookie('token', token, fastify.secretCookieOptions)
     reply.header('Authorization', `Bearer ${token}`)
     reply.redirect(`${process.env.SPA_LANDING_URL}?goTo=${goTo}&token=${token}`)
   })

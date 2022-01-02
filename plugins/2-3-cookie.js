@@ -12,21 +12,20 @@ module.exports = fp(async function (fastify, opts) {
   })
 
   let expDate = new Date()
-  expDate.setDate(expDate.getDate() + 30)
+  expDate.setDate(expDate.getDate() + 365)
 
-  fastify.decorate('cookieOptions', {
+  fastify.decorate('secretCookieOptions', {
     path: '/',
     sameSite: 'Strict',
     httpOnly: true,
     expires: expDate,
   })
-  fastify.decorate('cookieOptionsForUI', {
+  fastify.decorate('uiCookieOptions', {
     path: '/',
     sameSite: 'Strict',
     expires: expDate,
   })
   fastify.decorateRequest('userKey', '') // user's public ID
-  fastify.decorateRequest('tokenFromCookie', '') // user's public ID
   fastify.decorateRequest('anonymous', true)
 
   fastify.addHook('onRequest', async (request, reply) => {
@@ -34,7 +33,6 @@ module.exports = fp(async function (fastify, opts) {
 
     // look for a cookie that IDs the user
     const userKey = request.cookies.who
-    const sessionToken = request.cookies.token
 
     if (userKey && userKey !== 'undefined') {
       log.info(`user is ${userKey}`)
@@ -51,6 +49,6 @@ module.exports = fp(async function (fastify, opts) {
       request.tokenFromCookie = sessionToken
     }
 
-    reply.setCookie('latestApiCall', new Date(), fastify.cookieOptionsForUI)
+    reply.setCookie('touched', new Date(), fastify.uiCookieOptions)
   })
 })

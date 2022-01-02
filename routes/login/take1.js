@@ -30,8 +30,8 @@ module.exports = async function (fastify, opts) {
             log.debug(`session token found: ${JSON.stringify(validToken)}`)
             const who = validToken.who
 
-            reply.setCookie('who', who, fastify.cookieOptions)
-            reply.setCookie('token', token, fastify.cookieOptions)
+            reply.setCookie('who', who, fastify.uiCookieOptions)
+            reply.setCookie('token', token, fastify.secreteCookieOptions)
             reply.header('Authorization', `Bearer ${token}`)
             reply.redirect(
               `${process.env.SPA_LANDING_URL}?token=${token}&goTo=${GOTO_HOME}`
