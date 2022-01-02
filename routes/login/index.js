@@ -13,58 +13,48 @@ module.exports = async function (fastify, opts) {
     const { log } = fastify
     const pid = request.query.pid
 
+    if (!isProviderSupported(pid)) {
+      // FIXME: would be best to redirect to main URL; or don't redirect in the first place by handling this as an API call
+      log.warn('login attempted with unsupported identity provider')
+      reply.code(401)
+      reply.send("I hear you knocking, but you can't come in.")
+      return
+    }
+
     // no go - unknown user and requesting ID provider that is not supported
     if (request.anonymous) {
-      if (!isProviderSupported(pid)) {
-        // FIXME: would be best to redirect to main URL; or don't redirect in the first place by handling this as an API call
-        reply.code(401)
-        reply.send("I hear you knocking, but you can't come in.")
-        return
-      }
-
       // redirect to login route for provider
       reply.redirect(`/login/${pid}`)
       return
     }
 
     // user is known; refresh token and cookie, and redirect to landing
-    // TODO: handle return-to route name from client and redirect back to that - keep user in place
 
-
-    // look up user based on cookie
+    // look up social record for given provider
     const user = await fastify.data.identity.findUserWithPublicId(
       request.userKey,
       pid
     )
 
+    // first time with this identity provider?
     if (!user) {
-      reply.code(401)
-      reply.send('Who are you?')
+      reply.redirect(`/login/${pid}`)
       return
     }
 
-    log.debug(`found user ${JSON.stringify(user)}`)
-
-    // do i have a session token?
-    // let token = user.public_id
-    //   ? await fastify.data.identity.findSessionToken(user.public_id)
-    //   : null
-
-    // nope, create one
-    // if (!token) {
-    const roles = ['member', 'author', 'editor', 'admin']
+    // refresh token
+    const roles = await fastify.data.identity.getUserRoles(user.id)
     const token = fastify.jwt.sign({
       user: {
-        who: user.public_id,
+        who: user.userKey,
         alias: user.alias,
         roles,
       },
     })
     await fastify.data.identity.setSessionToken(user.public_id, token)
-    reply.setCookie('token', token, fastify.uiCookieOptions)
-    // }
-
-    reply.header('Authorization', `Bearer ${token}`)
-    reply.redirect(`${process.env.SPA_LANDING_URL}?goTo=home&token=${token}`)
+    reply.setCookie('token', token, fastify.secretCookieOptions)
+    reply.redirect(`${process.env.SPA_LANDING_URL}?goTo=home`)
   })
 }
+
+// TODO: handle return-to route name from client and redirect back to that - keep user in place

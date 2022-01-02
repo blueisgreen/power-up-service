@@ -7,6 +7,7 @@ module.exports = fp(
     log.info('loading useful decorators')
 
     fastify.decorateRequest('anonymous', true)
+    fastify.decorateRequest('userKey', '')
 
     fastify.addHook('onRequest', async (request, reply) => {
       // see if we know who this is
@@ -15,6 +16,7 @@ module.exports = fp(
         await request.jwtVerify()
         log.debug('found valid session token')
         request.anonymous = false
+        request.userKey = request.user.user.who
       } catch (err) {
         log.debug('session token not found or invalid')
         request.anonymous = true
