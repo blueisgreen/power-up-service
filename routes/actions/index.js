@@ -14,7 +14,7 @@ module.exports = async function (fastify, opts) {
    */
   fastify.post('/', async (request, reply) => {
     const { actionCode, details } = request.body
-    const userKey = request.user ? request.user.who : request.userKey || null
+    const userKey = request.userKey || 'anonymous'
 
     fastify.log.debug(
       `record action: ${actionCode} by ${userKey} details: ${details}`

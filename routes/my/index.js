@@ -14,7 +14,7 @@ module.exports = async function (fastify, opts) {
     },
     async (request, reply) => {
       const user = await fastify.data.identity.getUserWithPublicId(
-        request.user.who
+        request.userKey
       )
       reply.send(user)
     }
@@ -28,9 +28,9 @@ module.exports = async function (fastify, opts) {
       preValidation: fastify.preValidation,
     },
     async (request, reply) => {
-      fastify.log.info(`look up profile of user: ${request.user.who}`)
+      fastify.log.info(`look up profile of user: ${request.userKey}`)
       const user = await fastify.data.identity.getUserWithPublicId(
-        request.user.who
+        request.userKey
       )
       reply.send(user)
     }
@@ -44,10 +44,10 @@ module.exports = async function (fastify, opts) {
       preValidation: fastify.preValidation,
     },
     async (request, reply) => {
-      const userPublicId = request.user.who
+      const userKey = request.userKey
       const updates = request.body
 
-      if (userPublicId === null) {
+      if (userKey === null) {
         reply.code(400).send({
           error: {
             message: 'User must be making the request',
@@ -59,7 +59,7 @@ module.exports = async function (fastify, opts) {
             message: 'Profile updates are required',
           },
         })
-      } else if (updates.userId && updates.userId !== userPublicId) {
+      } else if (updates.userId && updates.userId !== userKey) {
         reply.code(400).send({
           error: {
             message: 'User must be changing own profile',
@@ -67,7 +67,7 @@ module.exports = async function (fastify, opts) {
         })
       }
 
-      const user = await fastify.data.identity.updateUser(userPublicId, updates)
+      const user = await fastify.data.identity.updateUser(userKey, updates)
       reply.send(user)
     }
   )
@@ -81,7 +81,7 @@ module.exports = async function (fastify, opts) {
     },
     async (request, reply) => {
       try {
-        await fastify.data.identity.agreeToTerms(request.user.who)
+        await fastify.data.identity.agreeToTerms(request.userKey)
         reply.code(204).send()
       } catch (err) {
         fastify.log.error(err)
@@ -99,7 +99,7 @@ module.exports = async function (fastify, opts) {
     },
     async (request, reply) => {
       try {
-        await fastify.data.identity.agreeToCookies(request.user.who)
+        await fastify.data.identity.agreeToCookies(request.userKey)
         reply.code(204).send()
       } catch (err) {
         reply.code(500).send({ error: ERROR_MESSAGE })
@@ -116,7 +116,7 @@ module.exports = async function (fastify, opts) {
     },
     async (request, reply) => {
       try {
-        await fastify.data.agreeToEmailComms(request.user.who)
+        await fastify.data.agreeToEmailComms(request.userKey)
         reply.code(204).send()
       } catch (err) {
         reply.code(500).send({ error: ERROR_MESSAGE })
@@ -131,7 +131,7 @@ module.exports = async function (fastify, opts) {
     },
     async (request, reply) => {
       const inquiries = await fastify.data.support.getInquiriesByUser(
-        request.user.who
+        request.userKey
       )
       reply.send(inquiries)
     }
@@ -149,13 +149,4 @@ module.exports = async function (fastify, opts) {
       reply.send(inquiries)
     }
   )
-
-  fastify.get('/cookies', {}, async (request, reply) => {
-    reply.setCookie(
-      'who',
-      '3002a7d3-f58a-4afa-965b-c69b08bf888f',
-      fastify.uiCookieOptions
-    )
-    reply.send(request.cookies)
-  })
 }

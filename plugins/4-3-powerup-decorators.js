@@ -25,6 +25,15 @@ module.exports = fp(
       // leave cookies as a reminder
       reply.setCookie('touched', new Date(), fastify.uiCookieOptions)
     })
+
+    fastify.addHook('preValidation', async (request, reply) => {
+      // TODO: expand to role-based access
+      log.debug('checking for userKey on request')
+      if (!request.userKey) {
+        reply.code(401)
+        reply.send('You must be signed in for that')
+      }
+    })
   },
   {
     fastify: '3.x',
