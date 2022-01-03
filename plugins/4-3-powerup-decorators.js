@@ -7,7 +7,7 @@ module.exports = fp(
     log.info('loading useful decorators')
 
     fastify.decorateRequest('anonymous', true)
-    fastify.decorateRequest('userKey', '')
+    fastify.decorateRequest('userKey', null)
 
     fastify.addHook('onRequest', async (request, reply) => {
       // see if we know who this is
@@ -26,7 +26,7 @@ module.exports = fp(
       reply.setCookie('touched', new Date(), fastify.uiCookieOptions)
     })
 
-    fastify.addHook('preValidation', async (request, reply) => {
+    fastify.decorate('preValidation', async (request, reply) => {
       // TODO: expand to role-based access
       log.debug('checking for userKey on request')
       if (!request.userKey) {

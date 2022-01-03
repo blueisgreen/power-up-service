@@ -3,12 +3,12 @@ const { actionColumns } = require('./modelFieldMap')
 module.exports = (fastify) => {
   const { knex, log } = fastify
 
-  const capture = async (code, details, userId) => {
+  const capture = async (code, details, userKey) => {
     log.debug('actionModel.capture')
     await knex('actions').insert({
       action_code: code,
       details,
-      user_public_id: userId,
+      user_public_id: userKey,
     })
     return
   }
