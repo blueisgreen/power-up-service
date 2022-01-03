@@ -30,7 +30,7 @@ module.exports = async function (fastify, opts) {
       let userId = null
       if (request.user) {
         const user = await fastify.data.identity.getUserWithPublicId(
-          request.user.who
+          request.userKey
         )
         if (user) {
           userId = user.id
