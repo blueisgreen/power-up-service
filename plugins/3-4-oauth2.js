@@ -5,10 +5,11 @@ const oauthPlugin = require('fastify-oauth2')
  * @see https://github.com/fastify/fastify-oauth2
  */
 module.exports = fp(async function (fastify, opts) {
-  fastify.log.info('loading fastify-oauth2 for github')
+  const { log, register } = fastify
+  log.info('loading fastify-oauth2 for github')
 
   log.debug('setup github ID provider')
-  fastify.register(oauthPlugin, {
+  register(oauthPlugin, {
     name: 'githubOAuth2',
     credentials: {
       client: {
@@ -22,7 +23,7 @@ module.exports = fp(async function (fastify, opts) {
   })
 
   log.debug('setup google ID provider')
-  fastify.register(oauthPlugin, {
+  register(oauthPlugin, {
     name: 'googleOAuth2',
     credentials: {
       client: {
