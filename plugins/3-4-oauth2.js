@@ -25,6 +25,7 @@ module.exports = fp(async function (fastify, opts) {
   log.debug('setup google ID provider')
   register(oauthPlugin, {
     name: 'googleOAuth2',
+    scope: ['profile', 'email'],
     credentials: {
       client: {
         id: process.env.OAUTH_GOOGLE_CLIENT_ID,
@@ -34,6 +35,9 @@ module.exports = fp(async function (fastify, opts) {
     },
     startRedirectPath: '/login/google',
     callbackUri: `${process.env.OAUTH_CALLBACK_URL_BASE}/login/google/callback`,
+    callbackUriParams: {
+      access_type: 'offline',
+    },
   })
 
   // TODO set up more OAuth providers below
