@@ -20,6 +20,13 @@ module.exports = (fastify) => {
     return roles
   }
 
+  const assignUserRole = async (userKey, role) => {
+    log.debug('adminModel.assignUserRole')
+    const userId = knex('users').select(id).where({})
+    const results = await knex('user_roles')
+    // FIXME: not finished - need handy ways to convert from public keys and codes to internal IDs
+  }
+
   // TODO: implement with paging
   const getActions = async () => {
     log.debug('adminModel.getActions')

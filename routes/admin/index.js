@@ -29,6 +29,14 @@ module.exports = async function (fastify, opts) {
     }
   )
 
+  fastify.post(
+    '/users/:userKey/roles',
+    {
+      preValidation: [fastify.preValidation],
+    },
+    async function (request, reply) {}
+  )
+
   fastify.get(
     '/roles',
     {
