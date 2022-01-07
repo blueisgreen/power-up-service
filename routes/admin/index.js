@@ -14,6 +14,7 @@ module.exports = async function (fastify, opts) {
       reply.send(users)
     }
   )
+
   fastify.get(
     '/users/:userKey/roles',
     {
@@ -25,6 +26,16 @@ module.exports = async function (fastify, opts) {
       log.debug('getting roles for ' + userKey)
       const roles = await fastify.data.admin.getUserRoles(userKey)
       reply.send(roles)
+    }
+  )
+
+  fastify.get(
+    '/roles',
+    {
+      preValidation: [fastify.preValidation],
+    },
+    async function (request, reply) {
+      reply.send(fastify.lookups.roles)
     }
   )
 }
