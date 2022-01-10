@@ -1,7 +1,68 @@
 const SYSTEM_CODES = 'system_codes'
 const columnsToReturn = ['id', 'code', 'display_name as displayName']
 
+const { getAllCodes } = require('./systemCodesModel')
+
 module.exports = async function (fastify, options, next) {
+  const codes = await getAllCodes()
+
+  /* 
+  Set up lookup structure like this:
+  lookups: {
+    all: [ // ids // ],
+    byId: {
+      1: { id, code, displayName }
+    },
+    byCode: {
+      parent-id: {
+        code: { id, code, displayName }
+      }
+    },
+    byCategory: {
+      cat: [],
+    }
+  }
+   */
+  const all = []
+  const byId = {}
+  const byCode = {}
+  const categoriesByCode = {}
+  codes.map((code) => {
+    all.push[code]
+    byId[code.id] = code
+
+    // category-code should be unique
+    if (code.parent_id) {
+      if (!byCode[code.parent_id]) {
+        byCode[code.parent_id] = {}
+      }
+      byCode[code.parent_id][code.code] = code
+    } else {
+      // keep track of category codes
+      categoriesByCode[code.code] = code
+    }
+  })
+
+  const lookups = {
+    all,
+    byId,
+    byCode,
+    categoriesByCode,
+    getById = (id) => {
+      return byId[id] 
+    },
+    getByCode = (catCode, code) => {
+      const catId = categoriesByCode[catCode]
+      return byCode[catId][code]
+    },
+    getSelectOptionsForUI = (catCode) => {
+      const catId = categoriesByCode[catCode]
+      
+    }
+  }
+
+  fastify.decorate('lookups', lookups)
+
   fastify.decorate('lookups', {
     platforms: await getCodes('socialPlatform'),
     findPlatform: (code) => {
@@ -13,6 +74,12 @@ module.exports = async function (fastify, options, next) {
     },
   })
   next()
+
+  async function loadSystemCodes() {
+    // load all codes into structure like:
+    // codes: byId, byCategory
+    // use that to implement lookup methods
+  }
 
   async function getCodes(category) {
     const { knex, log } = fastify
@@ -41,4 +108,19 @@ module.exports = async function (fastify, options, next) {
   //     .whereIsNull('parent_id')
   //   return codeRecords
   // }
+
+  /**
+   * Given type, return look-up options for UI.
+   */
+  function lookupOptions(category) {}
+
+  function codeToId(code) {}
+
+  function idToCode(id) {}
+
+  /**
+   * Given a code, return the display name
+   * @param {*} code
+   */
+  function decode(code) {}
 }
