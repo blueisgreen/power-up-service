@@ -8,7 +8,7 @@
  */
 module.exports = async function (fastify, options, next) {
   const codes = await fastify.data.systemCodes.getAllCodes()
-  fastify.decorate('lookups', buildLookups(codes))
+  fastify.decorate('lookups', await buildLookups(codes))
   next()
 
   async function buildLookups(codes) {
