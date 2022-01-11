@@ -1,37 +1,38 @@
-const { getAllCodes } = require('./systemCodesModel')
-
 /**
   Structure of lookups:
 
   lookups: {
-    all: [ // ids // ],
     byId: {
       1: { id, code, displayName }
     },
-    byCode: {
+    byCatAndCode: {
       all: [ // ids // ],
       parent-id: {
         code: { id, code, displayName }
       }
     },
-    byCategory: {
-      cat: [],
-    }
+    catsByCode: {
+      code: { id, code, displayName },
+    },
+    categories: [],
+    idToCode(id),
+    codeLookup(catCode, code)
+    categoriesForSelect: [],
+    category1: [],
+    category2: [],
   }
 */
 module.exports = async function (fastify, options, next) {
-  fastify.decorate('lookups', buildLookups())
+  const codes = await fastify.data.systemCodes.getAllCodes()
+  fastify.decorate('lookups', buildLookups(codes))
   next()
 
-  // helper methods below
-
-  function buildLookups() {
-    const codes = await getAllCodes()
-
+  async function buildLookups(codes) {
     const byId = {}
     const byCatIdAndCode = {}
-    const byCategoryAndCode = {}
-    const categoriesByCode = {}
+    const byCatAndCode = {}
+    const catsByCode = {}
+    const categories = []
 
     codes.forEach((record) => {
       byId[record.id] = record
@@ -39,46 +40,54 @@ module.exports = async function (fastify, options, next) {
       // category-code should be unique
       if (record.parent_id) {
         if (!byCatIdAndCode[record.parent_id]) {
-          byCatIdAndCode[record.parent_id] = []
+          byCatIdAndCode[record.parent_id] = {
+            all: [],
+          }
         }
         byCatIdAndCode[record.parent_id].all.push(record)
         byCatIdAndCode[record.parent_id][record.code] = record
       } else {
-        // keep track of category codes
-        categoriesByCode[record.code] = record
+        categories.push(record)
+        catsByCode[record.code] = record
       }
     })
 
-    const idToCode = (id) => {
+    const catIds = Object.keys(byCatIdAndCode)
+    catIds.forEach((id) => {
+      byCatAndCode[idToCode(id)] = byCatIdAndCode[id]
+    })
+
+    function idToCode(id) {
       return byId[id].code
     }
 
-    const codeLookup = (catCode, code) => {
-      return byCategoryAndCode[catCode][code]
+    function codeLookup(catCode, code) {
+      return byCatAndCode[catCode][code]
     }
 
-    byCatIdAndCode.keys().forEach((key) => {
-      byCategoryAndCode[idToCode(key)] = byCatIdAndCode[key]
-    })
+    function mapToUI(codes) {
+      if (!codes) {
+        return []
+      }
+      return codes.map((code) => ({
+        code: code.code,
+        displayName: code.displayName,
+      }))
+    }
 
     const lookups = {
       idToCode,
       codeLookup,
-      categoriesByCode,
-      uiOptionLists,
+      categoriesForUI: mapToUI(categories),
     }
 
-    const getCategoriesForUI = () => {}
+    categories.map((cat) => {
+      fastify.log.debug(cat)
+      lookups[cat] = mapToUI(catsByCode[cat])
+    })
 
-    const getCodesByCategoryForUI = (catCode) => {
-      const records = categoriesByCode[catCode].all
-      const results = records.map((record) => {
-        return {
-          code: record.code,
-          display: record.displayName,
-        }
-      })
-    }
+    fastify.log.debug('== show lookups structure ==')
+    fastify.log.debug(JSON.stringify(lookups))
 
     return lookups
   }
