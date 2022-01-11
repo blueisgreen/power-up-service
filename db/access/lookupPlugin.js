@@ -1,27 +1,11 @@
 /**
-  Structure of lookups:
-
-  lookups: {
-    byId: {
-      1: { id, code, displayName }
-    },
-    byCatAndCode: {
-      all: [ // ids // ],
-      parent-id: {
-        code: { id, code, displayName }
-      }
-    },
-    catsByCode: {
-      code: { id, code, displayName },
-    },
-    categories: [],
-    idToCode(id),
-    codeLookup(catCode, code)
-    categoriesForSelect: [],
-    category1: [],
-    category2: [],
-  }
-*/
+ * Cache system codes for quick access. Also provide helpers
+ * for converting between codes and database IDs.
+ *
+ * @param {*} fastify
+ * @param {*} options
+ * @param {*} next
+ */
 module.exports = async function (fastify, options, next) {
   const codes = await fastify.data.systemCodes.getAllCodes()
   fastify.decorate('lookups', buildLookups(codes))
@@ -31,7 +15,7 @@ module.exports = async function (fastify, options, next) {
     const byId = {}
     const byCatIdAndCode = {}
     const byCatAndCode = {}
-    const catsByCode = {}
+    const categoryCodes = {}
     const categories = []
 
     codes.forEach((record) => {
@@ -48,7 +32,7 @@ module.exports = async function (fastify, options, next) {
         byCatIdAndCode[record.parent_id][record.code] = record
       } else {
         categories.push(record)
-        catsByCode[record.code] = record
+        categoryCodes[record.code] = record
       }
     })
 
@@ -65,11 +49,11 @@ module.exports = async function (fastify, options, next) {
       return byCatAndCode[catCode][code]
     }
 
-    function mapToUI(codes) {
-      if (!codes) {
+    function mapToUI(codesToMap) {
+      if (!codesToMap) {
         return []
       }
-      return codes.map((code) => ({
+      return codesToMap.map((code) => ({
         code: code.code,
         displayName: code.displayName,
       }))
@@ -82,8 +66,8 @@ module.exports = async function (fastify, options, next) {
     }
 
     categories.map((cat) => {
-      fastify.log.debug(cat)
-      lookups[cat] = mapToUI(catsByCode[cat])
+      const catCode = cat.code
+      lookups[catCode] = mapToUI(byCatAndCode[catCode].all)
     })
 
     fastify.log.debug('== show lookups structure ==')
@@ -92,14 +76,3 @@ module.exports = async function (fastify, options, next) {
     return lookups
   }
 }
-
-// fastify.decorate('lookups', {
-//   platforms: await getCodes('socialPlatform'),
-//   findPlatform: (code) => {
-//     return fastify.lookups.platforms.find((item) => item.code === code)
-//   },
-//   roles: await getCodes('role'),
-//   findRole: (code) => {
-//     return fastify.lookups.roles.find((item) => item.code === code)
-//   },
-// })
