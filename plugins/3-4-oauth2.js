@@ -6,7 +6,7 @@ const oauthPlugin = require('fastify-oauth2')
  */
 module.exports = fp(async function (fastify, opts) {
   const { log, register } = fastify
-  log.info('loading fastify-oauth2 for github')
+  log.info('loading fastify-oauth2')
 
   log.debug('setup github ID provider')
   register(oauthPlugin, {
