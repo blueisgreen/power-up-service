@@ -27,7 +27,9 @@ module.exports = (fastify) => {
     )
     const platformCode = fastify.lookups.codeLookup('socialPlatform', platform)
     if (!userKey || !platformCode) {
-      log.debug(`Need both userKey and platform: ${userKey} ${platform} ${platformCode}`)
+      log.debug(
+        `Need both userKey and platform: ${userKey} ${platform} ${platformCode}`
+      )
       return null
     }
     const platformId = platformCode.id
@@ -72,7 +74,8 @@ module.exports = (fastify) => {
     platform,
     accessToken,
     socialProfile,
-    userPublicId
+    userPublicId,
+    accessTokenExpiresIn = 0
   ) => {
     log.debug('identity plugin: registerUser')
 
@@ -97,6 +100,7 @@ module.exports = (fastify) => {
       social_platform_id: platformId,
       access_token: accessToken,
       social_user_info: socialProfile,
+      access_token_exp: accessTokenExpiresIn,
     })
 
     return getUser(id)

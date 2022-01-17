@@ -34,7 +34,8 @@ module.exports = async function (fastify, opts) {
         'github',
         authToken.access_token,
         userInfo.data,
-        publicId
+        publicId,
+        authToken.expires_in
       )
       goTo = 'register'
     }

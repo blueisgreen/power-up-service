@@ -35,7 +35,8 @@ module.exports = async function (fastify, opts) {
         'google',
         authToken.access_token,
         userInfo.data,
-        publicId
+        publicId,
+        authToken.expires_in
       )
       goTo = 'register'
     }

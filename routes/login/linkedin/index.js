@@ -9,12 +9,10 @@ module.exports = async function (fastify, opts) {
       await this.linkedInOAuth2.getAccessTokenFromAuthorizationCodeFlow(request)
     log.debug(authToken.access_token)
 
-    // TODO: expand to store 'expires_in'
-
     /**
      * endpoints
-     * /emailAddress
      * /me
+     * /emailAddress
      */
 
     const userInfo = await fastify.axios.request({
@@ -42,7 +40,8 @@ module.exports = async function (fastify, opts) {
         'linkedin',
         authToken.access_token,
         userInfo.data,
-        publicId
+        publicId,
+        authToken.expires_in
       )
       goTo = 'register'
     }
