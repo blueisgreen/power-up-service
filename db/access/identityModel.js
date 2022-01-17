@@ -25,7 +25,7 @@ module.exports = (fastify) => {
     log.debug(
       `identity plugin: findUserWithPublicId using userKey ${userKey} on platform ${platform}`
     )
-    const platformId = fastify.lookups.findPlatform(platform).id
+    const platformId = fastify.lookups.codeLookup('socialPlatform', platform).id
     let profileRecord = await knex('social_profiles')
       .select('social_profiles.user_id as userId')
       .join('users', 'users.id', 'social_profiles.user_id')
@@ -45,7 +45,7 @@ module.exports = (fastify) => {
   const findUserFromSocialProfile = async (platform, profileId) => {
     log.debug('identity plugin: findUserFromSocialProfile')
 
-    const platformId = fastify.lookups.findPlatform(platform).id
+    const platformId = fastify.lookups.codeLookup('socialPlatform', platform).id
     const profileRecord = await knex('social_profiles')
       .select('user_id as userId')
       .where({
@@ -71,12 +71,12 @@ module.exports = (fastify) => {
   ) => {
     log.debug('identity plugin: registerUser')
 
-    const platformId = fastify.lookups.findPlatform(platform).id
+    const platformId = fastify.lookups.codeLookup('socialPlatform', platform).id
     const userRecord = await knex('users').returning(userColumns).insert({
       public_id: userPublicId,
       alias: socialProfile.name,
       email: socialProfile.email,
-      avatar_url: socialProfile.avatar_url,
+      avatar_url: socialProfile.avatar_url || socialProfile.picture,
     })
 
     log.debug('user record ==V')
@@ -85,7 +85,7 @@ module.exports = (fastify) => {
 
     await knex('social_profiles').insert({
       user_id: id,
-      social_id: socialProfile.id,
+      social_id: socialProfile.id || socialProfile.sub,
       social_platform_id: platformId,
       access_token: accessToken,
       social_user_info: socialProfile,

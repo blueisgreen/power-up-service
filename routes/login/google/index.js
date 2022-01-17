@@ -6,24 +6,27 @@ module.exports = async function (fastify, opts) {
 
   fastify.get('/callback', async function (request, reply) {
     const authToken =
-      await this.githubOAuth2.getAccessTokenFromAuthorizationCodeFlow(request)
+      await this.googleOAuth2.getAccessTokenFromAuthorizationCodeFlow(request)
     log.debug(authToken.access_token)
 
-    // try to get user info from GitHub
+    // FIXME: look at example from Google
+    // try to get user info from Google
     const userInfo = await fastify.axios.request({
-      url: 'https://api.github.com/user',
+      url: 'https://openidconnect.googleapis.com/v1/userinfo',
       method: 'get',
       headers: {
-        Authorization: `token ${authToken.access_token}`,
+        Authorization: `Bearer ${authToken.access_token}`,
       },
+      json: true,
     })
-    log.debug(JSON.stringify(userInfo.data))
+    log.debug(userInfo)
 
     // find or register user using authentication data
-    let user = await fastify.data.identity.findUserFromSocialProfile(
-      'github',
-      userInfo.data.id
-    )
+    let user = null
+    // let user = await fastify.data.identity.findUserFromSocialProfile(
+    //   'google',
+    //   userInfo.data.id
+    // )
 
     let goTo = 'home'
 
@@ -31,7 +34,7 @@ module.exports = async function (fastify, opts) {
     if (!user) {
       const publicId = uuidv4()
       user = await fastify.data.identity.registerUser(
-        'github',
+        'google',
         authToken.access_token,
         userInfo.data,
         publicId
