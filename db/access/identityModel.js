@@ -72,12 +72,14 @@ module.exports = (fastify) => {
     log.debug('identity plugin: registerUser')
 
     const platformId = fastify.lookups.codeLookup('socialPlatform', platform).id
-    const userRecord = await knex('users').returning(userColumns).insert({
-      public_id: userPublicId,
-      alias: socialProfile.name,
-      email: socialProfile.email,
-      avatar_url: socialProfile.avatar_url || socialProfile.picture,
-    })
+    const userRecord = await knex('users')
+      .returning(userColumns)
+      .insert({
+        public_id: userPublicId,
+        alias: socialProfile.name,
+        email: socialProfile.email,
+        avatar_url: socialProfile.avatar_url || socialProfile.picture,
+      })
 
     log.debug('user record ==V')
     log.debug(JSON.stringify(userRecord[0]))
@@ -106,12 +108,10 @@ module.exports = (fastify) => {
 
   const grantRoles = async (userId, roles) => {
     log.debug('identity plugin: grantRoles')
-    const roleMap = fastify.lookups.roles
-    info.debug(roleMap)
-    const roleIdsToGrant = roles.map((role) => {
-      const roleToUse = roleMap.find((element) => element.code === role)
-      return roleToUse.id
-    })
+    const roleMap = fastify.lookups.role
+    const roleIdsToGrant = roles.map(
+      (roleCode) => fastify.lookups.codeLookup('role', roleCode).id
+    )
     roleIdsToGrant.forEach(async (roleId) => {
       await knex('user_roles')
         .insert({ user_id: userId, role_id: roleId })
