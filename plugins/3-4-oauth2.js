@@ -43,7 +43,7 @@ module.exports = fp(async function (fastify, opts) {
   log.debug('setup linkedin ID provider')
   register(oauthPlugin, {
     name: 'linkedInOAuth2',
-    // scope: ['r_liteprofile', 'r_emailaddress', 'w_member_social'],
+    scope: ['r_liteprofile', 'r_emailaddress'],
     credentials: {
       client: {
         id: process.env.OAUTH_LINKEDIN_CLIENT_ID,

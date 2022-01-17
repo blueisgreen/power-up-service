@@ -11,6 +11,12 @@ module.exports = async function (fastify, opts) {
 
     // TODO: expand to store 'expires_in'
 
+    /**
+     * endpoints
+     * /emailAddress
+     * /me
+     */
+
     const userInfo = await fastify.axios.request({
       url: 'https://api.linkedin.com/v2/me',
       method: 'get',
@@ -19,7 +25,7 @@ module.exports = async function (fastify, opts) {
       },
       json: true,
     })
-    log.debug(JSON.stringify(userInfo))
+    log.debug(JSON.stringify(userInfo.data))
 
     // find or register user using authentication data
     let user = await fastify.data.identity.findUserFromSocialProfile(
