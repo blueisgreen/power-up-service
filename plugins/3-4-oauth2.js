@@ -40,5 +40,23 @@ module.exports = fp(async function (fastify, opts) {
     },
   })
 
-  // TODO set up more OAuth providers below
+  log.debug('setup linkedin ID provider')
+  register(oauthPlugin, {
+    name: 'linkedInOAuth2',
+    scope: ['r_liteprofile', 'r_emailaddress'],
+    credentials: {
+      client: {
+        id: process.env.OAUTH_LINKEDIN_CLIENT_ID,
+        secret: process.env.OAUTH_LINKEDIN_CLIENT_SECRET,
+      },
+      auth: oauthPlugin.LINKEDIN_CONFIGURATION,
+    },
+    startRedirectPath: '/login/linkedin',
+    callbackUri: `${process.env.OAUTH_CALLBACK_URL_BASE}/login/linkedin/callback`,
+    callbackUriParams: {
+      access_type: 'offline',
+    },
+  })
+
+  // TODO: set up more OAuth2 providers below
 })

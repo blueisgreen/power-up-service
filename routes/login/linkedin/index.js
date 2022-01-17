@@ -6,22 +6,28 @@ module.exports = async function (fastify, opts) {
 
   fastify.get('/callback', async function (request, reply) {
     const authToken =
-      await this.githubOAuth2.getAccessTokenFromAuthorizationCodeFlow(request)
+      await this.linkedInOAuth2.getAccessTokenFromAuthorizationCodeFlow(request)
     log.debug(authToken.access_token)
 
-    // try to get user info from GitHub
+    /**
+     * endpoints
+     * /me
+     * /emailAddress
+     */
+
     const userInfo = await fastify.axios.request({
-      url: 'https://api.github.com/user',
+      url: 'https://api.linkedin.com/v2/me',
       method: 'get',
       headers: {
-        Authorization: `token ${authToken.access_token}`,
+        Authorization: `Bearer ${authToken.access_token}`,
       },
+      json: true,
     })
     log.debug(JSON.stringify(userInfo.data))
 
     // find or register user using authentication data
     let user = await fastify.data.identity.findUserFromSocialProfile(
-      'github',
+      'linkedin',
       userInfo.data.id
     )
 
@@ -31,7 +37,7 @@ module.exports = async function (fastify, opts) {
     if (!user) {
       const publicId = uuidv4()
       user = await fastify.data.identity.registerUser(
-        'github',
+        'linkedin',
         authToken.access_token,
         userInfo.data,
         publicId,

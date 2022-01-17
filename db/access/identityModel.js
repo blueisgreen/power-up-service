@@ -25,7 +25,14 @@ module.exports = (fastify) => {
     log.debug(
       `identity plugin: findUserWithPublicId using userKey ${userKey} on platform ${platform}`
     )
-    const platformId = fastify.lookups.codeLookup('socialPlatform', platform).id
+    const platformCode = fastify.lookups.codeLookup('socialPlatform', platform)
+    if (!userKey || !platformCode) {
+      log.debug(
+        `Need both userKey and platform: ${userKey} ${platform} ${platformCode}`
+      )
+      return null
+    }
+    const platformId = platformCode.id
     let profileRecord = await knex('social_profiles')
       .select('social_profiles.user_id as userId')
       .join('users', 'users.id', 'social_profiles.user_id')
@@ -67,28 +74,33 @@ module.exports = (fastify) => {
     platform,
     accessToken,
     socialProfile,
-    userPublicId
+    userPublicId,
+    accessTokenExpiresIn = 0
   ) => {
     log.debug('identity plugin: registerUser')
 
     const platformId = fastify.lookups.codeLookup('socialPlatform', platform).id
-    const userRecord = await knex('users').returning(userColumns).insert({
-      public_id: userPublicId,
-      alias: socialProfile.name,
-      email: socialProfile.email,
-      avatar_url: socialProfile.avatar_url || socialProfile.picture,
-    })
+    const userRecord = await knex('users')
+      .returning(userColumns)
+      .insert({
+        public_id: userPublicId,
+        alias: socialProfile.name,
+        email: socialProfile.email,
+        avatar_url: socialProfile.avatar_url || socialProfile.picture,
+      })
 
     log.debug('user record ==V')
     log.debug(JSON.stringify(userRecord[0]))
     const id = userRecord[0].id
 
+    // FIXME: convert access_token to text or at least bigger - LinkedIn has a massive token >255 characters
     await knex('social_profiles').insert({
       user_id: id,
       social_id: socialProfile.id || socialProfile.sub,
       social_platform_id: platformId,
       access_token: accessToken,
       social_user_info: socialProfile,
+      access_token_exp: accessTokenExpiresIn,
     })
 
     return getUser(id)
@@ -106,12 +118,10 @@ module.exports = (fastify) => {
 
   const grantRoles = async (userId, roles) => {
     log.debug('identity plugin: grantRoles')
-    const roleMap = fastify.lookups.roles
-    info.debug(roleMap)
-    const roleIdsToGrant = roles.map((role) => {
-      const roleToUse = roleMap.find((element) => element.code === role)
-      return roleToUse.id
-    })
+    const roleMap = fastify.lookups.role
+    const roleIdsToGrant = roles.map(
+      (roleCode) => fastify.lookups.codeLookup('role', roleCode).id
+    )
     roleIdsToGrant.forEach(async (roleId) => {
       await knex('user_roles')
         .insert({ user_id: userId, role_id: roleId })

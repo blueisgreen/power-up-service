@@ -2,7 +2,7 @@
 
 const GOTO_HOME = 'home'
 const GOTO_REGISTER = 'register'
-const supportedIdentityProviders = ['github', 'google']
+const supportedIdentityProviders = ['github', 'google', 'linkedin']
 
 const isProviderSupported = (pid) => {
   return supportedIdentityProviders.includes(pid)
@@ -15,7 +15,7 @@ module.exports = async function (fastify, opts) {
 
     if (!isProviderSupported(pid)) {
       // FIXME: would be best to redirect to main URL; or don't redirect in the first place by handling this as an API call
-      log.warn('login attempted with unsupported identity provider')
+      log.warn(`login attempted with unsupported identity provider ${pid}`)
       reply.code(401)
       reply.send("I hear you knocking, but you can't come in.")
       return
