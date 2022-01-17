@@ -1,3 +1,5 @@
+// TODO: move common logic here to avoid duplication in callback funtions
+
 export const finishLogin = (fastify, response) => {
   fastify.log.debug('do some common stuff')
   return 'blah'

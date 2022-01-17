@@ -2,7 +2,7 @@
 
 const GOTO_HOME = 'home'
 const GOTO_REGISTER = 'register'
-const supportedIdentityProviders = ['github']
+const supportedIdentityProviders = ['github', 'google']
 
 const isProviderSupported = (pid) => {
   return supportedIdentityProviders.includes(pid)

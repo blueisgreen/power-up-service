@@ -1,44 +1,78 @@
-const SYSTEM_CODES = 'system_codes'
-const columnsToReturn = ['id', 'code', 'display_name as displayName']
-
+/**
+ * Cache system codes for quick access. Also provide helpers
+ * for converting between codes and database IDs.
+ *
+ * @param {*} fastify
+ * @param {*} options
+ * @param {*} next
+ */
 module.exports = async function (fastify, options, next) {
-  fastify.decorate('lookups', {
-    platforms: await getCodes('socialPlatform'),
-    findPlatform: (code) => {
-      return fastify.lookups.platforms.find((item) => item.code === code)
-    },
-    roles: await getCodes('role'),
-    findRole: (code) => {
-      return fastify.lookups.roles.find((item) => item.code === code)
-    },
-  })
+  const codes = await fastify.data.systemCodes.getAllCodes()
+  fastify.decorate('lookups', await buildLookups(codes))
   next()
 
-  async function getCodes(category) {
-    const { knex, log } = fastify
-    log.debug(`retrieving codes for category ${category}`)
-    const categoryRecord = await knex(SYSTEM_CODES)
-      .select(columnsToReturn)
-      .where({ code: category })
+  async function buildLookups(codes) {
+    const byId = {}
+    const byCatIdAndCode = {}
+    const byCatAndCode = {}
+    const categoryCodes = {}
+    const categories = []
 
-    if (categoryRecord.length === 0) {
-      log.warn(`no codes found for category ${category}`)
-      return []
+    codes.forEach((record) => {
+      byId[record.id] = record
+
+      // category-code should be unique
+      if (record.parent_id) {
+        if (!byCatIdAndCode[record.parent_id]) {
+          byCatIdAndCode[record.parent_id] = {
+            all: [],
+          }
+        }
+        byCatIdAndCode[record.parent_id].all.push(record)
+        byCatIdAndCode[record.parent_id][record.code] = record
+      } else {
+        categories.push(record)
+        categoryCodes[record.code] = record
+      }
+    })
+
+    const catIds = Object.keys(byCatIdAndCode)
+    catIds.forEach((id) => {
+      byCatAndCode[idToCode(id)] = byCatIdAndCode[id]
+    })
+
+    function idToCode(id) {
+      return byId[id].code
     }
-    const categoryId = categoryRecord[0].id
-    const codeRecords = await knex(SYSTEM_CODES)
-      .select(columnsToReturn)
-      .where({ parent_id: categoryId })
 
-    return codeRecords
+    function codeLookup(catCode, code) {
+      return byCatAndCode[catCode][code]
+    }
+
+    function mapToUI(codesToMap) {
+      if (!codesToMap) {
+        return []
+      }
+      return codesToMap.map((code) => ({
+        code: code.code,
+        displayName: code.displayName,
+      }))
+    }
+
+    const lookups = {
+      idToCode,
+      codeLookup,
+      categoriesForUI: mapToUI(categories),
+    }
+
+    categories.map((cat) => {
+      const catCode = cat.code
+      lookups[catCode] = mapToUI(byCatAndCode[catCode].all)
+    })
+
+    fastify.log.debug('== show lookups structure ==')
+    fastify.log.debug(JSON.stringify(lookups))
+
+    return lookups
   }
-
-  // const getCategories = async (fastify) => {
-  //   const { knex, log } = fastify
-  //   log.debug('retrieving categories')
-  //   const codeRecords = await knex(SYSTEM_CODES)
-  //     .select(columnsToReturn)
-  //     .whereIsNull('parent_id')
-  //   return codeRecords
-  // }
 }
