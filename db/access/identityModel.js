@@ -25,7 +25,12 @@ module.exports = (fastify) => {
     log.debug(
       `identity plugin: findUserWithPublicId using userKey ${userKey} on platform ${platform}`
     )
-    const platformId = fastify.lookups.codeLookup('socialPlatform', platform).id
+    const platformCode = fastify.lookups.codeLookup('socialPlatform', platform)
+    if (!userKey || !platformCode) {
+      log.debug(`Need both userKey and platform: ${userKey} ${platform} ${platformCode}`)
+      return null
+    }
+    const platformId = platformCode.id
     let profileRecord = await knex('social_profiles')
       .select('social_profiles.user_id as userId')
       .join('users', 'users.id', 'social_profiles.user_id')

@@ -6,24 +6,25 @@ module.exports = async function (fastify, opts) {
 
   fastify.get('/callback', async function (request, reply) {
     const authToken =
-      await this.googleOAuth2.getAccessTokenFromAuthorizationCodeFlow(request)
+      await this.linkedInOAuth2.getAccessTokenFromAuthorizationCodeFlow(request)
     log.debug(authToken.access_token)
 
+    // TODO: expand to store 'expires_in'
+
     const userInfo = await fastify.axios.request({
-      url: 'https://openidconnect.googleapis.com/v1/userinfo',
+      url: 'https://api.linkedin.com/v2/me',
       method: 'get',
       headers: {
         Authorization: `Bearer ${authToken.access_token}`,
       },
       json: true,
     })
-    log.debug(userInfo)
+    log.debug(JSON.stringify(userInfo))
 
     // find or register user using authentication data
-    // FIXME: make sure this works
     let user = await fastify.data.identity.findUserFromSocialProfile(
-      'google',
-      userInfo.data.sub
+      'linkedin',
+      userInfo.data.id
     )
 
     let goTo = 'home'
@@ -32,7 +33,7 @@ module.exports = async function (fastify, opts) {
     if (!user) {
       const publicId = uuidv4()
       user = await fastify.data.identity.registerUser(
-        'google',
+        'linkedin',
         authToken.access_token,
         userInfo.data,
         publicId
