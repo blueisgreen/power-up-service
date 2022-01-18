@@ -86,7 +86,7 @@ exports.up = function (knex) {
               parent_id: socialPlatformCat.id,
             },
             {
-              code: 'linkedIn',
+              code: 'linkedin',
               display_name: 'Linked In',
               parent_id: socialPlatformCat.id,
             },
