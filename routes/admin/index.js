@@ -43,7 +43,7 @@ module.exports = async function (fastify, opts) {
       preValidation: [fastify.preValidation],
     },
     async function (request, reply) {
-      reply.send(fastify.lookups.roles)
+      reply.send(fastify.lookups.role)
     }
   )
 }
