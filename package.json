@@ -1,6 +1,6 @@
 {
   "name": "power-up-service",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Power Up interactive magazine service",
   "main": "app.js",
   "directories": {
@@ -21,10 +21,10 @@
   "author": "Happy Spirit Publishing",
   "license": "ISC",
   "dependencies": {
-    "fastify": "^3.19.2",
-    "fastify-autoload": "^3.8.0",
+    "fastify": "^3.27.2",
+    "fastify-autoload": "^3.11.0",
     "fastify-axios": "^1.2.3",
-    "fastify-cli": "^2.14.0",
+    "fastify-cli": "^2.15.0",
     "fastify-cookie": "^5.3.2",
     "fastify-cors": "^6.0.2",
     "fastify-env": "^2.1.1",
@@ -32,16 +32,16 @@
     "fastify-helmet": "^7.0.0",
     "fastify-jwt": "^4.0.0",
     "fastify-knexjs": "^1.4.0",
-    "fastify-oauth2": "^4.2.3",
+    "fastify-oauth2": "^4.5.0",
     "fastify-plugin": "^3.0.0",
     "fastify-sensible": "^3.1.0",
     "pg": "^8.7.1",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "dotenv": "^12.0.0",
+    "dotenv": "^16.0.0",
     "fastify-knexjs-mock": "^1.1.1",
-    "pino-pretty": "^7.2.0",
+    "pino-pretty": "^7.5.0",
     "tap": "^15.0.9"
   },
   "engines": {
