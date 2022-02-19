@@ -20,20 +20,30 @@ module.exports = (fastify) => {
     return roles
   }
 
-  const assignUserRole = async (userKey, role) => {
+  const addUserRole = async (userKey, role) => {
     log.debug('adminModel.assignUserRole')
-    // FIXME: not finished - need handy ways to convert from public keys and codes to internal IDs
-    const userId = await knex('users').select(id).where({ public_id: userKey })
-    const results = await knex('user_roles').insert({
-      user_id: userId,
-      role_: role,
-    })
+    const userResult = await knex('users')
+      .select('id')
+      .where({ public_id: userKey })
+    const userId = userResult[0].id
+    const roleId = fastify.lookups.codeLookup('role', role).id
+    const results = await knex('user_roles')
+      .insert({
+        user_id: userId,
+        role_id: roleId,
+      })
+      .onConflict()
+      .ignore()
   }
 
   const removeUserRole = async (userKey, role) => {
     log.debug('adminModel.removeUserRole')
-    // FIXME: not finished - need handy ways to convert from public keys and codes to internal IDs
-    await knex('user_roles').where({ userId: userKey }).del()
+    const userResult = await knex('users')
+      .select('id')
+      .where({ public_id: userKey })
+    const userId = userResult[0].id
+    const roleId = fastify.lookups.codeLookup('role', role).id
+    await knex('user_roles').where({ user_id: userId, role_id: roleId }).del()
   }
 
   // TODO: implement with paging
@@ -49,6 +59,8 @@ module.exports = (fastify) => {
   return {
     getUsers,
     getUserRoles,
+    addUserRole,
+    removeUserRole,
     getActions,
   }
 }

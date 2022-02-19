@@ -46,4 +46,28 @@ module.exports = async function (fastify, opts) {
       reply.send(fastify.lookups.role)
     }
   )
+
+  fastify.put(
+    '/users/:userKey/roles/:code',
+    {
+      preValidation: [fastify.preValidation],
+    },
+    async function (request, reply) {
+      const { userKey, code } = request.params
+      await fastify.data.admin.addUserRole(userKey, code)
+      reply.code(204)
+    }
+  )
+
+  fastify.delete(
+    '/users/:userKey/roles/:code',
+    {
+      preValidation: [fastify.preValidation],
+    },
+    async function (request, reply) {
+      const { userKey, code } = request.params
+      await fastify.data.admin.removeUserRole(userKey, code)
+      reply.code(204)
+    }
+  )
 }
