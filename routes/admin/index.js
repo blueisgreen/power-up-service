@@ -70,4 +70,21 @@ module.exports = async function (fastify, opts) {
       reply.code(204)
     }
   )
+
+  /**
+   * Browse activities. Slice by date, and page through results.
+   * Results are for a single day. Pass 'on' in query string in
+   * ISO date format. Default for 'on' is today.
+   * Limit to N results (capped at 100?) with paging.
+   */
+  fastify.get('/activities', async (request, reply) => {
+    // use today as default when 'on' not provided
+    // expect 'on' to be an ISO date string
+    const { on } = request.query
+
+    // FIXME: verify format of 'on'
+    const onTs = on ? new Date(on) : new Date()
+    const actions = await fastify.data.action.getActions(onTs)
+    reply.send(actions)
+  })
 }
