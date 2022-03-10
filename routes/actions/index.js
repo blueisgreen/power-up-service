@@ -2,14 +2,6 @@
 
 module.exports = async function (fastify, opts) {
   /**
-   * Get all actions.
-   */
-  fastify.get('/', async (request, reply) => {
-    const actions = await fastify.data.action.getActions()
-    reply.send(actions)
-  })
-
-  /**
    * Record an action.
    */
   fastify.post('/', async (request, reply) => {

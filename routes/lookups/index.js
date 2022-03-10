@@ -10,6 +10,7 @@ module.exports = async function (fastify, opts) {
   })
 
   fastify.get('/roles', async (req, reply) => {
+    fastify.log.debug(fastify.lookups.role)
     reply.send(fastify.lookups.role)
   })
 }

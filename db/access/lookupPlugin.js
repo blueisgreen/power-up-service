@@ -55,7 +55,7 @@ module.exports = async function (fastify, options, next) {
       }
       return codesToMap.map((code) => ({
         code: code.code,
-        displayName: code.displayName,
+        display: code.displayName,
       }))
     }
 
