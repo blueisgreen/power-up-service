@@ -21,31 +21,25 @@ module.exports = async function (fastify, opts) {
   /**
    * Create an inquiry.
    */
-  fastify.post(
-    '/',
-    {
-      preValidation: fastify.preValidation,
-    },
-    async (request, reply) => {
-      let userId = null
-      if (request.user) {
-        const user = await fastify.data.identity.getUserWithPublicId(
-          request.userKey
-        )
-        if (user) {
-          userId = user.id
-        } else {
-          console.log('weird, logged in user not found')
-        }
-      }
-      fastify.log.debug(JSON.stringify(request.body))
-      const inquiry = await fastify.data.support.createInquiry(
-        request.body,
-        userId
+  fastify.post('/', async (request, reply) => {
+    let userId = null
+    if (request.user) {
+      const user = await fastify.data.identity.getUserWithPublicId(
+        request.userKey
       )
-      reply.send(inquiry)
+      if (user) {
+        userId = user.id
+      } else {
+        console.log('weird, logged in user not found')
+      }
     }
-  )
+    fastify.log.debug(JSON.stringify(request.body))
+    const inquiry = await fastify.data.support.createInquiry(
+      request.body,
+      userId
+    )
+    reply.send(inquiry)
+  })
 
   /**
    * Get a specific inquiry.
