@@ -1,7 +1,13 @@
 // TODO: move common logic here to avoid duplication in callback funtions
 
 export const finishLogin = (fastify, response) => {
-  fastify.log.debug('do some common stuff')
+  const browserContext = `${request.headers['user-agent']} | ${request.headers['referer']}`
+  const actionResponse = await fastify.data.action.capture(
+    'login',
+    browserContext,
+    request.userKey
+  )
+
   return 'blah'
 }
 

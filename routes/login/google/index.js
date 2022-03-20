@@ -41,6 +41,14 @@ module.exports = async function (fastify, opts) {
       goTo = 'register'
     }
 
+    // record login activity - capture user browser context
+    const browserContext = `${request.headers['user-agent']} | ${request.headers['referer']}`
+    const actionResponse = await fastify.data.action.capture(
+      'login',
+      browserContext,
+      user.public_id
+    )
+
     // refresh token
     const roles = await fastify.data.identity.getUserRoles(user.id)
     const token = fastify.jwt.sign({

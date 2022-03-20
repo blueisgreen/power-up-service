@@ -12,6 +12,10 @@ module.exports = async function (fastify, opts) {
       `record action: ${actionCode} by ${userKey} details: ${details}`
     )
 
+    fastify.log.debug(
+      `${request.headers['user-agent']} | ${request.headers['referer']}`
+    )
+
     const inquiry = await fastify.data.action.capture(
       actionCode,
       details,
