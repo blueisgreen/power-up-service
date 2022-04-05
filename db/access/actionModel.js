@@ -44,20 +44,46 @@ module.exports = (fastify) => {
 
     const { start, end, user, action, limit, offset } = queryParams
 
-    // const startDate = start || new Date()
-    // start.setHours(0, 0, 0, 0)
-    // const end = new Date(
-    //   start.getFullYear(),
-    //   start.getMonth(),
-    //   start.getDate() + 1
-    // )
+    // FIXME: deal properly with dates
+    let startTS, endTS
+    if (start) {
+      try {
+        startTS = new Date(start)
+      } catch (err) {
+        console.log(err)
+        startTS
+      }
+    }
+    if (end) {
+      try {
+        endTS = new Date(end)
+      } catch (err) {
+        console.log(err)
+        endTS
+      }
+    }
 
     const results = await knex('actions')
-      .select(actionColumns)
-      .where('created_at', '>=', start.toISOString())
-      .andWhere('created_at', '<', end.toISOString())
-      .orderBy('createdAt', 'desc')
-      .limit(100)
+      .select('created_at', 'action_code', 'details', 'user_public_id')
+      .orderBy('created_at', 'desc')
+      .limit(limit)
+      .offset(offset)
+      .modify((builder) => {
+        if (startTS) {
+          builder.where('created_at', '>=', startTS.toISOString)
+        }
+        if (endTS) {
+          builder.where('created_at', '<', endTS.toISOString)
+        }
+        if (action) {
+          builder.where('action_code', '=', action)
+        }
+        if (user) {
+          builder.where('user_public_id', '=', user)
+        }
+        return builder
+      })
+
     return results
   }
 
