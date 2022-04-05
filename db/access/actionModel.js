@@ -1,4 +1,5 @@
 const { actionColumns } = require('./modelFieldMap')
+const { dateIsValid } = require('../../util/helpers')
 
 module.exports = (fastify) => {
   const { knex, log } = fastify
@@ -33,6 +34,24 @@ module.exports = (fastify) => {
 
   */
 
+  // function dateIsValid(dateStr) {
+  //   // format looks correct
+  //   const regex = /^\d{4}-\d{2}-\d{2}$/
+  //   if (dateStr.match(regex) === null) {
+  //     return false
+  //   }
+
+  //   // date is legitimate
+  //   const date = new Date(dateStr)
+  //   const timestamp = date.getTime()
+  //   if (typeof timestamp !== 'number' || Number.isNaN(timestamp)) {
+  //     return false
+  //   }
+
+  //   // converts back to given
+  //   return date.toISOString().startsWith(dateStr)
+  // }
+
   /**
    * Return all activities records that match given filters.
    * @param {*} on Date to restrict view or unrestricted if not passed
@@ -44,36 +63,17 @@ module.exports = (fastify) => {
 
     const { start, end, user, action, limit, offset } = queryParams
 
-    // FIXME: deal properly with dates
-    let startTS, endTS
-    if (start) {
-      try {
-        startTS = new Date(start)
-      } catch (err) {
-        console.log(err)
-        startTS
-      }
-    }
-    if (end) {
-      try {
-        endTS = new Date(end)
-      } catch (err) {
-        console.log(err)
-        endTS
-      }
-    }
-
     const results = await knex('actions')
       .select('created_at', 'action_code', 'details', 'user_public_id')
       .orderBy('created_at', 'desc')
       .limit(limit)
       .offset(offset)
       .modify((builder) => {
-        if (startTS) {
-          builder.where('created_at', '>=', startTS.toISOString)
+        if (start && dateIsValid(start)) {
+          builder.where('created_at', '>=', start)
         }
-        if (endTS) {
-          builder.where('created_at', '<', endTS.toISOString)
+        if (end && dateIsValid(end)) {
+          builder.where('created_at', '<', end)
         }
         if (action) {
           builder.where('action_code', '=', action)
