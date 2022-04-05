@@ -23,4 +23,30 @@ module.exports = async function (fastify, opts) {
     )
     reply.code(204).send()
   })
+
+  /**
+   * Browse user action log.
+   * By default, return all rows starting now and going backward in time.
+   *
+   * Query options:
+   * Filter by user key.
+   * Filter by action code.
+   * Filter by date: start and end ('YYYY-MM-DD'), which can be open ended.
+   *
+   * Specify limit: 100 by default.
+   * Specify offset: 0 by default.
+   */
+  fastify.get('/', async (request, reply) => {
+    const { start, end, user, action, limit, offset } = request.query
+    const queryParams = {
+      start,
+      end,
+      user,
+      action,
+      limit: limit || 100,
+      offset: offset || 0,
+    }
+    const actions = await fastify.data.action.getActions(queryParams)
+    reply.send(actions)
+  })
 }
