@@ -46,7 +46,7 @@ module.exports = (fastify) => {
     const { start, end, user, action, limit, offset } = queryParams
 
     const results = await knex('actions')
-      .select('created_at', 'action_code', 'details', 'user_public_id')
+      .select(actionColumns)
       .orderBy('created_at', 'desc')
       .limit(limit)
       .offset(offset)
