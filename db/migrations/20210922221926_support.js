@@ -19,9 +19,10 @@ exports.up = function (knex) {
       table.increments('id')
       table.timestamp('created_at').defaultTo(knex.fn.now())
       table.string('action_code')
-      table.text('details')
+      table.string('tracker')
       table.uuid('user_public_id')
       table.foreign('user_public_id').references('public_id').inTable(USERS)
+      table.text('details')
     })
 }
 

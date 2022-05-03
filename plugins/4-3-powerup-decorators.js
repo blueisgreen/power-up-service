@@ -3,15 +3,16 @@ const fp = require('fastify-plugin')
 
 module.exports = fp(
   async function (fastify, options, next) {
+    const uuidv4 = require('uuid').v4
     const { log } = fastify
     log.info('loading useful decorators')
 
     fastify.decorateRequest('anonymous', true)
     fastify.decorateRequest('userKey', null)
+    fastify.decorateRequest('tracker', null)
 
     fastify.addHook('onRequest', async (request, reply) => {
       // see if we know who this is
-      // TODO: expand to help track anonymous users
       try {
         await request.jwtVerify()
         log.debug(`found valid session token ${JSON.stringify(request.user)}`)
@@ -20,6 +21,12 @@ module.exports = fp(
       } catch (err) {
         log.debug('session token not found or invalid')
         request.anonymous = true
+      }
+
+      request.tracker = request.cookies.tracker
+      if (!request.tracker) {
+        request.tracker = `tr:${uuidv4()}`
+        reply.setCookie('tracker', request.tracker, fastify.uiCookieOptions)
       }
 
       // leave cookies as a reminder
