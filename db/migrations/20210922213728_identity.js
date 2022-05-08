@@ -31,6 +31,7 @@ exports.up = function (knex) {
         table.integer('social_platform_id')
         table.string('social_id')
         table.string('access_token', 512) // from auth provider; hold for future processing
+        table.integer('access_token_exp')
         table.text('social_user_info') // public user info from id provider
         table.timestamps(true, true)
         table.primary(['user_id', 'social_platform_id'])
