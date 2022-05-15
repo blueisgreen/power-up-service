@@ -92,8 +92,6 @@ module.exports = (fastify) => {
     log.debug('user record ==V')
     log.debug(JSON.stringify(userRecord[0]))
     const id = userRecord[0].id
-
-    // FIXME: convert access_token to text or at least bigger - LinkedIn has a massive token >255 characters
     await knex('social_profiles').insert({
       user_id: id,
       social_id: socialProfile.id || socialProfile.sub,
@@ -118,9 +116,8 @@ module.exports = (fastify) => {
 
   const grantRoles = async (userId, roles) => {
     log.debug('identity plugin: grantRoles')
-    const roleMap = fastify.lookups.role
     const roleIdsToGrant = roles.map(
-      (roleCode) => fastify.lookups.codeLookup('role', roleCode).id
+      (roleCode) => fastify.lookups.codeLookup('userRole', roleCode).id
     )
     roleIdsToGrant.forEach(async (roleId) => {
       await knex('user_roles')
