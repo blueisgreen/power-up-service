@@ -1,5 +1,5 @@
 const fp = require('fastify-plugin')
-const oauthPlugin = require('fastify-oauth2')
+const oauthPlugin = require('@fastify/oauth2')
 
 /**
  * @see https://github.com/fastify/fastify-oauth2

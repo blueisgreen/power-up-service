@@ -21,6 +21,25 @@ module.exports = (fastify) => {
     return userRecord.length > 0 ? userRecord[0] : null
   }
 
+  const join = async (userPublicId, alias, okToTerms, okToCookies) => {
+    log.debug('identity plugin: join')
+    const now = new Date()
+    const membership = {
+      alias,
+      updated_at: now,
+    }
+    if (okToTerms) {
+      membership.terms_accepted_at = now
+    }
+    if (okToCookies) {
+      membership.cookies_accepted_at = now
+    }
+    await knex('users').where('public_id', '=', userPublicId).update(membership)
+    if (okToTerms) {
+      await grantRoles(userId, ['member'])
+    }
+  }
+
   const findUserWithPublicId = async (userKey, platform) => {
     log.debug(
       `identity plugin: findUserWithPublicId using userKey ${userKey} on platform ${platform}`
@@ -158,6 +177,9 @@ module.exports = (fastify) => {
     return true
   }
 
+  // FIXME: improve user account lifecycle methods
+  // TODO: support contributor role lifecycle
+
   const updateUser = async (userPublicId, changes) => {
     log.debug('identity plugin: updateUser')
     const now = new Date()
@@ -216,6 +238,7 @@ module.exports = (fastify) => {
     getUserWithPublicId,
     findUserWithPublicId,
     findUserFromSocialProfile,
+    join,
     registerUser,
     getUserRoles,
     grantRoles,
