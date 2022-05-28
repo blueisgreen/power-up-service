@@ -28,10 +28,11 @@ module.exports = async function (fastify, opts) {
       preValidation: fastify.preValidation,
     },
     async (request, reply) => {
-      fastify.log.info(`make user a member: ${request.userKey}`)
+      const userKey = request.userKey
+      fastify.log.info(`make user a member: ${userKey}`)
       const { alias, okToTerms, okToCookies } = request.body
-      const userInfo = await fastify.identity.join(
-        request.userKey,
+      const userInfo = await fastify.data.identity.becomeMember(
+        userKey,
         alias,
         okToTerms,
         okToCookies

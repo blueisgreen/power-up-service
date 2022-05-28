@@ -21,8 +21,8 @@ module.exports = (fastify) => {
     return userRecord.length > 0 ? userRecord[0] : null
   }
 
-  const join = async (userPublicId, alias, okToTerms, okToCookies) => {
-    log.debug('identity plugin: join')
+  const becomeMember = async (userPublicId, alias, okToTerms, okToCookies) => {
+    log.debug(`identity plugin: becomeMember ${userPublicId}, ${alias}`)
     const now = new Date()
     const membership = {
       alias,
@@ -34,9 +34,15 @@ module.exports = (fastify) => {
     if (okToCookies) {
       membership.cookies_accepted_at = now
     }
-    await knex('users').where('public_id', '=', userPublicId).update(membership)
+    const userInfo = await knex('users')
+      .returning(userColumns)
+      .where('public_id', '=', userPublicId)
+      .update(membership)
+    log.debug(JSON.stringify(userInfo))
     if (okToTerms) {
-      await grantRoles(userId, ['member'])
+      const userRecord = getUserWithPublicId(userPublicId)
+      log.debug(JSON.stringify(userRecord))
+      await grantRoles(userInfo[0].id, ['member'])
     }
   }
 
@@ -238,7 +244,7 @@ module.exports = (fastify) => {
     getUserWithPublicId,
     findUserWithPublicId,
     findUserFromSocialProfile,
-    join,
+    becomeMember,
     registerUser,
     getUserRoles,
     grantRoles,
