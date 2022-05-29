@@ -29,7 +29,6 @@ module.exports = async function (fastify, opts) {
     },
     async (request, reply) => {
       const userKey = request.userKey
-      fastify.log.info(`make user a member: ${userKey}`)
       const { alias, okToTerms, okToCookies } = request.body
       const userInfo = await fastify.data.identity.becomeMember(
         userKey,
@@ -37,6 +36,10 @@ module.exports = async function (fastify, opts) {
         okToTerms,
         okToCookies
       )
+      const updatedRoles = await fastify.data.identity.getUserRoles(userInfo.id)
+      // TODO: determine an approach to suppress internal data, like db IDs
+      userInfo.roles = updatedRoles
+      delete userInfo.id
       reply.send(userInfo)
     }
   )

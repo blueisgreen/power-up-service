@@ -21,31 +21,6 @@ module.exports = (fastify) => {
     return userRecord.length > 0 ? userRecord[0] : null
   }
 
-  const becomeMember = async (userPublicId, alias, okToTerms, okToCookies) => {
-    log.debug(`identity plugin: becomeMember ${userPublicId}, ${alias}`)
-    const now = new Date()
-    const membership = {
-      alias,
-      updated_at: now,
-    }
-    if (okToTerms) {
-      membership.terms_accepted_at = now
-    }
-    if (okToCookies) {
-      membership.cookies_accepted_at = now
-    }
-    const userInfo = await knex('users')
-      .returning(userColumns)
-      .where('public_id', '=', userPublicId)
-      .update(membership)
-    log.debug(JSON.stringify(userInfo))
-    if (okToTerms) {
-      const userRecord = getUserWithPublicId(userPublicId)
-      log.debug(JSON.stringify(userRecord))
-      await grantRoles(userInfo[0].id, ['member'])
-    }
-  }
-
   const findUserWithPublicId = async (userKey, platform) => {
     log.debug(
       `identity plugin: findUserWithPublicId using userKey ${userKey} on platform ${platform}`
@@ -129,6 +104,32 @@ module.exports = (fastify) => {
     return getUser(id)
   }
 
+  const becomeMember = async (userPublicId, alias, okToTerms, okToCookies) => {
+    log.debug(`identity plugin: becomeMember ${userPublicId}, ${alias}`)
+    const now = new Date()
+    const membership = {
+      alias,
+      updated_at: now,
+    }
+    if (okToTerms) {
+      membership.terms_accepted_at = now
+    }
+    if (okToCookies) {
+      membership.cookies_accepted_at = now
+    }
+    const result = await knex('users')
+      .returning(userColumns)
+      .where('public_id', '=', userPublicId)
+      .update(membership)
+    const userInfo = result[0]
+    if (okToTerms) {
+      const userRecord = getUserWithPublicId(userPublicId)
+      log.debug(JSON.stringify(userRecord))
+      await grantRoles(userInfo.id, ['member'])
+    }
+    return userInfo
+  }
+
   const getUserRoles = async (userId) => {
     log.debug('identity plugin: getUserRoles')
     const roleRecords = await knex('system_codes')
@@ -136,6 +137,7 @@ module.exports = (fastify) => {
       .join('user_roles', 'user_roles.role_id', '=', 'system_codes.id')
       .where({ user_id: userId })
     const roles = roleRecords.map((record) => record.code)
+    log.debug(`roles ${roles}`)
     return roles
   }
 
