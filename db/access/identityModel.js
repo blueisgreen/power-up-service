@@ -123,11 +123,17 @@ module.exports = (fastify) => {
       .update(membership)
     const userInfo = result[0]
     if (okToTerms) {
-      const userRecord = getUserWithPublicId(userPublicId)
-      log.debug(JSON.stringify(userRecord))
       await grantRoles(userInfo.id, ['member'])
     }
     return userInfo
+  }
+
+  const becomeContributor = async (userPublicId) => {
+    log.debug('identity plugin: becomeContributor')
+    const userRecord = await getUserWithPublicId(userPublicId)
+    log.debug('user:' + userRecord)
+    await grantRoles(userRecord.id, ['author'])
+    return userRecord
   }
 
   const getUserRoles = async (userId) => {
@@ -247,6 +253,7 @@ module.exports = (fastify) => {
     findUserWithPublicId,
     findUserFromSocialProfile,
     becomeMember,
+    becomeContributor,
     registerUser,
     getUserRoles,
     grantRoles,
