@@ -128,8 +128,8 @@ module.exports = (fastify) => {
     return userInfo
   }
 
-  const becomeContributor = async (userPublicId) => {
-    log.debug('identity plugin: becomeContributor')
+  const becomeAuthor = async (userPublicId) => {
+    log.debug('identity plugin: becomeAuthor')
     const userRecord = await getUserWithPublicId(userPublicId)
     log.debug('user:' + userRecord)
     await grantRoles(userRecord.id, ['author'])
@@ -253,7 +253,7 @@ module.exports = (fastify) => {
     findUserWithPublicId,
     findUserFromSocialProfile,
     becomeMember,
-    becomeContributor,
+    becomeAuthor,
     registerUser,
     getUserRoles,
     grantRoles,

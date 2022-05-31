@@ -47,13 +47,13 @@ module.exports = async function (fastify, opts) {
    * Become a member.
    */
   fastify.post(
-    '/contributor',
+    '/author',
     {
       preValidation: fastify.preValidation,
     },
     async (request, reply) => {
       const userKey = request.userKey
-      const userInfo = await fastify.data.identity.becomeContributor(userKey)
+      const userInfo = await fastify.data.identity.becomeAuthor(userKey)
       const updatedRoles = await fastify.data.identity.getUserRoles(userInfo.id)
       userInfo.roles = updatedRoles
       delete userInfo.id
