@@ -124,6 +124,8 @@ module.exports = (fastify) => {
     const userInfo = result[0]
     if (okToTerms) {
       await grantRoles(userInfo.id, ['member'])
+      const roles = getUserRoles(userInfo.id)
+      userInfo.roles = roles
     }
     return userInfo
   }
@@ -131,8 +133,9 @@ module.exports = (fastify) => {
   const becomeAuthor = async (userPublicId) => {
     log.debug('identity plugin: becomeAuthor')
     const userRecord = await getUserWithPublicId(userPublicId)
-    log.debug('user:' + userRecord)
     await grantRoles(userRecord.id, ['author'])
+    const roles = getUserRoles(userRecord.id)
+    userRecord.roles = roles
     return userRecord
   }
 
@@ -145,6 +148,16 @@ module.exports = (fastify) => {
     const roles = roleRecords.map((record) => record.code)
     log.debug(`roles ${roles}`)
     return roles
+  }
+
+  const getUserRolesWithPublicId = async (userPublicId) => {
+    log.debug('identity plugin: getUserWithPublicId')
+    const userRecord = await knex('users')
+      .returning(['id'])
+      .where('public_id', '=', userPublicId)
+    log.debug(userRecord)
+    const userId = userRecord.length > 0 ? userRecord[0].id : null
+    return getUserRoles(userId)
   }
 
   const grantRoles = async (userId, roles) => {
@@ -190,9 +203,6 @@ module.exports = (fastify) => {
     })
     return true
   }
-
-  // FIXME: improve user account lifecycle methods
-  // TODO: support contributor role lifecycle
 
   const updateUser = async (userPublicId, changes) => {
     log.debug('identity plugin: updateUser')
@@ -256,6 +266,7 @@ module.exports = (fastify) => {
     becomeAuthor,
     registerUser,
     getUserRoles,
+    getUserRolesWithPublicId,
     grantRoles,
     agreeToTerms,
     agreeToCookies,

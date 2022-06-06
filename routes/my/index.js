@@ -149,4 +149,17 @@ module.exports = async function (fastify, opts) {
       reply.send(inquiries)
     }
   )
+
+  fastify.get(
+    '/roles',
+    {
+      preValidation: fastify.preValidation,
+    },
+    async (request, reply) => {
+      const roles = await fastify.data.identity.getUserRolesWithPublicId(
+        request.userKey
+      )
+      reply.send(roles)
+    }
+  )
 }
