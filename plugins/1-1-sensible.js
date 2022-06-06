@@ -8,8 +8,8 @@ const fp = require('fastify-plugin')
  * @see https://github.com/fastify/fastify-sensible
  */
 module.exports = fp(async function (fastify, opts) {
-  fastify.log.info("loading fastify-sensible");
-  fastify.register(require('fastify-sensible'), {
+  fastify.log.info("loading @fastify/sensible");
+  fastify.register(require('@fastify/sensible'), {
     errorHandler: false
   })
 })

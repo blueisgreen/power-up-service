@@ -10,14 +10,14 @@ exports.up = function (knex) {
       return knex('system_codes')
         .insert(
           [
-            { code: 'role', display_name: 'Role' },
+            { code: 'userRole', display_name: 'User Role' },
             { code: 'accountStatus', display_name: 'Account Status' },
-            { code: 'socialPlatform', display_name: 'Social Platform' },
+            { code: 'socialPlatform', display_name: 'Authentication Platform' },
           ],
           ['id', 'code']
         )
         .then((rows) => {
-          const roleCat = rows.find((cat) => cat.code === 'role')
+          const userRoleCat = rows.find((cat) => cat.code === 'userRole')
           const accountStatusCat = rows.find(
             (cat) => cat.code === 'accountStatus'
           )
@@ -28,27 +28,37 @@ exports.up = function (knex) {
             {
               code: 'admin',
               display_name: 'System Administrator',
-              parent_id: roleCat.id,
+              parent_id: userRoleCat.id,
             },
             {
-              code: 'editorInChief',
-              display_name: 'Editor in Chief',
-              parent_id: roleCat.id,
+              code: 'support',
+              display_name: 'Member Support',
+              parent_id: userRoleCat.id,
             },
             {
-              code: 'member',
-              display_name: 'Member',
-              parent_id: roleCat.id,
-            },
-            {
-              code: 'author',
-              display_name: 'Author',
-              parent_id: roleCat.id,
+              code: 'producer',
+              display_name: 'Producer',
+              parent_id: userRoleCat.id,
             },
             {
               code: 'editor',
               display_name: 'Editor',
-              parent_id: roleCat.id,
+              parent_id: userRoleCat.id,
+            },
+            {
+              code: 'member',
+              display_name: 'Member',
+              parent_id: userRoleCat.id,
+            },
+            {
+              code: 'author',
+              display_name: 'Contributor',
+              parent_id: userRoleCat.id,
+            },
+            {
+              code: 'moderator',
+              display_name: 'Moderator',
+              parent_id: userRoleCat.id,
             },
             {
               code: 'active',
@@ -69,11 +79,6 @@ exports.up = function (knex) {
               code: 'archived',
               display_name: 'Archived',
               parent_id: accountStatusCat.id,
-            },
-            {
-              code: 'bypass',
-              display_name: 'Bypass',
-              parent_id: socialPlatformCat.id,
             },
             {
               code: 'github',

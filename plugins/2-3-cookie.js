@@ -1,5 +1,5 @@
 const fp = require('fastify-plugin')
-const cookiePlugin = require('fastify-cookie')
+const cookiePlugin = require('@fastify/cookie')
 
 module.exports = fp(async function (fastify, opts) {
   const { log } = fastify
@@ -12,7 +12,7 @@ module.exports = fp(async function (fastify, opts) {
   })
 
   let expDate = new Date()
-  expDate.setDate(expDate.getDate() + 365)
+  expDate.setDate(expDate.getDate() + 30)
 
   fastify.decorate('secretCookieOptions', {
     path: '/',

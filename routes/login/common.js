@@ -2,10 +2,11 @@
 
 export const finishLogin = (fastify, response) => {
   const browserContext = `${request.headers['user-agent']} | ${request.headers['referer']}`
-  const actionResponse = await fastify.data.action.capture(
+  fastify.data.action.capture(
     'login',
-    browserContext,
-    request.userKey
+    request.tracker,
+    request.userKey,
+    browserContext
   )
 
   return 'blah'

@@ -31,6 +31,6 @@ const options = {
  * @see https://github.com/fastify/fastify-env
  */
 module.exports = fp(async function (fastify, opts) {
-  fastify.log.info("loading fastify-env");
-  fastify.register(require("fastify-env"), options);
+  fastify.log.info("loading @fastify/env");
+  fastify.register(require("@fastify/env"), options);
 });

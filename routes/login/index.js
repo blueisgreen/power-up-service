@@ -46,10 +46,11 @@ module.exports = async function (fastify, opts) {
 
     // record login activity - capture user browser context
     const browserContext = `${request.headers['user-agent']} | ${request.headers['referer']}`
-    const actionResponse = await fastify.data.action.capture(
+    fastify.data.action.capture(
       'login',
-      browserContext,
-      user.public_id
+      request.tracker,
+      user.public_id,
+      browserContext
     )
 
     // refresh token

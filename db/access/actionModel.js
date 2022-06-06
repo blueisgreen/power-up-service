@@ -4,12 +4,13 @@ const { dateIsValid } = require('../../util/helpers')
 module.exports = (fastify) => {
   const { knex, log } = fastify
 
-  const capture = async (code, details, userKey) => {
+  const capture = async (code, tracker, userKey, details) => {
     log.debug('actionModel.capture')
     await knex('actions').insert({
       action_code: code,
-      details,
+      tracker: tracker,
       user_public_id: userKey,
+      details,
     })
     return
   }

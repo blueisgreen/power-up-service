@@ -92,8 +92,6 @@ module.exports = (fastify) => {
     log.debug('user record ==V')
     log.debug(JSON.stringify(userRecord[0]))
     const id = userRecord[0].id
-
-    // FIXME: convert access_token to text or at least bigger - LinkedIn has a massive token >255 characters
     await knex('social_profiles').insert({
       user_id: id,
       social_id: socialProfile.id || socialProfile.sub,
@@ -106,6 +104,38 @@ module.exports = (fastify) => {
     return getUser(id)
   }
 
+  const becomeMember = async (userPublicId, alias, okToTerms, okToCookies) => {
+    log.debug(`identity plugin: becomeMember ${userPublicId}, ${alias}`)
+    const now = new Date()
+    const membership = {
+      alias,
+      updated_at: now,
+    }
+    if (okToTerms) {
+      membership.terms_accepted_at = now
+    }
+    if (okToCookies) {
+      membership.cookies_accepted_at = now
+    }
+    const result = await knex('users')
+      .returning(userColumns)
+      .where('public_id', '=', userPublicId)
+      .update(membership)
+    const userInfo = result[0]
+    if (okToTerms) {
+      await grantRoles(userInfo.id, ['member'])
+    }
+    return userInfo
+  }
+
+  const becomeAuthor = async (userPublicId) => {
+    log.debug('identity plugin: becomeAuthor')
+    const userRecord = await getUserWithPublicId(userPublicId)
+    log.debug('user:' + userRecord)
+    await grantRoles(userRecord.id, ['author'])
+    return userRecord
+  }
+
   const getUserRoles = async (userId) => {
     log.debug('identity plugin: getUserRoles')
     const roleRecords = await knex('system_codes')
@@ -113,14 +143,14 @@ module.exports = (fastify) => {
       .join('user_roles', 'user_roles.role_id', '=', 'system_codes.id')
       .where({ user_id: userId })
     const roles = roleRecords.map((record) => record.code)
+    log.debug(`roles ${roles}`)
     return roles
   }
 
   const grantRoles = async (userId, roles) => {
     log.debug('identity plugin: grantRoles')
-    const roleMap = fastify.lookups.role
     const roleIdsToGrant = roles.map(
-      (roleCode) => fastify.lookups.codeLookup('role', roleCode).id
+      (roleCode) => fastify.lookups.codeLookup('userRole', roleCode).id
     )
     roleIdsToGrant.forEach(async (roleId) => {
       await knex('user_roles')
@@ -160,6 +190,9 @@ module.exports = (fastify) => {
     })
     return true
   }
+
+  // FIXME: improve user account lifecycle methods
+  // TODO: support contributor role lifecycle
 
   const updateUser = async (userPublicId, changes) => {
     log.debug('identity plugin: updateUser')
@@ -219,6 +252,8 @@ module.exports = (fastify) => {
     getUserWithPublicId,
     findUserWithPublicId,
     findUserFromSocialProfile,
+    becomeMember,
+    becomeAuthor,
     registerUser,
     getUserRoles,
     grantRoles,
