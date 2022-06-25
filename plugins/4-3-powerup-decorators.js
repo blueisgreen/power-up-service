@@ -10,12 +10,7 @@ module.exports = fp(
     fastify.decorateRequest('anonymous', true)
     fastify.decorateRequest('userKey', null)
     fastify.decorateRequest('tracker', null)
-    fastify.decorateRequest('userContext', {
-      userKey: null,
-      userId: -1,
-      userStatus: null,
-      roles: [],
-    })
+    fastify.decorateRequest('userContext', null)
 
     fastify.addHook('onRequest', async (request, reply) => {
       // see if we know who this is
@@ -28,8 +23,9 @@ module.exports = fp(
         request.userContext = await fastify.data.identity.getUserContext(
           request.user.user.who
         )
+        log.debug('user ' + request.userContext)
       } catch (err) {
-        log.debug('session token not found or invalid')
+        log.debug('session token not found or invalid: ' + err)
         request.anonymous = true
       }
 

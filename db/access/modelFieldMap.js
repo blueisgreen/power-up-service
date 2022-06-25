@@ -26,7 +26,7 @@ const articleTableName = 'articles'
 const articleInfoColumns = [
   'id',
   'headline',
-  'author_alias as authorAlias',
+  // 'author_alias as authorAlias',
   'byline',
   'cover_art_url as coverArtUrl',
   'synopsis',

@@ -42,8 +42,8 @@ module.exports = (fastify) => {
   const getArticles = async (userId) => {
     log.debug('articleModel.getMyArticles')
     const myArticles = await knex(articleTableName)
+      .select(articleInfoColumns)
       .where('author_id', userId)
-      .returning(articleInfoColumns)
     fastify.log.debug('Found ' + myArticles.length + ' articles by ' + userId)
     return myArticles
   }
@@ -63,8 +63,8 @@ module.exports = (fastify) => {
       author_id: userId,
     }
     const myArticle = await knex(articleTableName)
+      .select(articleContentColumns)
       .where(conditions)
-      .returning(articleContentColumns)
     return myArticle.length > 0 ? myArticle[0] : null
   }
 

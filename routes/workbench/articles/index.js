@@ -5,67 +5,46 @@ module.exports = async function (fastify, opts) {
     error: 'Bad news, kiddies. Something went wrong.',
   }
 
-  fastify.get(
-    '/',
-    {
-      // FIXME: make sure user is author or editor
-      preValidation: [fastify.preValidation],
-    },
-    async (req, reply) => {
-      const articles = await fastify.data.workbench.getArticles(
-        req.userContext.userId
-      )
-      if (articles) {
-        reply.send(articles)
-      } else {
-        reply.code(404).send('No articles found')
-      }
+  fastify.get('/', async (req, reply) => {
+    const articles = await fastify.data.workbench.getArticles(
+      req.userContext.userId
+    )
+    if (articles) {
+      reply.send(articles)
+    } else {
+      reply.code(404).send('No articles found')
     }
-  )
+  })
 
-  fastify.post(
-    '/',
-    {
-      // FIXME: make sure user is author
-      preValidation: [fastify.preValidation],
-    },
-    async (req, reply) => {
-      const userInfo = await fastify.data.identity.getUserWithPublicId(
-        req.userKey
-      )
-      const headline = req.body.headline
-      const byline = userInfo.alias || 'A. Nonymous'
-      const articleInfo = await fastify.data.workbench.createArticle(
-        headline,
-        userInfo.id,
-        byline
-      )
-      if (articleInfo) {
-        reply.code(201).send(articleInfo)
-      } else {
-        reply.code(500).send(genericErrorMsg)
-      }
+  fastify.post('/', async (req, reply) => {
+    const userInfo = await fastify.data.identity.getUserWithPublicId(
+      req.userKey
+    )
+    const headline = req.body.headline
+    const byline = userInfo.alias || 'A. Nonymous'
+    const articleInfo = await fastify.data.workbench.createArticle(
+      headline,
+      userInfo.id,
+      byline
+    )
+    if (articleInfo) {
+      reply.code(201).send(articleInfo)
+    } else {
+      reply.code(500).send(genericErrorMsg)
     }
-  )
+  })
 
-  fastify.get(
-    '/:id',
-    {
-      // FIXME: make sure user is author or editor
-      preValidation: [fastify.preValidation],
-    },
-    async (req, reply) => {
-      const article = await fastify.data.workbench.getArticleContent(
-        req.params.id,
-        req.userContext.userId
-      )
-      if (article) {
-        reply.send(article)
-      } else {
-        reply.code(404).send()
-      }
+  fastify.get('/:id', async (req, reply) => {
+    const article = await fastify.data.workbench.getArticleContent(
+      req.params.id,
+      req.userContext.userId
+    )
+    if (article) {
+      reply.send(article)
+    } else {
+      reply.code(404).send()
     }
-  )
+  })
 
   fastify.put('/:id', async (req, reply) => {
     try {

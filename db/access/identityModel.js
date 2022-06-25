@@ -15,15 +15,14 @@ module.exports = (fastify) => {
 
   const getUserContext = async (userPublicId) => {
     log.debug('identity plugin: getUserContext')
-    const user = await getUserRolesWithPublicId(userPublicId)
+    const user = await getUserWithPublicId(userPublicId)
+    const roles = await getUserRolesWithPublicId(userPublicId)
     const status = user.accountStatusId
       ? fastify.lookups.idToCode(user.accountStatusId)
       : null
-    const roles = await getUserRoles(user.id)
     return {
       userId: user.id,
       userKey: userPublicId,
-      userKey: user.publicId,
       userStatus: status,
       roles,
     }
@@ -173,7 +172,7 @@ module.exports = (fastify) => {
       .where('public_id', '=', userPublicId)
     log.debug(userRecord)
     const userId = userRecord.length > 0 ? userRecord[0].id : null
-    return getUserRoles(userId)
+    return await getUserRoles(userId)
   }
 
   const grantRoles = async (userId, roles) => {
