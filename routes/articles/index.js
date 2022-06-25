@@ -10,6 +10,7 @@ module.exports = async function (fastify, opts) {
   const columnsToReturn = [
     'id',
     'headline',
+    'author_id as authorId',
     'byline',
     'cover_art_url as coverArtUrl',
     'synopsis',
@@ -44,26 +45,26 @@ module.exports = async function (fastify, opts) {
     reply.send(articles)
   })
 
-  fastify.post('/', async (req, reply) => {
-    const userInfo = await fastify.data.identity.getUserWithPublicId(req.userKey)
-    const author = userInfo.alias || 'A. Nonymous'
-    console.log(author)
+  // fastify.post('/', async (req, reply) => {
+  //   const userInfo = await fastify.data.identity.getUserWithPublicId(req.userKey)
+  //   const author = userInfo.alias || 'A. Nonymous'
+  //   console.log(author)
 
-    const given = req.body
-    const row = {
-      ...given,
-      author_id: userInfo.id,
-      byline: author,
-    }
-    delete row.id
-    try {
-      const result = await knex(tableName).insert(row, columnsToReturn)
-      reply.code(201).send(result[0])
-    } catch (err) {
-      fastify.log.error(err)
-      reply.code(500).send(genericErrorMsg)
-    }
-  })
+  //   const given = req.body
+  //   const row = {
+  //     ...given,
+  //     author_id: userInfo.id,
+  //     byline: author,
+  //   }
+  //   delete row.id
+  //   try {
+  //     const result = await knex(tableName).insert(row, columnsToReturn)
+  //     reply.code(201).send(result[0])
+  //   } catch (err) {
+  //     fastify.log.error(err)
+  //     reply.code(500).send(genericErrorMsg)
+  //   }
+  // })
 
   fastify.get('/:id', async (req, reply) => {
     try {
