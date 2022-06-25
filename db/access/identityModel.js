@@ -13,6 +13,22 @@ module.exports = (fastify) => {
     return userRecord.length > 0 ? userRecord[0] : null
   }
 
+  const getUserContext = async (userPublicId) => {
+    log.debug('identity plugin: getUserContext')
+    const user = await getUserRolesWithPublicId(userPublicId)
+    const status = user.accountStatusId
+      ? fastify.lookups.idToCode(user.accountStatusId)
+      : null
+    const roles = await getUserRoles(user.id)
+    return {
+      userId: user.id,
+      userKey: userPublicId,
+      userKey: user.publicId,
+      userStatus: status,
+      roles,
+    }
+  }
+
   const getUserWithPublicId = async (userPublicId) => {
     log.debug('identity plugin: getUserWithPublicId')
     const userRecord = await knex('users')
@@ -259,6 +275,7 @@ module.exports = (fastify) => {
 
   return {
     getUser,
+    getUserContext,
     getUserWithPublicId,
     findUserWithPublicId,
     findUserFromSocialProfile,

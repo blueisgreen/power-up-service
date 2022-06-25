@@ -1,31 +1,25 @@
 'use strict'
 
 module.exports = async function (fastify, opts) {
-  const knex = fastify.knex
-  const tableName = 'articles'
-
   const genericErrorMsg = {
     error: 'Bad news, kiddies. Something went wrong with the database.',
   }
-  const columnsToReturn = [
-    'id',
-    'headline',
-    'byline',
-    'cover_art_url as coverArtUrl',
-    'synopsis',
-    'content',
-    'created_at as createdAt',
-    'updated_at as updatedAt',
-    'published_at as publishedAt',
-    'archived_at as archivedAt',
-  ]
 
-  fastify.get('/', async (req, reply) => {
-    const articles = await knex(tableName)
-      .select(columnsToReturn)
-      .orderBy('created_at', 'desc')
-    reply.send(articles)
-  })
+  fastify.get(
+    '/',
+    {
+      // FIXME: make sure user is admin
+      preValidation: [fastify.preValidation],
+    },
+    async (req, reply) => {
+      // const articles = await knex(tableName)
+      //   .select(columnsToReturn)
+      //   .orderBy('created_at', 'desc')
+      // reply.send(articles)
+
+      return request.userContext
+    }
+  )
 
   fastify.get('/published', async (req, reply) => {
     const articles = await knex(tableName)
@@ -45,14 +39,15 @@ module.exports = async function (fastify, opts) {
   })
 
   fastify.post('/', async (req, reply) => {
-    const userInfo = await fastify.data.identity.getUserWithPublicId(req.userKey)
+    const userInfo = await fastify.data.identity.getUserWithPublicId(
+      req.userKey
+    )
     const author = userInfo.alias || 'A. Nonymous'
     console.log(author)
 
     const given = req.body
     const row = {
       ...given,
-      author_id: userInfo.id,
       byline: author,
     }
     delete row.id
