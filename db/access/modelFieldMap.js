@@ -9,7 +9,7 @@ const userColumns = [
   'terms_accepted_at as termsAcceptedAt',
   'cookies_accepted_at as cookiesAcceptedAt',
   'email_comms_accepted_at as emailCommsAcceptedAt',
-  'account_status_id',
+  'account_status_id as accountStatusId',
 ]
 
 const inquiryTableName = 'inquiries'
@@ -21,6 +21,21 @@ const inquiryColumns = [
   'purpose',
   'message',
 ]
+
+const articleTableName = 'articles'
+const articleInfoColumns = [
+  'id',
+  'headline',
+  // 'author_alias as authorAlias',
+  'byline',
+  'cover_art_url as coverArtUrl',
+  'synopsis',
+  'created_at as createdAt',
+  'updated_at as updatedAt',
+  'published_at as publishedAt',
+  'archived_at as archivedAt',
+]
+const articleContentColumns = ['id', 'content', 'updated_at as updatedAt']
 
 const actionTableName = 'actions'
 const actionColumns = [
@@ -41,6 +56,9 @@ const systemCodeColumns = [
 module.exports = {
   userColumns,
   userTableName,
+  articleTableName,
+  articleInfoColumns,
+  articleContentColumns,
   inquiryTableName,
   inquiryColumns,
   actionTableName,

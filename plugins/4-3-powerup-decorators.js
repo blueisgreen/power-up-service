@@ -10,6 +10,7 @@ module.exports = fp(
     fastify.decorateRequest('anonymous', true)
     fastify.decorateRequest('userKey', null)
     fastify.decorateRequest('tracker', null)
+    fastify.decorateRequest('userContext', null)
 
     fastify.addHook('onRequest', async (request, reply) => {
       // see if we know who this is
@@ -18,8 +19,13 @@ module.exports = fp(
         log.debug(`found valid session token ${JSON.stringify(request.user)}`)
         request.anonymous = false
         request.userKey = request.user.user.who
+        log.debug(request.userKey + ' is the public key of the user')
+        request.userContext = await fastify.data.identity.getUserContext(
+          request.user.user.who
+        )
+        log.debug('user ' + request.userContext)
       } catch (err) {
-        log.debug('session token not found or invalid')
+        log.debug('session token not found or invalid: ' + err)
         request.anonymous = true
       }
 
@@ -36,7 +42,7 @@ module.exports = fp(
     fastify.decorate('preValidation', async (request, reply) => {
       // TODO: expand to role-based access
       log.debug('checking for userKey on request')
-      if (!request.userKey) {
+      if (!request.userContext.userKey) {
         reply.code(401)
         reply.send('You must be signed in for that')
       }

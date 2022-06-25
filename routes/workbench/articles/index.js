@@ -1,84 +1,48 @@
 'use strict'
 
 module.exports = async function (fastify, opts) {
-  const knex = fastify.knex
-  const tableName = 'articles'
-
   const genericErrorMsg = {
-    error: 'Bad news, kiddies. Something went wrong with the database.',
+    error: 'Bad news, kiddies. Something went wrong.',
   }
-  const columnsToReturn = [
-    'id',
-    'headline',
-    'author_id as authorId',
-    'byline',
-    'cover_art_url as coverArtUrl',
-    'synopsis',
-    'content',
-    'created_at as createdAt',
-    'updated_at as updatedAt',
-    'published_at as publishedAt',
-    'archived_at as archivedAt',
-  ]
 
   fastify.get('/', async (req, reply) => {
-    const articles = await knex(tableName)
-      .select(columnsToReturn)
-      .orderBy('created_at', 'desc')
-    reply.send(articles)
+    const articles = await fastify.data.workbench.getArticles(
+      req.userContext.userId
+    )
+    if (articles) {
+      reply.send(articles)
+    } else {
+      reply.code(404).send('No articles found')
+    }
   })
 
-  fastify.get('/published', async (req, reply) => {
-    const articles = await knex(tableName)
-      .whereNull('archived_at')
-      .whereNotNull('published_at')
-      .select(columnsToReturn)
-      .orderBy('created_at', 'desc')
-    reply.send(articles)
+  fastify.post('/', async (req, reply) => {
+    const userInfo = await fastify.data.identity.getUserWithPublicId(
+      req.userKey
+    )
+    const headline = req.body.headline
+    const byline = userInfo.alias || 'A. Nonymous'
+    const articleInfo = await fastify.data.workbench.createArticle(
+      headline,
+      userInfo.id,
+      byline
+    )
+    if (articleInfo) {
+      reply.code(201).send(articleInfo)
+    } else {
+      reply.code(500).send(genericErrorMsg)
+    }
   })
-
-  fastify.get('/archived', async (req, reply) => {
-    const articles = await knex(tableName)
-      .whereNotNull('archived_at')
-      .select(columnsToReturn)
-      .orderBy('created_at', 'desc')
-    reply.send(articles)
-  })
-
-  // fastify.post('/', async (req, reply) => {
-  //   const userInfo = await fastify.data.identity.getUserWithPublicId(req.userKey)
-  //   const author = userInfo.alias || 'A. Nonymous'
-  //   console.log(author)
-
-  //   const given = req.body
-  //   const row = {
-  //     ...given,
-  //     author_id: userInfo.id,
-  //     byline: author,
-  //   }
-  //   delete row.id
-  //   try {
-  //     const result = await knex(tableName).insert(row, columnsToReturn)
-  //     reply.code(201).send(result[0])
-  //   } catch (err) {
-  //     fastify.log.error(err)
-  //     reply.code(500).send(genericErrorMsg)
-  //   }
-  // })
 
   fastify.get('/:id', async (req, reply) => {
-    try {
-      const result = await knex(tableName)
-        .select(columnsToReturn)
-        .where('id', req.params.id)
-      if (result.length > 0) {
-        reply.send(result[0])
-      } else {
-        reply.code(404).send()
-      }
-    } catch (err) {
-      fastify.log.error(err)
-      reply.code(500).send(genericErrorMsg)
+    const article = await fastify.data.workbench.getArticleContent(
+      req.params.id,
+      req.userContext.userId
+    )
+    if (article) {
+      reply.send(article)
+    } else {
+      reply.code(404).send()
     }
   })
 

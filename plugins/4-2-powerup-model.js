@@ -6,6 +6,7 @@ const adminModel = require('../db/access/adminModel')
 const supportModel = require('../db/access/supportModel')
 const actionModel = require('../db/access/actionModel')
 const systemCodesModel = require('../db/access/systemCodesModel')
+const workbenchModel = require('../db/access/workbenchModel')
 
 module.exports = fp(
   async function (fastify, options, next) {
@@ -16,6 +17,7 @@ module.exports = fp(
       support: supportModel(fastify),
       action: actionModel(fastify),
       systemCodes: systemCodesModel(fastify),
+      workbench: workbenchModel(fastify)
     }
     fastify.decorate('data', data)
     next()
