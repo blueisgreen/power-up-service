@@ -116,7 +116,8 @@ module.exports = async function (fastify, opts) {
     },
     async (request, reply) => {
       try {
-        await fastify.data.agreeToEmailComms(request.userKey)
+        fastify.log.debug('user wants to get more email -- well, okay then!')
+        await fastify.data.identity.agreeToEmailComms(request.userKey)
         reply.code(204).send()
       } catch (err) {
         reply.code(500).send({ error: ERROR_MESSAGE })

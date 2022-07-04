@@ -121,10 +121,12 @@ module.exports = (fastify) => {
 
   const becomeMember = async (userPublicId, alias, okToTerms, okToCookies) => {
     log.debug(`identity plugin: becomeMember ${userPublicId}, ${alias}`)
+    const active = fastify.lookups.codeLookup('accountStatus', 'active')
     const now = new Date()
     const membership = {
       alias,
       updated_at: now,
+      account_status_id: active.id
     }
     if (okToTerms) {
       membership.terms_accepted_at = now
