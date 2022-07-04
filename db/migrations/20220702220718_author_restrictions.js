@@ -47,15 +47,17 @@ exports.up = function (knex) {
 }
 
 exports.down = function (knex) {
-  // drop table
-  return knex.schema.dropTableIfExists(AUTHORS)
-  // remove new column
+  const catRows = knex(SYSTEM_CODES)
+    .select('id')
+    .where({ code: 'authorStatus' })
+  console.log(catRows)
+
+  return knex.schema
+    .dropTableIfExists(AUTHORS)
     .alterTable(ARTICLES, function (table) {
       table.dropColumn('requested_to_publish_at')
     })
-  // remove system codes
-    //  .then(() => {
-    //   return knex[SYSTEM_CODES]
-    //     .where({ code: 'authorStatus'})
-    // })
+    .then(() => {
+      return knex(SYSTEM_CODES).where({ code: 'authorStatus' }).del()
+    })
 }
