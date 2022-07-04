@@ -126,7 +126,7 @@ module.exports = (fastify) => {
     const membership = {
       alias,
       updated_at: now,
-      account_status_id: active.id
+      account_status_id: active.id,
     }
     if (okToTerms) {
       membership.terms_accepted_at = now
@@ -150,6 +150,11 @@ module.exports = (fastify) => {
   const becomeAuthor = async (userPublicId) => {
     log.debug('identity plugin: becomeAuthor')
     const userRecord = await getUserWithPublicId(userPublicId)
+    await knex('authors').insert({
+      user_id: userRecord.id,
+      pen_name: userRecord.alias,
+      status: 'untrusted',
+    })
     await grantRoles(userRecord.id, ['author'])
     const roles = getUserRoles(userRecord.id)
     userRecord.roles = roles
