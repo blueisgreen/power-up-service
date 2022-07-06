@@ -61,6 +61,22 @@ module.exports = async function (fastify, opts) {
     }
   )
   /**
+   * Get information related to the author role for the logged in user.
+   */
+  fastify.get(
+    '/author',
+    {
+      // TODO: must user have author role for this to work, or okay to return empty?
+      preValidation: fastify.preValidation,
+    },
+    async (request, reply) => {
+      const authorInfo = await fastify.data.identity.getAuthorInfo(
+        request.userContext.userId
+      )
+      reply.send(authorInfo)
+    }
+  )
+  /**
    * Update profile of the logged in user.
    */
   fastify.put(

@@ -1,4 +1,9 @@
-const { userColumns } = require('./modelFieldMap')
+const {
+  userTableName,
+  userColumns,
+  authorTableName,
+  authorColumns,
+} = require('./modelFieldMap')
 
 // TODO: verify that userPublicId parameter is uuid or wrap query in try-catch and handle
 
@@ -7,8 +12,8 @@ module.exports = (fastify) => {
 
   const getUser = async (userId) => {
     log.debug('identity plugin: getUser')
-    const userRecord = await knex('users')
-      .returning(userColumns)
+    const userRecord = await knex(userTableName)
+      .select(userColumns)
       .where('id', '=', userId)
     return userRecord.length > 0 ? userRecord[0] : null
   }
@@ -30,8 +35,8 @@ module.exports = (fastify) => {
 
   const getUserWithPublicId = async (userPublicId) => {
     log.debug('identity plugin: getUserWithPublicId')
-    const userRecord = await knex('users')
-      .returning(userColumns)
+    const userRecord = await knex(userTableName)
+      .select(userColumns)
       .where('public_id', '=', userPublicId)
     return userRecord.length > 0 ? userRecord[0] : null
   }
@@ -50,7 +55,7 @@ module.exports = (fastify) => {
     const platformId = platformCode.id
     let profileRecord = await knex('social_profiles')
       .select('social_profiles.user_id as userId')
-      .join('users', 'users.id', 'social_profiles.user_id')
+      .join(userTableName, 'users.id', 'social_profiles.user_id')
       .where('users.public_id', '=', userKey)
       .andWhere('social_profiles.social_platform_id', '=', platformId)
 
@@ -95,7 +100,7 @@ module.exports = (fastify) => {
     log.debug('identity plugin: registerUser')
 
     const platformId = fastify.lookups.codeLookup('socialPlatform', platform).id
-    const userRecord = await knex('users')
+    const userRecord = await knex(userTableName)
       .returning(userColumns)
       .insert({
         public_id: userPublicId,
@@ -134,7 +139,7 @@ module.exports = (fastify) => {
     if (okToCookies) {
       membership.cookies_accepted_at = now
     }
-    const result = await knex('users')
+    const result = await knex(userTableName)
       .returning(userColumns)
       .where('public_id', '=', userPublicId)
       .update(membership)
@@ -150,15 +155,26 @@ module.exports = (fastify) => {
   const becomeAuthor = async (userPublicId) => {
     log.debug('identity plugin: becomeAuthor')
     const userRecord = await getUserWithPublicId(userPublicId)
-    await knex('authors').insert({
-      user_id: userRecord.id,
-      pen_name: userRecord.alias,
-      status: 'untrusted',
-    })
+    const authorRecord = await knex(authorTableName)
+      .returning(authorColumns)
+      .insert({
+        user_id: userRecord.id,
+        pen_name: userRecord.alias,
+        status: 'untrusted',
+      })
     await grantRoles(userRecord.id, ['author'])
     const roles = getUserRoles(userRecord.id)
+    userRecord.author = authorRecord
     userRecord.roles = roles
     return userRecord
+  }
+
+  // TODO: figure out strategy for return user info, including for roles
+  const getAuthorInfo = async (userId) => {
+    const authorRecord = await knex(authorTableName)
+      .select(authorColumns)
+      .where('user_id', userId)
+    return authorRecord
   }
 
   const getUserRoles = async (userId) => {
@@ -174,7 +190,7 @@ module.exports = (fastify) => {
 
   const getUserRolesWithPublicId = async (userPublicId) => {
     log.debug('identity plugin: getUserWithPublicId')
-    const userRecord = await knex('users')
+    const userRecord = await knex(userTableName)
       .returning(['id'])
       .where('public_id', '=', userPublicId)
     log.debug(userRecord)
@@ -199,7 +215,7 @@ module.exports = (fastify) => {
   const agreeToTerms = async (publicId) => {
     log.debug('identity plugin: agreeToTerms')
     const now = new Date()
-    await knex('users').where('public_id', '=', publicId).update({
+    await knex(userTableName).where('public_id', '=', publicId).update({
       terms_accepted_at: now,
       updated_at: now,
     })
@@ -209,7 +225,7 @@ module.exports = (fastify) => {
   const agreeToCookies = async (publicId) => {
     log.debug('identity plugin: agreeToCookies')
     const now = new Date()
-    await knex('users').where('public_id', '=', publicId).update({
+    await knex(userTableName).where('public_id', '=', publicId).update({
       cookies_accepted_at: now,
       updated_at: now,
     })
@@ -219,7 +235,7 @@ module.exports = (fastify) => {
   const agreeToEmailComms = async (publicId) => {
     log.debug('identity plugin: agreeToEmailComms')
     const now = new Date()
-    await knex('users').where('public_id', '=', publicId).update({
+    await knex(userTableName).where('public_id', '=', publicId).update({
       email_comms_accepted_at: now,
       updated_at: now,
     })
@@ -245,7 +261,7 @@ module.exports = (fastify) => {
     if (!userBefore.email_comms_accepted_at && changes.agreeToEmailComms) {
       userAfter.email_comms_accepted_at = now
     }
-    const result = await knex('users')
+    const result = await knex(userTableName)
       .where('public_id', '=', userPublicId)
       .update(userAfter, ['id'])
 
@@ -285,12 +301,13 @@ module.exports = (fastify) => {
     getUserWithPublicId,
     findUserWithPublicId,
     findUserFromSocialProfile,
-    becomeMember,
-    becomeAuthor,
     registerUser,
     getUserRoles,
     getUserRolesWithPublicId,
     grantRoles,
+    becomeMember,
+    becomeAuthor,
+    getAuthorInfo,
     agreeToTerms,
     agreeToCookies,
     agreeToEmailComms,

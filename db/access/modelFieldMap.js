@@ -12,6 +12,14 @@ const userColumns = [
   'account_status_id as accountStatusId',
 ]
 
+const authorTableName = 'authors'
+const authorColumns = [
+  'pen_name as penName',
+  'status',
+  'created_at as createdAt',
+  'updated_at as updatedAt',
+]
+
 const inquiryTableName = 'inquiries'
 const inquiryColumns = [
   'inquiries.id',
@@ -56,6 +64,8 @@ const systemCodeColumns = [
 module.exports = {
   userColumns,
   userTableName,
+  authorColumns,
+  authorTableName,
   articleTableName,
   articleInfoColumns,
   articleContentColumns,
