@@ -49,7 +49,7 @@ module.exports = fp(
     })
   },
   {
-    fastify: '4.x',
+    fastify: '3.x',
     name: 'powerup-decorators',
   }
 )

@@ -23,7 +23,7 @@ module.exports = fp(
     next()
   },
   {
-    fastify: '4.x',
+    fastify: '3.x',
     name: 'powerup-model',
   }
 )

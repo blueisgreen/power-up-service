@@ -68,9 +68,57 @@ module.exports = (fastify) => {
     return myArticle.length > 0 ? myArticle[0] : null
   }
 
+  const publishArticle = async (articleId) => {
+    const now = new Date()
+    const result = await knex(articleTableName)
+      .where('id', articleId)
+      .update({
+        published_at: now,
+        requested_to_publish_at: null,
+      })
+      .returning(articleInfoColumns)
+    return result
+  }
+
+  const retractArticle = async (articleId) => {
+    const result = await knex(tableName)
+      .where('id', articleId)
+      .update({
+        published_at: null,
+      })
+      .returning(articleInfoColumns)
+    return result
+  }
+
+  const requestToPublishArticle = async (articleId) => {
+    const now = new Date()
+    const result = await knex(articleTableName)
+      .where('id', articleId)
+      .update({
+        requested_to_publish_at: now,
+      })
+      .returning(articleInfoColumns)
+    return result
+  }
+
+  const retractRequestToPublishArticle = async (articleId) => {
+    const now = new Date()
+    const result = await knex(articleTableName)
+      .where('id', articleId)
+      .update({
+        requested_to_publish_at: null,
+      })
+      .returning(articleInfoColumns)
+    return result
+  }
+
   return {
     createArticle,
     getArticles,
     getArticleContent,
+    publishArticle,
+    retractArticle,
+    requestToPublishArticle,
+    retractRequestToPublishArticle,
   }
 }

@@ -74,13 +74,11 @@ module.exports = async function (fastify, opts) {
 
   fastify.put('/:id/publish', async (req, reply) => {
     try {
-      const now = new Date()
-      const result = await knex(tableName)
-        .where('id', req.params.id)
-        .update({
-          published_at: now,
-        })
-        .returning(columnsToReturn)
+      // if author is trusted or user is editor
+      const result = await fastify.data.workbench.publishArticle(req.params.id)
+
+      // TODO: call requestToPublishArticle if author is untrusted
+
       if (result.length > 0) {
         reply.send(result[0])
       } else {
@@ -94,12 +92,10 @@ module.exports = async function (fastify, opts) {
 
   fastify.put('/:id/retract', async (req, reply) => {
     try {
-      const result = await knex(tableName)
-        .where('id', req.params.id)
-        .update({
-          published_at: null,
-        })
-        .returning(columnsToReturn)
+      const result = await fastify.data.workbench.retractArticle(req.params.id)
+
+      // TODO: call retractRequestToPublishArticle if author is untrusted
+
       if (result.length > 0) {
         reply.send(result[0])
       } else {

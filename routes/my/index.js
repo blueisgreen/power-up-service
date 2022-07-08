@@ -36,6 +36,18 @@ module.exports = async function (fastify, opts) {
     }
   )
   /**
+   * Get context for the logged in user.
+   */
+  fastify.get(
+    '/context',
+    {
+      preValidation: fastify.preValidation,
+    },
+    async (request, reply) => {
+      reply.send(request.userContext)
+    }
+  )
+  /**
    * Update profile of the logged in user.
    */
   fastify.put(

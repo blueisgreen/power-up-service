@@ -22,6 +22,7 @@ module.exports = (fastify) => {
     log.debug('identity plugin: getUserContext')
     const user = await getUserWithPublicId(userPublicId)
     const roles = await getUserRolesWithPublicId(userPublicId)
+    const authorInfo = roles.includes('author') ? getAuthorInfo(user.id) : null
     const status = user.accountStatusId
       ? fastify.lookups.idToCode(user.accountStatusId)
       : null
@@ -29,6 +30,7 @@ module.exports = (fastify) => {
       userId: user.id,
       userKey: userPublicId,
       userStatus: status,
+      authorStatus: authorInfo ? authorInfo.status : null,
       roles,
     }
   }
