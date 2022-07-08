@@ -20,19 +20,24 @@ module.exports = (fastify) => {
 
   const getUserContext = async (userPublicId) => {
     log.debug('identity plugin: getUserContext')
-    const user = await getUserWithPublicId(userPublicId)
-    const roles = await getUserRolesWithPublicId(userPublicId)
-    const authorInfo = roles.includes('author') ? getAuthorInfo(user.id) : null
-    const status = user.accountStatusId
-      ? fastify.lookups.idToCode(user.accountStatusId)
-      : null
-    return {
-      userId: user.id,
+    const context = {
       userKey: userPublicId,
-      userStatus: status,
-      authorStatus: authorInfo ? authorInfo.status : null,
-      roles,
+      userId: 0,
+      userStatus: '',
+      roles: {},
     }
+    const user = await getUserWithPublicId(userPublicId)
+    context.userId = user.id
+    if (user.accountStatusId) {
+      context.userStatus = fastify.lookups.idToCode(user.accountStatusId)
+    }
+    const roles = await getUserRolesWithPublicId(userPublicId)
+    roles.forEach((role) => (context.roles[role] = true))
+    if (context.roles.author) {
+      const authorInfo = await getAuthorInfo(user.id)
+      context.authorStatus = authorInfo.status
+    }
+    return context
   }
 
   const getUserWithPublicId = async (userPublicId) => {
@@ -176,7 +181,7 @@ module.exports = (fastify) => {
     const authorRecord = await knex(authorTableName)
       .select(authorColumns)
       .where('user_id', userId)
-    return authorRecord
+    return authorRecord[0]
   }
 
   const getUserRoles = async (userId) => {

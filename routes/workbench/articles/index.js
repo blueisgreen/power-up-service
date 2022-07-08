@@ -75,8 +75,19 @@ module.exports = async function (fastify, opts) {
   fastify.put('/:id/publish', async (req, reply) => {
     try {
       // if author is trusted or user is editor
-      const result = await fastify.data.workbench.publishArticle(req.params.id)
-
+      if (
+        req.userContext.roles.includes('editor') ||
+        (req.userContext.roles.includes('author') &&
+          req.userContext.authorStatus === 'trusted')
+      ) {
+        const result = await fastify.data.workbench.publishArticle(
+          req.params.id
+        )
+      } else {
+        const result = await fastify.data.workbench.requestToPublishArticle(
+          req.params.id
+        )
+      }
       // TODO: call requestToPublishArticle if author is untrusted
 
       if (result.length > 0) {
