@@ -17,6 +17,18 @@ module.exports = async function (fastify, opts) {
     }
   })
 
+  fastify.get('/pending', async (req, reply) => {
+    let articles = null
+    if (req.userContext.roles.editor) {
+      articles = await fastify.data.workbench.getArticlesPendingReview()
+    }
+    if (articles) {
+      reply.send(articles)
+    } else {
+      reply.code(404).send('No articles found')
+    }
+  })
+
   fastify.post('/', async (req, reply) => {
     const userInfo = await fastify.data.identity.getUserWithPublicId(
       req.userKey
@@ -78,20 +90,15 @@ module.exports = async function (fastify, opts) {
     try {
       const articleId = req.params.id
       let result
-
-      // if author is trusted or user is editor
       if (
         req.userContext.roles.editor ||
         (req.userContext.roles.author &&
           req.userContext.authorStatus === 'trusted')
       ) {
-        log.debug('user is allowed to publish - so just do it')
         result = await fastify.data.workbench.publishArticle(articleId)
       } else {
-        log.debug('user is untrusted to publish - make request')
         result = await fastify.data.workbench.requestToPublishArticle(articleId)
       }
-      // TODO: call requestToPublishArticle if author is untrusted
 
       if (result.length > 0) {
         reply.send(result[0])

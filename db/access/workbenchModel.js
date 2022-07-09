@@ -113,6 +113,13 @@ module.exports = (fastify) => {
     return result
   }
 
+  const getArticlesPendingReview = async () => {
+    const result = await knex(articleTableName)
+      .whereNotNull('requested_to_publish_at')
+      .returning(articleInfoColumns)
+    return result
+  }
+
   return {
     createArticle,
     getArticles,
@@ -121,5 +128,6 @@ module.exports = (fastify) => {
     retractArticle,
     requestToPublishArticle,
     retractRequestToPublishArticle,
+    getArticlesPendingReview,
   }
 }
