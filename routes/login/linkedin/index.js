@@ -51,20 +51,20 @@ module.exports = async function (fastify, opts) {
     fastify.data.action.capture(
       'login',
       request.tracker,
-      user.public_id,
-      browserContext,
+      user.userKey,
+      browserContext
     )
 
     // refresh token
     const roles = await fastify.data.identity.getUserRoles(user.id)
     const token = fastify.jwt.sign({
       user: {
-        who: user.public_id,
+        who: user.userKey,
         alias: user.alias,
         roles,
       },
     })
-    await fastify.data.identity.setSessionToken(user.public_id, token)
+    await fastify.data.identity.setSessionToken(user.userKey, token)
     reply.setCookie('token', token, fastify.secretCookieOptions)
     reply.redirect(`${process.env.SPA_LANDING_URL}?goTo=${goTo}&token=${token}`)
   })
