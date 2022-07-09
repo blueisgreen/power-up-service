@@ -107,9 +107,6 @@ module.exports = async function (fastify, opts) {
   fastify.put('/:id/retract', async (req, reply) => {
     try {
       const result = await fastify.data.workbench.retractArticle(req.params.id)
-
-      // TODO: call retractRequestToPublishArticle if author is untrusted
-
       if (result.length > 0) {
         reply.send(result[0])
       } else {

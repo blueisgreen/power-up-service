@@ -81,10 +81,11 @@ module.exports = (fastify) => {
   }
 
   const retractArticle = async (articleId) => {
-    const result = await knex(tableName)
+    const result = await knex(articleTableName)
       .where('id', articleId)
       .update({
         published_at: null,
+        requested_to_publish_at: null,
       })
       .returning(articleInfoColumns)
     return result
