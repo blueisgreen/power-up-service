@@ -1,6 +1,7 @@
 'use strict'
 
 module.exports = async function (fastify, opts) {
+  const { log } = fastify
   const genericErrorMsg = {
     error: 'Bad news, kiddies. Something went wrong.',
   }
@@ -48,6 +49,7 @@ module.exports = async function (fastify, opts) {
 
   fastify.put('/:id', async (req, reply) => {
     try {
+      log.debug('===called article update===')
       const now = new Date()
       const given = req.body
       const result = await knex(tableName)
@@ -74,19 +76,20 @@ module.exports = async function (fastify, opts) {
 
   fastify.put('/:id/publish', async (req, reply) => {
     try {
+      const articleId = req.params.id
+      let result
+
       // if author is trusted or user is editor
       if (
-        req.userContext.roles.includes('editor') ||
-        (req.userContext.roles.includes('author') &&
+        req.userContext.roles.editor ||
+        (req.userContext.roles.author &&
           req.userContext.authorStatus === 'trusted')
       ) {
-        const result = await fastify.data.workbench.publishArticle(
-          req.params.id
-        )
+        log.debug('user is allowed to publish - so just do it')
+        result = await fastify.data.workbench.publishArticle(articleId)
       } else {
-        const result = await fastify.data.workbench.requestToPublishArticle(
-          req.params.id
-        )
+        log.debug('user is untrusted to publish - make request')
+        result = await fastify.data.workbench.requestToPublishArticle(articleId)
       }
       // TODO: call requestToPublishArticle if author is untrusted
 
