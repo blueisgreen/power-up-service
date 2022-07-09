@@ -42,6 +42,8 @@ const articleInfoColumns = [
   'updated_at as updatedAt',
   'published_at as publishedAt',
   'archived_at as archivedAt',
+  'archived_at as archivedAt',
+  'requested_to_publish_at as requestedToPublishAt'
 ]
 const articleContentColumns = ['id', 'content', 'updated_at as updatedAt']
 
