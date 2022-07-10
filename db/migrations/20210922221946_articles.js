@@ -2,7 +2,6 @@ const ARTICLES = 'articles'
 const ARTICLE_HITS = 'article_hits' // TODO track times an article is accessed
 
 exports.up = function (knex) {
-  // TODO: add author id to article
   return knex.schema.createTable(ARTICLES, (table) => {
     table.increments('id')
     table.integer('author_id')

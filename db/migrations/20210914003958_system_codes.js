@@ -4,7 +4,7 @@ exports.up = function (knex) {
       table.increments()
       table.string('code').notNullable()
       table.string('display_name').notNullable()
-      table.integer('parent_id').references('id').inTable('system_codes')
+      table.integer('parent_id').references('id').inTable('system_codes').onDelete('CASCADE')
     })
     .then(() => {
       return knex('system_codes')

@@ -1,6 +1,7 @@
 'use strict'
 
 module.exports = async function (fastify, opts) {
+  const { log } = fastify
   const genericErrorMsg = {
     error: 'Bad news, kiddies. Something went wrong.',
   }
@@ -9,6 +10,27 @@ module.exports = async function (fastify, opts) {
     const articles = await fastify.data.workbench.getArticles(
       req.userContext.userId
     )
+    if (articles) {
+      reply.send(articles)
+    } else {
+      reply.code(404).send('No articles found')
+    }
+  })
+
+  fastify.get('/full', async (req, reply) => {
+    const articles = await fastify.data.workbench.getArticlesFullInfo()
+    if (articles) {
+      reply.send(articles)
+    } else {
+      reply.code(404).send('No articles found')
+    }
+  })
+
+  fastify.get('/pending', async (req, reply) => {
+    let articles = null
+    if (req.userContext.roles.editor) {
+      articles = await fastify.data.workbench.getArticlesPendingReview()
+    }
     if (articles) {
       reply.send(articles)
     } else {
@@ -35,10 +57,12 @@ module.exports = async function (fastify, opts) {
   })
 
   fastify.get('/:id', async (req, reply) => {
-    const article = await fastify.data.workbench.getArticleContent(
-      req.params.id,
-      req.userContext.userId
-    )
+    const article = req.userContext.roles.editor
+      ? await fastify.data.workbench.getArticleContentForEditor(req.params.id)
+      : await fastify.data.workbench.getArticleContent(
+          req.params.id,
+          req.userContext.userId
+        )
     if (article) {
       reply.send(article)
     } else {
@@ -48,6 +72,7 @@ module.exports = async function (fastify, opts) {
 
   fastify.put('/:id', async (req, reply) => {
     try {
+      log.debug('===called article update===')
       const now = new Date()
       const given = req.body
       const result = await knex(tableName)
@@ -74,13 +99,18 @@ module.exports = async function (fastify, opts) {
 
   fastify.put('/:id/publish', async (req, reply) => {
     try {
-      const now = new Date()
-      const result = await knex(tableName)
-        .where('id', req.params.id)
-        .update({
-          published_at: now,
-        })
-        .returning(columnsToReturn)
+      const articleId = req.params.id
+      let result
+      if (
+        req.userContext.roles.editor ||
+        (req.userContext.roles.author &&
+          req.userContext.authorStatus === 'trusted')
+      ) {
+        result = await fastify.data.workbench.publishArticle(articleId)
+      } else {
+        result = await fastify.data.workbench.requestToPublishArticle(articleId)
+      }
+
       if (result.length > 0) {
         reply.send(result[0])
       } else {
@@ -94,12 +124,7 @@ module.exports = async function (fastify, opts) {
 
   fastify.put('/:id/retract', async (req, reply) => {
     try {
-      const result = await knex(tableName)
-        .where('id', req.params.id)
-        .update({
-          published_at: null,
-        })
-        .returning(columnsToReturn)
+      const result = await fastify.data.workbench.retractArticle(req.params.id)
       if (result.length > 0) {
         reply.send(result[0])
       } else {
