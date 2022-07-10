@@ -157,8 +157,9 @@ module.exports = (fastify) => {
 
   const getArticlesPendingReview = async () => {
     const result = await knex(articleTableName)
-      .select(articleInfoColumns)
+      .select(fullArticleInfoColumns)
       .whereNotNull('requested_to_publish_at')
+      .join('users', 'users.id', 'articles.author_id')
     return result
   }
 
