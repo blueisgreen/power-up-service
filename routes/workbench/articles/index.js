@@ -48,10 +48,12 @@ module.exports = async function (fastify, opts) {
   })
 
   fastify.get('/:id', async (req, reply) => {
-    const article = await fastify.data.workbench.getArticleContent(
-      req.params.id,
-      req.userContext.userId
-    )
+    const article = req.userContext.roles.editor
+      ? await fastify.data.workbench.getArticleContentForEditor(req.params.id)
+      : await fastify.data.workbench.getArticleContent(
+          req.params.id,
+          req.userContext.userId
+        )
     if (article) {
       reply.send(article)
     } else {

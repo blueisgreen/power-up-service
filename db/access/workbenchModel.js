@@ -68,6 +68,25 @@ module.exports = (fastify) => {
     return myArticle.length > 0 ? myArticle[0] : null
   }
 
+  /**
+   * Get the content of a specific article regardless of status
+   * for an editor to review.
+   *
+   * @param {number} articleId - system ID of the article being requested
+   * @returns ArticleContent the content of the article, plus minimal identifying info
+   */
+  const getArticleContentForEditor = async (articleId) => {
+    // TODO: refactor this, should be able to consolidate with getArticleContent
+    log.debug('articleModel.getArticleContent')
+    const conditions = {
+      id: articleId,
+    }
+    const myArticle = await knex(articleTableName)
+      .select(articleContentColumns)
+      .where(conditions)
+    return myArticle.length > 0 ? myArticle[0] : null
+  }
+
   const publishArticle = async (articleId) => {
     const now = new Date()
     const result = await knex(articleTableName)
@@ -115,8 +134,8 @@ module.exports = (fastify) => {
 
   const getArticlesPendingReview = async () => {
     const result = await knex(articleTableName)
+      .select(articleInfoColumns)
       .whereNotNull('requested_to_publish_at')
-      .returning(articleInfoColumns)
     return result
   }
 
@@ -124,6 +143,7 @@ module.exports = (fastify) => {
     createArticle,
     getArticles,
     getArticleContent,
+    getArticleContentForEditor,
     publishArticle,
     retractArticle,
     requestToPublishArticle,
