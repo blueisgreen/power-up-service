@@ -17,6 +17,15 @@ module.exports = async function (fastify, opts) {
     }
   })
 
+  fastify.get('/full', async (req, reply) => {
+    const articles = await fastify.data.workbench.getArticlesFullInfo()
+    if (articles) {
+      reply.send(articles)
+    } else {
+      reply.code(404).send('No articles found')
+    }
+  })
+
   fastify.get('/pending', async (req, reply) => {
     let articles = null
     if (req.userContext.roles.editor) {

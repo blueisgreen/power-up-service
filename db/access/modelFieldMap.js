@@ -34,14 +34,12 @@ const articleTableName = 'articles'
 const articleInfoColumns = [
   'id',
   'headline',
-  // 'author_alias as authorAlias',
   'byline',
   'cover_art_url as coverArtUrl',
   'synopsis',
   'created_at as createdAt',
   'updated_at as updatedAt',
   'published_at as publishedAt',
-  'archived_at as archivedAt',
   'archived_at as archivedAt',
   'requested_to_publish_at as requestedToPublishAt'
 ]

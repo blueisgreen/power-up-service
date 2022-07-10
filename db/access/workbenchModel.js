@@ -4,6 +4,21 @@ const {
   articleContentColumns,
 } = require('./modelFieldMap')
 
+const fullArticleInfoColumns = [
+  'articles.id',
+  'articles.headline',
+  'articles.byline',
+  'users.alias as author',
+  'users.public_id as authorKey',
+  'articles.cover_art_url as coverArtUrl',
+  'articles.synopsis',
+  'articles.created_at as createdAt',
+  'articles.updated_at as updatedAt',
+  'articles.published_at as publishedAt',
+  'articles.archived_at as archivedAt',
+  'articles.requested_to_publish_at as requestedToPublishAt',
+]
+
 module.exports = (fastify) => {
   const { knex, log } = fastify
 
@@ -45,6 +60,14 @@ module.exports = (fastify) => {
       .select(articleInfoColumns)
       .where('author_id', userId)
     fastify.log.debug('Found ' + myArticles.length + ' articles by ' + userId)
+    return myArticles
+  }
+
+  const getArticlesFullInfo = async () => {
+    log.debug('articleModel.getArticlesFullInfo')
+    const myArticles = await knex('articles')
+      .join('users', 'users.id', 'articles.author_id')
+      .select(fullArticleInfoColumns)
     return myArticles
   }
 
@@ -142,6 +165,7 @@ module.exports = (fastify) => {
   return {
     createArticle,
     getArticles,
+    getArticlesFullInfo,
     getArticleContent,
     getArticleContentForEditor,
     publishArticle,
