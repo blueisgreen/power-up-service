@@ -71,21 +71,19 @@ module.exports = async function (fastify, opts) {
   })
 
   fastify.put('/:id', async (req, reply) => {
+    const { params, body } = req
     try {
-      log.debug('===called article update===')
-      const now = new Date()
-      const given = req.body
-      const result = await knex(tableName)
-        .where('id', req.params.id)
-        .update({
-          headline: given.headline,
-          byline: given.byline,
-          cover_art_url: given.coverArtUrl,
-          synopsis: given.synopsis,
-          content: given.content,
-          updated_at: now,
-        })
-        .returning(columnsToReturn)
+      const changes = {
+        headline: body.headline,
+        byline: body.byline,
+        coverArtUrl: body.coverArtUrl,
+        synopsis: body.synopsis,
+        content: body.content,
+      }
+      const result = await fastify.data.workbench.updateArticle(
+        params.id,
+        changes
+      )
       if (result.length > 0) {
         reply.send(result[0])
       } else {
@@ -136,6 +134,8 @@ module.exports = async function (fastify, opts) {
     }
   })
 
+  // TODO: finish migrating these to article model
+  
   fastify.put('/:id/revive', async (req, reply) => {
     try {
       const result = await knex(tableName)

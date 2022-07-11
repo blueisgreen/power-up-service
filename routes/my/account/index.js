@@ -44,7 +44,7 @@ module.exports = async function (fastify, opts) {
     }
   )
   /**
-   * Become a member.
+   * Become a contributing member (a.k.a. author).
    */
   fastify.post(
     '/author',

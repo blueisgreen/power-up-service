@@ -170,7 +170,7 @@ module.exports = (fastify) => {
         status: 'untrusted',
       })
     await grantRoles(userRecord.id, ['author'])
-    const roles = getUserRoles(userRecord.id)
+    const roles = await getUserRoles(userRecord.id)
     userRecord.author = authorRecord
     userRecord.roles = roles
     return userRecord

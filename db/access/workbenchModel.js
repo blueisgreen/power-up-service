@@ -2,6 +2,7 @@ const {
   articleTableName,
   articleInfoColumns,
   articleContentColumns,
+  articleFullColumns,
 } = require('./modelFieldMap')
 
 const fullArticleInfoColumns = [
@@ -110,6 +111,24 @@ module.exports = (fastify) => {
     return myArticle.length > 0 ? myArticle[0] : null
   }
 
+  const updateArticle = async (articleId, changes) => {
+    log.debug('articleModel.updateArticle')
+    const now = new Date()
+    // TODO: should map details to expected columns
+    const result = await knex(articleTableName)
+      .where('id', articleId)
+      .update({
+        headline: changes.headline,
+        byline: changes.byline,
+        cover_art_url: changes.coverArtUrl,
+        synopsis: changes.synopsis,
+        content: changes.content,
+        updated_at: now,
+      })
+      .returning(articleFullColumns)
+    return result
+  }
+
   const publishArticle = async (articleId) => {
     const now = new Date()
     const result = await knex(articleTableName)
@@ -169,6 +188,7 @@ module.exports = (fastify) => {
     getArticlesFullInfo,
     getArticleContent,
     getArticleContentForEditor,
+    updateArticle,
     publishArticle,
     retractArticle,
     requestToPublishArticle,

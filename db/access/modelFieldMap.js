@@ -4,6 +4,7 @@ const userColumns = [
   'public_id as userKey',
   'alias',
   'email',
+  'avatar_url as avatarUrl',
   'created_at as createdAt',
   'updated_at as updatedAt',
   'terms_accepted_at as termsAcceptedAt',
@@ -41,7 +42,20 @@ const articleInfoColumns = [
   'updated_at as updatedAt',
   'published_at as publishedAt',
   'archived_at as archivedAt',
-  'requested_to_publish_at as requestedToPublishAt'
+  'requested_to_publish_at as requestedToPublishAt',
+]
+const articleFullColumns = [
+  'id',
+  'headline',
+  'byline',
+  'cover_art_url as coverArtUrl',
+  'synopsis',
+  'content',
+  'created_at as createdAt',
+  'updated_at as updatedAt',
+  'published_at as publishedAt',
+  'archived_at as archivedAt',
+  'requested_to_publish_at as requestedToPublishAt',
 ]
 const articleContentColumns = ['id', 'content', 'updated_at as updatedAt']
 
@@ -69,6 +83,7 @@ module.exports = {
   articleTableName,
   articleInfoColumns,
   articleContentColumns,
+  articleFullColumns,
   inquiryTableName,
   inquiryColumns,
   actionTableName,
