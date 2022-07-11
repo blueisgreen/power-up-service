@@ -32,6 +32,7 @@ module.exports = (fastify) => {
    * @returns ArticleInfo everything about the article except the content
    */
   const createArticle = async (headline, authorId, byline) => {
+    log.debug('articleModel.createArticle')
     const row = {
       headline,
       author_id: authorId,
@@ -92,6 +93,15 @@ module.exports = (fastify) => {
     return myArticle.length > 0 ? myArticle[0] : null
   }
 
+  const getArticlesPendingReview = async () => {
+    log.debug('articleModel.getArticlesPendingReview')
+    const result = await knex(articleTableName)
+      .select(fullArticleInfoColumns)
+      .whereNotNull('requested_to_publish_at')
+      .join('users', 'users.id', 'articles.author_id')
+    return result
+  }
+
   /**
    * Get the content of a specific article regardless of status
    * for an editor to review.
@@ -100,7 +110,6 @@ module.exports = (fastify) => {
    * @returns ArticleContent the content of the article, plus minimal identifying info
    */
   const getArticleContentForEditor = async (articleId) => {
-    // TODO: refactor this, should be able to consolidate with getArticleContent
     log.debug('articleModel.getArticleContent')
     const conditions = {
       id: articleId,
@@ -114,7 +123,6 @@ module.exports = (fastify) => {
   const updateArticle = async (articleId, changes) => {
     log.debug('articleModel.updateArticle')
     const now = new Date()
-    // TODO: should map details to expected columns
     const result = await knex(articleTableName)
       .where('id', articleId)
       .update({
@@ -130,6 +138,7 @@ module.exports = (fastify) => {
   }
 
   const publishArticle = async (articleId) => {
+    log.debug('articleModel.publishArticle')
     const now = new Date()
     const result = await knex(articleTableName)
       .where('id', articleId)
@@ -141,18 +150,8 @@ module.exports = (fastify) => {
     return result
   }
 
-  const retractArticle = async (articleId) => {
-    const result = await knex(articleTableName)
-      .where('id', articleId)
-      .update({
-        published_at: null,
-        requested_to_publish_at: null,
-      })
-      .returning(articleInfoColumns)
-    return result
-  }
-
   const requestToPublishArticle = async (articleId) => {
+    log.debug('articleModel.requestToPublishArticle')
     const now = new Date()
     const result = await knex(articleTableName)
       .where('id', articleId)
@@ -163,23 +162,44 @@ module.exports = (fastify) => {
     return result
   }
 
-  const retractRequestToPublishArticle = async (articleId) => {
-    const now = new Date()
+  const retractArticle = async (articleId) => {
+    log.debug('articleModel.retractArticle')
     const result = await knex(articleTableName)
       .where('id', articleId)
       .update({
+        published_at: null,
         requested_to_publish_at: null,
       })
       .returning(articleInfoColumns)
     return result
   }
 
-  const getArticlesPendingReview = async () => {
+  const reviveArticle = async (articleId) => {
+    log.debug('articleModel.reviveArticle')
     const result = await knex(articleTableName)
-      .select(fullArticleInfoColumns)
-      .whereNotNull('requested_to_publish_at')
-      .join('users', 'users.id', 'articles.author_id')
+      .where('id', articleId)
+      .update({
+        archived_at: null,
+      })
+      .returning(articleInfoColumns)
     return result
+  }
+
+  const archiveArticle = async (articleId) => {
+    log.debug('articleModel.archiveArticle')
+    const now = new Date()
+    const result = await knex(articleTableName)
+      .where('id', articleId)
+      .update({
+        archived_at: now,
+      })
+      .returning(articleInfoColumns)
+    return result
+  }
+
+  const purgeArticle = async (articleId) => {
+    log.debug('articleModel.purgeArticle')
+    await knex(articleTableName).where('id', articleId).delete()
   }
 
   return {
@@ -187,12 +207,14 @@ module.exports = (fastify) => {
     getArticles,
     getArticlesFullInfo,
     getArticleContent,
+    getArticlesPendingReview,
     getArticleContentForEditor,
     updateArticle,
     publishArticle,
-    retractArticle,
     requestToPublishArticle,
-    retractRequestToPublishArticle,
-    getArticlesPendingReview,
+    retractArticle,
+    reviveArticle,
+    archiveArticle,
+    purgeArticle,
   }
 }

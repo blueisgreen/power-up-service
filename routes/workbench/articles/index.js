@@ -123,8 +123,8 @@ module.exports = async function (fastify, opts) {
   fastify.put('/:id/retract', async (req, reply) => {
     try {
       const result = await fastify.data.workbench.retractArticle(req.params.id)
-      if (result.length > 0) {
-        reply.send(result[0])
+      if (result) {
+        reply.send(result)
       } else {
         reply.code(404).send()
       }
@@ -134,18 +134,11 @@ module.exports = async function (fastify, opts) {
     }
   })
 
-  // TODO: finish migrating these to article model
-  
   fastify.put('/:id/revive', async (req, reply) => {
     try {
-      const result = await knex(tableName)
-        .where('id', req.params.id)
-        .update({
-          archived_at: null,
-        })
-        .returning(columnsToReturn)
-      if (result.length > 0) {
-        reply.send(result[0])
+      const result = await fastify.data.workbench.reviveArticle(req.params.id)
+      if (result) {
+        reply.send(result)
       } else {
         reply.code(404).send()
       }
@@ -157,15 +150,9 @@ module.exports = async function (fastify, opts) {
 
   fastify.delete('/:id', async (req, reply) => {
     try {
-      const now = new Date()
-      const result = await knex(tableName)
-        .where('id', req.params.id)
-        .update({
-          archived_at: now,
-        })
-        .returning(columnsToReturn)
-      if (result.length > 0) {
-        reply.send(result[0])
+      const result = await fastify.data.workbench.archiveArticle(req.params.id)
+      if (result) {
+        reply.send(result)
       } else {
         reply.code(404).send()
       }
@@ -177,7 +164,7 @@ module.exports = async function (fastify, opts) {
 
   fastify.delete('/:id/purge', async (req, reply) => {
     try {
-      const result = await knex(tableName).where('id', req.params.id).delete()
+      await fastify.data.workbench.purgeArticle(req.params.id)
       reply.code(204).send()
     } catch (err) {
       fastify.log.error(err)
