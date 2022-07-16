@@ -1,16 +1,8 @@
-const {
-  articleTableName,
-  articleInfoColumns,
-  articleContentColumns,
-  articleFullColumns,
-} = require('./modelFieldMap')
-
+const articleTableName = 'articles'
 const fullArticleInfoColumns = [
   'articles.id',
   'articles.headline',
   'articles.byline',
-  'users.alias as author',
-  'users.public_id as authorKey',
   'articles.cover_art_url as coverArtUrl',
   'articles.synopsis',
   'articles.created_at as createdAt',
@@ -18,7 +10,35 @@ const fullArticleInfoColumns = [
   'articles.published_at as publishedAt',
   'articles.archived_at as archivedAt',
   'articles.requested_to_publish_at as requestedToPublishAt',
+  'users.alias as author',
+  'users.public_id as authorKey',
 ]
+const articleInfoColumns = [
+  'id',
+  'headline',
+  'byline',
+  'cover_art_url as coverArtUrl',
+  'synopsis',
+  'created_at as createdAt',
+  'updated_at as updatedAt',
+  'published_at as publishedAt',
+  'archived_at as archivedAt',
+  'requested_to_publish_at as requestedToPublishAt',
+]
+const articleFullColumns = [
+  'id',
+  'headline',
+  'byline',
+  'cover_art_url as coverArtUrl',
+  'synopsis',
+  'content',
+  'created_at as createdAt',
+  'updated_at as updatedAt',
+  'published_at as publishedAt',
+  'archived_at as archivedAt',
+  'requested_to_publish_at as requestedToPublishAt',
+]
+const articleContentColumns = ['id', 'content']
 
 module.exports = (fastify) => {
   const { knex, log } = fastify
@@ -27,15 +47,15 @@ module.exports = (fastify) => {
    * Creates a new article, mostly a shell to be filled in by its author.
    *
    * @param {string} headline - main title of the article
-   * @param {number} authorId - system id of article's author
+   * @param {number} authorUserId - system id of article's author
    * @param {string} byline - text description of the author, a.k.a. pen name
    * @returns ArticleInfo everything about the article except the content
    */
-  const createArticle = async (headline, authorId, byline) => {
+  const createArticle = async (headline, authorUserId, byline) => {
     log.debug('articleModel.createArticle')
     const row = {
       headline,
-      author_id: authorId,
+      author_id: authorUserId,
       byline,
     }
     try {

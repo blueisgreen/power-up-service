@@ -31,33 +31,6 @@ const inquiryColumns = [
   'message',
 ]
 
-const articleTableName = 'articles'
-const articleInfoColumns = [
-  'id',
-  'headline',
-  'byline',
-  'cover_art_url as coverArtUrl',
-  'synopsis',
-  'created_at as createdAt',
-  'updated_at as updatedAt',
-  'published_at as publishedAt',
-  'archived_at as archivedAt',
-  'requested_to_publish_at as requestedToPublishAt',
-]
-const articleFullColumns = [
-  'id',
-  'headline',
-  'byline',
-  'cover_art_url as coverArtUrl',
-  'synopsis',
-  'content',
-  'created_at as createdAt',
-  'updated_at as updatedAt',
-  'published_at as publishedAt',
-  'archived_at as archivedAt',
-  'requested_to_publish_at as requestedToPublishAt',
-]
-const articleContentColumns = ['id', 'content', 'updated_at as updatedAt']
 
 const actionTableName = 'actions'
 const actionColumns = [
@@ -80,10 +53,6 @@ module.exports = {
   userTableName,
   authorColumns,
   authorTableName,
-  articleTableName,
-  articleInfoColumns,
-  articleContentColumns,
-  articleFullColumns,
   inquiryTableName,
   inquiryColumns,
   actionTableName,
