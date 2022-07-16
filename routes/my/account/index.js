@@ -37,7 +37,6 @@ module.exports = async function (fastify, opts) {
         okToCookies
       )
       const updatedRoles = await fastify.data.identity.getUserRoles(userInfo.id)
-      // TODO: determine an approach to suppress internal data, like db IDs
       userInfo.roles = updatedRoles
       delete userInfo.id
       reply.send(userInfo)
@@ -70,7 +69,7 @@ module.exports = async function (fastify, opts) {
       preValidation: fastify.preValidation,
     },
     async (request, reply) => {
-      const authorInfo = await fastify.data.identity.getAuthorInfo(
+      const authorInfo = await fastify.data.author.getInfo(
         request.userContext.userId
       )
       reply.send(authorInfo)

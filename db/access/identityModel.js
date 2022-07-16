@@ -34,7 +34,7 @@ module.exports = (fastify) => {
     const roles = await getUserRolesWithPublicId(userPublicId)
     roles.forEach((role) => (context.roles[role] = true))
     if (context.roles.author) {
-      const authorInfo = await getAuthorInfo(user.id)
+      const authorInfo = await fastify.data.author.getInfo(user.id)
       context.authorStatus = authorInfo.status
     }
     return context
@@ -97,6 +97,7 @@ module.exports = (fastify) => {
     return getUser(profileRecord[0].userId)
   }
 
+  // TODO: pull this up out of the model
   const registerUser = async (
     platform,
     accessToken,
@@ -131,6 +132,7 @@ module.exports = (fastify) => {
     return getUser(id)
   }
 
+  // TODO: pull this up out of the model
   const becomeMember = async (userPublicId, alias, okToTerms, okToCookies) => {
     log.debug(`identity plugin: becomeMember ${userPublicId}, ${alias}`)
     const active = fastify.lookups.codeLookup('accountStatus', 'active')
@@ -159,29 +161,20 @@ module.exports = (fastify) => {
     return userInfo
   }
 
+  // TODO: pull this up out of the model
   const becomeAuthor = async (userPublicId) => {
     log.debug('identity plugin: becomeAuthor')
     const userRecord = await getUserWithPublicId(userPublicId)
-    const authorRecord = await knex(authorTableName)
-      .returning(authorColumns)
-      .insert({
-        user_id: userRecord.id,
-        pen_name: userRecord.alias,
-        status: 'untrusted',
-      })
+
+    const authorRecord = await fastify.data.author.createAuthor(
+      userRecord.id,
+      userRecord.penName
+    )
     await grantRoles(userRecord.id, ['author'])
     const roles = await getUserRoles(userRecord.id)
     userRecord.author = authorRecord
     userRecord.roles = roles
     return userRecord
-  }
-
-  // TODO: figure out strategy for return user info, including for roles
-  const getAuthorInfo = async (userId) => {
-    const authorRecord = await knex(authorTableName)
-      .select(authorColumns)
-      .where('user_id', userId)
-    return authorRecord[0]
   }
 
   const getUserRoles = async (userId) => {
@@ -314,7 +307,6 @@ module.exports = (fastify) => {
     grantRoles,
     becomeMember,
     becomeAuthor,
-    getAuthorInfo,
     agreeToTerms,
     agreeToCookies,
     agreeToEmailComms,
