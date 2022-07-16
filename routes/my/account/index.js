@@ -70,7 +70,7 @@ module.exports = async function (fastify, opts) {
       preValidation: fastify.preValidation,
     },
     async (request, reply) => {
-      const authorInfo = await fastify.data.identity.getAuthorInfo(
+      const authorInfo = await fastify.data.author.getInfo(
         request.userContext.userId
       )
       reply.send(authorInfo)
