@@ -37,15 +37,16 @@ module.exports = fp(
       }
 
       // FIXME: tracker cookie is not being returned
-      log.debug(`client sent touched cookie: ${request.cookies.touched}`)
       request.tracker = request.cookies.tracker
       if (!request.tracker) {
+        log.debug('tracker cookie not sent by client')
         // request.tracker = `tr:${uuidv4()}`
         request.tracker = 'boo'
         reply.setCookie('tracker', request.tracker, fastify.uiCookieOptions)
       }
 
       // leave proof that were we there
+      log.debug(`time of previous request was: ${request.cookies.touched}`)
       reply.setCookie('touched', new Date(), fastify.uiCookieOptions)
     })
 

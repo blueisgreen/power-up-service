@@ -76,11 +76,11 @@ module.exports = (fastify) => {
    * @param {number} userId - system ID of the presumed author with articles
    * @returns [ArticleInfo] list of articles owned by user
    */
-  const getArticles = async (userId) => {
+  const getMyArticles = async (userId) => {
     log.debug('articleModel.getMyArticles')
     const myArticles = await knex(articleTableName)
       .select(articleInfoColumns)
-      .where('author_id', userId)
+      .where({ author_id: userId })
     fastify.log.debug('Found ' + myArticles.length + ' articles by ' + userId)
     return myArticles
   }
@@ -224,7 +224,7 @@ module.exports = (fastify) => {
 
   return {
     createArticle,
-    getArticles,
+    getMyArticles,
     getArticlesFullInfo,
     getArticleContent,
     getArticlesPendingReview,
