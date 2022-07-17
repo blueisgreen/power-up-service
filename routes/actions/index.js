@@ -5,19 +5,24 @@ module.exports = async function (fastify, opts) {
    * Record an action.
    */
   fastify.post('/', async (request, reply) => {
-    const { actionCode, details } = request.body
-    const tracker = request.tracker
-    const userKey = request.userKey
+    // FIXME: rethink - do bulk send of actions at key moments and at intervals
+    
+    // const { actionCode, details } = request.body
+    // const tracker = request.tracker
+    // const alias = !request.anonymous ? request.userContext.alias : 'unknown'
+    // const userKey = !request.anonymous ? request.userContext.userKey : null
 
-    fastify.log.debug(
-      `record action: ${actionCode} by ${userKey} details: ${details}`
-    )
+    // fastify.log.debug(
+    //   `record action: ${actionCode} by ${alias} details: ${JSON.stringify(
+    //     details
+    //   )}`
+    // )
 
-    fastify.log.debug(
-      `${request.headers['user-agent']} | ${request.headers['referer']}`
-    )
+    // fastify.log.debug(
+    //   `${request.headers['user-agent']} | ${request.headers['referer']}`
+    // )
 
-    fastify.data.action.capture(actionCode, tracker, userKey, details)
+    // fastify.data.action.capture(actionCode, tracker, userKey, details)
     reply.code(204).send()
   })
 

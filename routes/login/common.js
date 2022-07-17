@@ -1,26 +1,52 @@
-// TODO: move common logic here to avoid duplication in callback funtions
+const finishLogin = async (
+  fastify,
+  reply,
+  pid,
+  authToken,
+  authId,
+  authUserData
+) => {
+  let goTo = 'home'
 
-export const finishLogin = (fastify, response) => {
+  let user = await fastify.data.identity.findUserFromSocialProfile(
+    pid,
+    userInfo.data.id
+  )
+
+  // user not found; set up new user
+  if (!user) {
+    const publicId = uuidv4()
+    user = await fastify.data.identity.registerUser(
+      pid,
+      authToken.access_token,
+      userInfo.data,
+      publicId,
+      authToken.expires_in
+    )
+    goTo = 'register'
+  }
+
+  // record login activity - capture user browser context
   const browserContext = `${request.headers['user-agent']} | ${request.headers['referer']}`
   fastify.data.action.capture(
     'login',
     request.tracker,
-    request.userKey,
+    user.userKey,
     browserContext
   )
 
-  return 'blah'
+  // refresh token
+  const roles = await fastify.data.identity.getUserRoles(user.id)
+  const token = fastify.jwt.sign({
+    who: user.userKey,
+    alias: user.alias,
+    roles,
+  })
+  await fastify.data.identity.setSessionToken(user.userKey, token)
+  reply.setCookie('token', token, fastify.secretCookieOptions)
+  reply.redirect(`${process.env.SPA_LANDING_URL}?goTo=${goTo}&token=${token}`)
 }
 
-export const updateToken = (fastify, payload) => {
-  /*
-      const token = fastify.jwt.sign({
-        user: {
-          who: '596b3081-6073-476c-bc9d-d9273ba70f0e',
-          alias: 'Big Faker',
-          roles: ['butcher', 'baker', 'candlestick maker'],
-        },
-      })
-      reply.setCookie('token', token, fastify.secretCookieOptions)
-*/
+module.exports = {
+  finishLogin,
 }

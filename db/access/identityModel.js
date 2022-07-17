@@ -18,6 +18,13 @@ module.exports = (fastify) => {
     return userRecord.length > 0 ? userRecord[0] : null
   }
 
+  /**
+   * Gathers useful user information: userKey, userId, userStatus, roles,
+   * plus authorStatus (if applicable).
+   *
+   * @param {*} userPublicId same as userKey
+   * @returns
+   */
   const getUserContext = async (userPublicId) => {
     log.debug('identity plugin: getUserContext')
     const context = {
