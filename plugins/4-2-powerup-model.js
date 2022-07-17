@@ -15,12 +15,12 @@ module.exports = fp(
     const data = {
       action: actionModel(fastify),
       admin: adminModel(fastify),
-      articles: articleModel(fastify),
+      article: articleModel(fastify),
       author: authorModel(fastify),
       identity: identityModel(fastify),
       support: supportModel(fastify),
       systemCodes: systemCodesModel(fastify),
-      workbench: articleModel(fastify)  // TODO: remove after conversion to articles
+      workbench: articleModel(fastify)  // TODO: remove after conversion to article
     }
     fastify.decorate('data', data)
     next()

@@ -8,7 +8,7 @@ module.exports = async function (fastify, opts) {
 
   fastify.get('/', async (req, reply) => {
     log.debug('==>' + JSON.stringify(req.userContext))
-    const articles = await fastify.data.workbench.getMyArticles(
+    const articles = await fastify.data.article.getMyArticles(
       req.userContext.userId
     )
     if (articles) {
@@ -19,7 +19,7 @@ module.exports = async function (fastify, opts) {
   })
 
   fastify.get('/full', async (req, reply) => {
-    const articles = await fastify.data.workbench.getArticlesFullInfo()
+    const articles = await fastify.data.article.getArticlesFullInfo()
     if (articles) {
       reply.send(articles)
     } else {
@@ -30,7 +30,7 @@ module.exports = async function (fastify, opts) {
   fastify.get('/pending', async (req, reply) => {
     let articles = null
     if (req.userContext.roles.editor) {
-      articles = await fastify.data.workbench.getArticlesPendingReview()
+      articles = await fastify.data.article.getArticlesPendingReview()
     }
     if (articles) {
       reply.send(articles)
@@ -45,7 +45,7 @@ module.exports = async function (fastify, opts) {
     )
     const headline = req.body.headline
     const byline = userInfo.alias || 'A. Nonymous'
-    const articleInfo = await fastify.data.workbench.createArticle(
+    const articleInfo = await fastify.data.article.createArticle(
       headline,
       userInfo.id,
       byline
@@ -59,8 +59,8 @@ module.exports = async function (fastify, opts) {
 
   fastify.get('/:id', async (req, reply) => {
     const article = req.userContext.roles.editor
-      ? await fastify.data.workbench.getArticleContentForEditor(req.params.id)
-      : await fastify.data.workbench.getArticleContent(
+      ? await fastify.data.article.getArticleContentForEditor(req.params.id)
+      : await fastify.data.article.getArticleContent(
           req.params.id,
           req.userContext.userId
         )
@@ -81,7 +81,7 @@ module.exports = async function (fastify, opts) {
         synopsis: body.synopsis,
         content: body.content,
       }
-      const result = await fastify.data.workbench.updateArticle(
+      const result = await fastify.data.article.updateArticle(
         params.id,
         changes
       )
@@ -105,9 +105,9 @@ module.exports = async function (fastify, opts) {
         (req.userContext.roles.author &&
           req.userContext.authorStatus === 'trusted')
       ) {
-        result = await fastify.data.workbench.publishArticle(articleId)
+        result = await fastify.data.article.publishArticle(articleId)
       } else {
-        result = await fastify.data.workbench.requestToPublishArticle(articleId)
+        result = await fastify.data.article.requestToPublishArticle(articleId)
       }
 
       if (result.length > 0) {
@@ -123,7 +123,7 @@ module.exports = async function (fastify, opts) {
 
   fastify.put('/:id/retract', async (req, reply) => {
     try {
-      const result = await fastify.data.workbench.retractArticle(req.params.id)
+      const result = await fastify.data.article.retractArticle(req.params.id)
       if (result) {
         reply.send(result)
       } else {
@@ -137,7 +137,7 @@ module.exports = async function (fastify, opts) {
 
   fastify.put('/:id/revive', async (req, reply) => {
     try {
-      const result = await fastify.data.workbench.reviveArticle(req.params.id)
+      const result = await fastify.data.article.reviveArticle(req.params.id)
       if (result) {
         reply.send(result)
       } else {
@@ -151,7 +151,7 @@ module.exports = async function (fastify, opts) {
 
   fastify.delete('/:id', async (req, reply) => {
     try {
-      const result = await fastify.data.workbench.archiveArticle(req.params.id)
+      const result = await fastify.data.article.archiveArticle(req.params.id)
       if (result) {
         reply.send(result)
       } else {
@@ -165,7 +165,7 @@ module.exports = async function (fastify, opts) {
 
   fastify.delete('/:id/purge', async (req, reply) => {
     try {
-      await fastify.data.workbench.purgeArticle(req.params.id)
+      await fastify.data.article.purgeArticle(req.params.id)
       reply.code(204).send()
     } catch (err) {
       fastify.log.error(err)
