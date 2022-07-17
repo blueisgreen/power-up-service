@@ -85,12 +85,39 @@ module.exports = (fastify) => {
     return myArticles
   }
 
-  const getArticlesFullInfo = async () => {
-    log.debug('articleModel.getArticlesFullInfo')
-    const myArticles = await knex('articles')
-      .join('users', 'users.id', 'articles.author_id')
+  const getArticlesInfoOnly = async (queryParams) => {
+    log.debug('articleModel.getArticlesInfoOnly')
+
+    const { user, status, limit, offset } = queryParams
+
+    const results = await knex(articleTableName)
       .select(fullArticleInfoColumns)
-    return myArticles
+      .join('users', 'users.id', 'articles.author_id')
+      .limit(limit)
+      .offset(offset)
+      .modify((builder) => {
+        if (status === 'pending') {
+          builder.whereNotNull('requested_to_publish_at')
+        }
+        if (status === 'published') {
+          builder.whereNotNull('published_at')
+        }
+        if (status === 'archived') {
+          builder.whereNotNull('archived_at')
+        }
+        if (user) {
+          log.warn('tried to filter by user: not implemented')
+          // FIXME: whenever needed
+          //   builder.where('user_public_id', '=', user)
+        }
+        if (status === 'pending') {
+          builder.orderBy('requested_to_publish_at', 'asc')
+        } else {
+          builder.orderBy('created_at', 'desc')
+        }
+        return builder
+      })
+    return results
   }
 
   /**
@@ -225,7 +252,7 @@ module.exports = (fastify) => {
   return {
     createArticle,
     getMyArticles,
-    getArticlesFullInfo,
+    getArticlesInfoOnly,
     getArticleContent,
     getArticlesPendingReview,
     getArticleContentForEditor,

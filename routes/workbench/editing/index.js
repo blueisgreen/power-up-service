@@ -7,50 +7,18 @@ module.exports = async function (fastify, opts) {
   }
 
   fastify.get('/', async (req, reply) => {
-    const articles = await fastify.data.article.getArticlesFullInfo()
+    const { user, status, limit, offset } = req.query
+    const queryParams = {
+      user,
+      status,
+      limit: limit || 20,
+      offset: offset || 0,
+    }
+    const articles = await fastify.data.article.getArticlesInfoOnly(queryParams)
     if (articles) {
       reply.send(articles)
     } else {
       reply.code(404).send('No articles found')
-    }
-  })
-
-  fastify.get('/full', async (req, reply) => {
-    const articles = await fastify.data.article.getArticlesFullInfo()
-    if (articles) {
-      reply.send(articles)
-    } else {
-      reply.code(404).send('No articles found')
-    }
-  })
-
-  fastify.get('/pending', async (req, reply) => {
-    let articles = null
-    if (req.userContext.roles.editor) {
-      articles = await fastify.data.article.getArticlesPendingReview()
-    }
-    if (articles) {
-      reply.send(articles)
-    } else {
-      reply.code(404).send('No articles found')
-    }
-  })
-
-  fastify.post('/', async (req, reply) => {
-    const userInfo = await fastify.data.identity.getUserWithPublicId(
-      req.userKey
-    )
-    const headline = req.body.headline
-    const byline = userInfo.alias || 'A. Nonymous'
-    const articleInfo = await fastify.data.article.createArticle(
-      headline,
-      userInfo.id,
-      byline
-    )
-    if (articleInfo) {
-      reply.code(201).send(articleInfo)
-    } else {
-      reply.code(500).send(genericErrorMsg)
     }
   })
 
