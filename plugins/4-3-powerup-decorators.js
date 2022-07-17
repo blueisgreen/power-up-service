@@ -14,20 +14,30 @@ module.exports = fp(
 
     fastify.addHook('onRequest', async (request, reply) => {
       try {
-        log.debug(`client sent these cookies: ${JSON.stringify(request.cookies)}`)
         await request.jwtVerify()
-        log.debug(`found valid session token ${JSON.stringify(request.user)}`)
+        log.debug(`valid session token ${JSON.stringify(request.user)}`)
         request.anonymous = false
-        request.userKey = request.user.who
-        request.userContext = await fastify.data.identity.getUserContext(
-          request.user.who
+        request.userKey = request.user.user.who
+
+        const flattenedRoles = {}
+        request.user.user.roles.forEach((role) => (flattenedRoles[role] = true))
+        const context = await fastify.data.identity.getUserContext(
+          request.user.user.who,
+          flattenedRoles.author
         )
-        log.debug('user context: ' + request.userContext)
+
+        const whole = Object.assign({}, request.user.user, context, {
+          roles: flattenedRoles,
+        })
+        log.debug('user context:' + JSON.stringify(whole))
+        request.userContext = whole
       } catch (err) {
+        log.debug('Oops, something went wrong establishing user context')
         log.debug(err)
       }
 
       // FIXME: tracker cookie is not being returned
+      log.debug(`client sent touched cookie: ${request.cookies.touched}`)
       request.tracker = request.cookies.tracker
       if (!request.tracker) {
         // request.tracker = `tr:${uuidv4()}`

@@ -1,17 +1,12 @@
-const {
-  userTableName,
-  userColumns,
-  authorTableName,
-  authorColumns,
-} = require('./modelFieldMap')
+const { userTableName, userColumns } = require('./modelFieldMap')
 
-// TODO: verify that userPublicId parameter is uuid or wrap query in try-catch and handle
+// TODO: validation: verify that userPublicId parameter is uuid or wrap query in try-catch and handle
 
 module.exports = (fastify) => {
   const { knex, log } = fastify
 
   const getUser = async (userId) => {
-    log.debug('identity plugin: getUser')
+    log.debug('identityModel.getUser')
     const userRecord = await knex(userTableName)
       .select(userColumns)
       .where('id', '=', userId)
@@ -25,30 +20,31 @@ module.exports = (fastify) => {
    * @param {*} userPublicId same as userKey
    * @returns
    */
-  const getUserContext = async (userPublicId) => {
-    log.debug('identity plugin: getUserContext')
-    const context = {
-      userKey: userPublicId,
-      userId: 0,
-      userStatus: '',
-      roles: {},
+  const getUserContext = async (userKey, isAuthor) => {
+    log.debug('identityModel.getUserContext')
+
+    const useful = await knex(userTableName)
+      .select(['users.id as userId', 'system_codes.code as userStatus'])
+      .join('system_codes', 'system_codes.id', 'users.account_status_id')
+      .where('public_id', '=', userKey)
+
+    if (useful.length === 0) {
+      return null
     }
-    const user = await getUserWithPublicId(userPublicId)
-    context.userId = user.id
-    if (user.accountStatusId) {
-      context.userStatus = fastify.lookups.idToCode(user.accountStatusId)
-    }
-    const roles = await getUserRolesWithPublicId(userPublicId)
-    roles.forEach((role) => (context.roles[role] = true))
-    if (context.roles.author) {
-      const authorInfo = await fastify.data.author.getInfo(user.id)
+
+    const context = useful[0]
+
+    // context.userStatus = fastify.lookups.idToCode(user.accountStatusId)
+
+    if (isAuthor) {
+      const authorInfo = await fastify.data.author.getInfo(context.userId)
       context.authorStatus = authorInfo.status
     }
     return context
   }
 
   const getUserWithPublicId = async (userPublicId) => {
-    log.debug('identity plugin: getUserWithPublicId')
+    log.debug('identityModel.getUserWithPublicId')
     const userRecord = await knex(userTableName)
       .select(userColumns)
       .where('public_id', '=', userPublicId)
@@ -57,7 +53,7 @@ module.exports = (fastify) => {
 
   const findUserWithPublicId = async (userKey, platform) => {
     log.debug(
-      `identity plugin: findUserWithPublicId using userKey ${userKey} on platform ${platform}`
+      `identityModel.findUserWithPublicId using userKey ${userKey} on platform ${platform}`
     )
     const platformCode = fastify.lookups.codeLookup('socialPlatform', platform)
     if (!userKey || !platformCode) {
@@ -84,7 +80,7 @@ module.exports = (fastify) => {
   }
 
   const findUserFromSocialProfile = async (platform, profileId) => {
-    log.debug('identity plugin: findUserFromSocialProfile')
+    log.debug('identityModel.findUserFromSocialProfile')
 
     const platformId = fastify.lookups.codeLookup('socialPlatform', platform).id
     const profileRecord = await knex('social_profiles')
@@ -112,7 +108,7 @@ module.exports = (fastify) => {
     userPublicId,
     accessTokenExpiresIn = 0
   ) => {
-    log.debug('identity plugin: registerUser')
+    log.debug('identityModel.registerUser')
 
     const platformId = fastify.lookups.codeLookup('socialPlatform', platform).id
     const userRecord = await knex(userTableName)
@@ -141,7 +137,7 @@ module.exports = (fastify) => {
 
   // TODO: pull this up out of the model
   const becomeMember = async (userPublicId, alias, okToTerms, okToCookies) => {
-    log.debug(`identity plugin: becomeMember ${userPublicId}, ${alias}`)
+    log.debug(`identityModel.becomeMember ${userPublicId}, ${alias}`)
     const active = fastify.lookups.codeLookup('accountStatus', 'active')
     const now = new Date()
     const membership = {
@@ -170,7 +166,7 @@ module.exports = (fastify) => {
 
   // TODO: pull this up out of the model
   const becomeAuthor = async (userPublicId) => {
-    log.debug('identity plugin: becomeAuthor')
+    log.debug('identityModel.becomeAuthor')
     const userRecord = await getUserWithPublicId(userPublicId)
 
     const authorRecord = await fastify.data.author.createAuthor(
@@ -185,7 +181,7 @@ module.exports = (fastify) => {
   }
 
   const getUserRoles = async (userId) => {
-    log.debug('identity plugin: getUserRoles')
+    log.debug('identityModel.getUserRoles')
     const roleRecords = await knex('system_codes')
       .select('system_codes.code')
       .join('user_roles', 'user_roles.role_id', '=', 'system_codes.id')
@@ -196,7 +192,7 @@ module.exports = (fastify) => {
   }
 
   const getUserRolesWithPublicId = async (userPublicId) => {
-    log.debug('identity plugin: getUserWithPublicId')
+    log.debug('identityModel.getUserWithPublicId')
     const userRecord = await knex(userTableName)
       .returning(['id'])
       .where('public_id', '=', userPublicId)
@@ -206,7 +202,7 @@ module.exports = (fastify) => {
   }
 
   const grantRoles = async (userId, roles) => {
-    log.debug('identity plugin: grantRoles')
+    log.debug('identityModel.grantRoles')
     const roleIdsToGrant = roles.map(
       (roleCode) => fastify.lookups.codeLookup('userRole', roleCode).id
     )
@@ -220,7 +216,7 @@ module.exports = (fastify) => {
   }
 
   const agreeToTerms = async (publicId) => {
-    log.debug('identity plugin: agreeToTerms')
+    log.debug('identityModel.agreeToTerms')
     const now = new Date()
     await knex(userTableName).where('public_id', '=', publicId).update({
       terms_accepted_at: now,
@@ -230,7 +226,7 @@ module.exports = (fastify) => {
   }
 
   const agreeToCookies = async (publicId) => {
-    log.debug('identity plugin: agreeToCookies')
+    log.debug('identityModel.agreeToCookies')
     const now = new Date()
     await knex(userTableName).where('public_id', '=', publicId).update({
       cookies_accepted_at: now,
@@ -240,7 +236,7 @@ module.exports = (fastify) => {
   }
 
   const agreeToEmailComms = async (publicId) => {
-    log.debug('identity plugin: agreeToEmailComms')
+    log.debug('identityModel.agreeToEmailComms')
     const now = new Date()
     await knex(userTableName).where('public_id', '=', publicId).update({
       email_comms_accepted_at: now,
@@ -250,7 +246,7 @@ module.exports = (fastify) => {
   }
 
   const updateUser = async (userPublicId, changes) => {
-    log.debug('identity plugin: updateUser')
+    log.debug('identityModel.updateUser')
     const now = new Date()
     const userBefore = await getUserWithPublicId(userPublicId)
     const userAfter = Object.assign({}, userBefore, {
@@ -283,7 +279,7 @@ module.exports = (fastify) => {
   }
 
   const findSessionToken = async (userPublicId) => {
-    log.debug('identity plugin: findSessionToken')
+    log.debug('identityModel.findSessionToken')
     const result = await knex('user_sessions')
       .select('auth_token')
       .where('user_public_id', '=', userPublicId)
@@ -292,7 +288,7 @@ module.exports = (fastify) => {
   }
 
   const setSessionToken = async (userPublicId, sessionToken) => {
-    log.debug('identity plugin: setSessionToken')
+    log.debug('identityModel.setSessionToken')
     await knex('user_sessions')
       .insert({
         user_public_id: userPublicId,

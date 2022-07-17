@@ -7,8 +7,9 @@ module.exports = async function (fastify, opts) {
   }
 
   fastify.get('/', async (req, reply) => {
+    log.debug('==>' + req.userContext)
     const articles = await fastify.data.workbench.getArticles(
-      req.userContext.userId
+      req.context.userId
     )
     if (articles) {
       reply.send(articles)
