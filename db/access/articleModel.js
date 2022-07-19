@@ -111,9 +111,9 @@ module.exports = (fastify) => {
           //   builder.where('user_public_id', '=', user)
         }
         if (status === 'pending') {
-          builder.orderBy('requested_to_publish_at', 'asc')
+          builder.orderBy('articles.requested_to_publish_at', 'asc')
         } else {
-          builder.orderBy('created_at', 'desc')
+          builder.orderBy('articles.created_at', 'desc')
         }
         return builder
       })
