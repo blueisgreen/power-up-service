@@ -2,7 +2,7 @@
 
 const { test } = require('tap')
 const Fastify = require('fastify')
-const authorModel = require('../../db/access/authorModel.js')
+const authorModel = require('../../db/models/authorModel.js')
 
 test('authorModel creates author', async (t) => {
   const fastify = Fastify()

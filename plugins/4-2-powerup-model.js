@@ -1,13 +1,13 @@
 'use strict'
 
 const fp = require('fastify-plugin')
-const actionModel = require('../db/access/actionModel')
-const adminModel = require('../db/access/adminModel')
-const articleModel = require('../db/access/articleModel')
-const authorModel = require('../db/access/authorModel')
-const identityModel = require('../db/access/identityModel')
-const supportModel = require('../db/access/supportModel')
-const systemCodesModel = require('../db/access/systemCodesModel')
+const actionModel = require('../db/models/actionModel')
+const adminModel = require('../db/models/adminModel')
+const articleModel = require('../db/models/articleModel')
+const authorModel = require('../db/models/authorModel')
+const identityModel = require('../db/models/identityModel')
+const supportModel = require('../db/models/supportModel')
+const systemCodesModel = require('../db/models/systemCodesModel')
 
 module.exports = fp(
   async function (fastify, options, next) {

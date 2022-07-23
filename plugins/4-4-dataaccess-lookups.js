@@ -1,7 +1,7 @@
 'use strict'
 
 const fp = require('fastify-plugin')
-const lookups = require('../db/access/lookupPlugin')
+const lookups = require('./lookupPlugin')
 
 module.exports = fp(lookups, {
   fastify: '3.x',

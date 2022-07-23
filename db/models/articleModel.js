@@ -106,7 +106,7 @@ module.exports = (fastify) => {
           builder.whereNotNull('archived_at')
         }
         if (user) {
-          log.warn('tried to filter by user: not implemented')
+          log.warn('asked to filter by user: not implemented')
           // FIXME: whenever needed
           //   builder.where('user_public_id', '=', user)
         }
