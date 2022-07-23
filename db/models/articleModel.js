@@ -1,3 +1,5 @@
+import { generateRandomKey } from './util'
+
 const articleTableName = 'articles'
 const fullArticleInfoColumns = [
   'articles.id',
@@ -53,7 +55,9 @@ module.exports = (fastify) => {
    */
   const createArticle = async (headline, authorUserId, byline) => {
     log.debug('articleModel.createArticle')
+    const articleKey = generateRandomKey()
     const row = {
+      public_id: articleKey,
       headline,
       author_id: authorUserId,
       byline,
@@ -66,6 +70,7 @@ module.exports = (fastify) => {
       return result.length > 0 ? result[0] : null
     } catch (err) {
       fastify.log.error(err)
+      // TODO: chance of violating unique constraint on key; handle properly; prove with unit tests
       return null
     }
   }
