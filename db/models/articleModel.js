@@ -1,4 +1,4 @@
-import { generateRandomKey } from './util'
+const { generateRandomKey } = require('./util')
 
 const articleTableName = 'articles'
 const fullArticleInfoColumns = [
