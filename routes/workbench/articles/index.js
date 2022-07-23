@@ -7,7 +7,6 @@ module.exports = async function (fastify, opts) {
   }
 
   fastify.get('/', async (req, reply) => {
-    log.debug('==>' + JSON.stringify(req.userContext))
     const articles = await fastify.data.article.getMyArticles(
       req.userContext.userId
     )
@@ -20,18 +19,6 @@ module.exports = async function (fastify, opts) {
 
   fastify.get('/full', async (req, reply) => {
     const articles = await fastify.data.article.getArticlesFullInfo()
-    if (articles) {
-      reply.send(articles)
-    } else {
-      reply.code(404).send('No articles found')
-    }
-  })
-
-  fastify.get('/pending', async (req, reply) => {
-    let articles = null
-    if (req.userContext.roles.editor) {
-      articles = await fastify.data.article.getArticlesPendingReview()
-    }
     if (articles) {
       reply.send(articles)
     } else {
