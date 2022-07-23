@@ -92,14 +92,16 @@ module.exports = (fastify) => {
   const getArticlesInfoOnly = async (queryParams) => {
     log.debug('articleModel.getArticlesInfoOnly')
 
-    const { user, status, limit, offset } = queryParams
+    const { status, limit = 0, offset = 0 } = queryParams
 
     const results = await knex(articleTableName)
       .select(fullArticleInfoColumns)
       .join('users', 'users.id', 'articles.author_id')
-      .limit(limit)
-      .offset(offset)
       .modify((builder) => {
+        if (limit) {
+          builder.limit(limit)
+          builder.offset(offset)
+        }
         if (status === 'pending') {
           builder.whereNotNull('articles.requested_to_publish_at')
         }
@@ -108,11 +110,6 @@ module.exports = (fastify) => {
         }
         if (status === 'archived') {
           builder.whereNotNull('articles.archived_at')
-        }
-        if (user) {
-          log.warn('asked to filter by user: not implemented')
-          // TODO: whenever needed
-          //   builder.where('user_public_id', '=', user)
         }
         if (status === 'pending') {
           builder.orderBy('articles.requested_to_publish_at', 'asc')
@@ -149,7 +146,7 @@ module.exports = (fastify) => {
       .select(articleFullColumns)
       .where({ public_id: articleKey })
       .whereNotNull('articles.published_at')
-    return myArticles.length > 0 ? myArticle[0] : null
+    return myArticle.length > 0 ? myArticle[0] : null
   }
 
   /**

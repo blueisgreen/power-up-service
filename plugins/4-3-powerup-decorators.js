@@ -32,8 +32,11 @@ module.exports = fp(
         log.debug('user context:' + JSON.stringify(whole))
         request.userContext = whole
       } catch (err) {
-        log.debug('Oops, something went wrong establishing user context')
-        log.debug(err)
+        if (err.message.startsWith('No Authorization was found')) {
+          log.debug('Anonymous user')
+        } else {
+          log.error(err)
+        }
       }
 
       // FIXME: tracker cookie is not being returned
