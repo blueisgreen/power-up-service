@@ -22,11 +22,12 @@ module.exports = async function (fastify, opts) {
     }
   })
 
-  fastify.get('/:id', async (req, reply) => {
+  fastify.get('/:key', async (req, reply) => {
+    const { key } = req.params
     const article = req.userContext.roles.editor
-      ? await fastify.data.article.getArticleContentForEditor(req.params.id)
+      ? await fastify.data.article.getArticleContentForEditor(key)
       : await fastify.data.article.getArticleContent(
-          req.params.id,
+          key,
           req.userContext.userId
         )
     if (article) {
@@ -36,8 +37,9 @@ module.exports = async function (fastify, opts) {
     }
   })
 
-  fastify.put('/:id', async (req, reply) => {
+  fastify.put('/:key', async (req, reply) => {
     const { params, body } = req
+    const { key } = params
     try {
       const changes = {
         headline: body.headline,
@@ -46,10 +48,7 @@ module.exports = async function (fastify, opts) {
         synopsis: body.synopsis,
         content: body.content,
       }
-      const result = await fastify.data.article.updateArticle(
-        params.id,
-        changes
-      )
+      const result = await fastify.data.article.updateArticle(key, changes)
       if (result.length > 0) {
         reply.send(result[0])
       } else {
@@ -61,18 +60,18 @@ module.exports = async function (fastify, opts) {
     }
   })
 
-  fastify.put('/:id/publish', async (req, reply) => {
+  fastify.put('/:key/publish', async (req, reply) => {
+    const { key } = req.params
     try {
-      const articleId = req.params.id
       let result
       if (
         req.userContext.roles.editor ||
         (req.userContext.roles.author &&
           req.userContext.authorStatus === 'trusted')
       ) {
-        result = await fastify.data.article.publishArticle(articleId)
+        result = await fastify.data.article.publishArticle(key)
       } else {
-        result = await fastify.data.article.requestToPublishArticle(articleId)
+        result = await fastify.data.article.requestToPublishArticle(key)
       }
 
       if (result.length > 0) {
@@ -86,9 +85,10 @@ module.exports = async function (fastify, opts) {
     }
   })
 
-  fastify.put('/:id/retract', async (req, reply) => {
+  fastify.put('/:key/retract', async (req, reply) => {
+    const { key } = req.params
     try {
-      const result = await fastify.data.article.retractArticle(req.params.id)
+      const result = await fastify.data.article.retractArticle(key)
       if (result) {
         reply.send(result)
       } else {
@@ -100,9 +100,10 @@ module.exports = async function (fastify, opts) {
     }
   })
 
-  fastify.put('/:id/revive', async (req, reply) => {
+  fastify.put('/:key/revive', async (req, reply) => {
+    const { key } = req.params
     try {
-      const result = await fastify.data.article.reviveArticle(req.params.id)
+      const result = await fastify.data.article.reviveArticle(key)
       if (result) {
         reply.send(result)
       } else {
@@ -114,9 +115,10 @@ module.exports = async function (fastify, opts) {
     }
   })
 
-  fastify.delete('/:id', async (req, reply) => {
+  fastify.delete('/:key', async (req, reply) => {
+    const { key } = req.params
     try {
-      const result = await fastify.data.article.archiveArticle(req.params.id)
+      const result = await fastify.data.article.archiveArticle(key)
       if (result) {
         reply.send(result)
       } else {
@@ -128,9 +130,10 @@ module.exports = async function (fastify, opts) {
     }
   })
 
-  fastify.delete('/:id/purge', async (req, reply) => {
+  fastify.delete('/:key/purge', async (req, reply) => {
+    const { key } = req.params
     try {
-      await fastify.data.article.purgeArticle(req.params.id)
+      await fastify.data.article.purgeArticle(key)
       reply.code(204).send()
     } catch (err) {
       fastify.log.error(err)

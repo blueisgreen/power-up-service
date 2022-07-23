@@ -14,7 +14,8 @@ module.exports = async function (fastify, opts) {
   const genericErrorMsg = {
     error: 'Bad news, kiddies. Something went wrong with the database.',
   }
-  fastify.get('/published', async (req, reply) => {
+  
+  fastify.get('/', async (req, reply) => {
     log.debug('get articles.published')
     try {
       const articles = await fastify.data.article.getPublishedArticleCovers()
