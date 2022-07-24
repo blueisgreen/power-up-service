@@ -16,7 +16,9 @@ const fullArticleInfoColumns = [
   'users.public_id as authorKey',
 ]
 const articleInfoColumns = [
+  'id',
   'public_id as articleKey',
+  'author_id',
   'headline',
   'byline',
   'cover_art_url as coverArtUrl',

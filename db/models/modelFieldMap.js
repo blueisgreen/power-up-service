@@ -21,17 +21,6 @@ const authorColumns = [
   'updated_at as updatedAt',
 ]
 
-const inquiryTableName = 'inquiries'
-const inquiryColumns = [
-  'inquiries.id',
-  'inquiries.user_id as userId',
-  'inquiries.created_at as createdAt',
-  'inquiries.relates_to as relatesTo',
-  'purpose',
-  'message',
-]
-
-
 const actionTableName = 'actions'
 const actionColumns = [
   'created_at as createdAt',
@@ -53,8 +42,6 @@ module.exports = {
   userTableName,
   authorColumns,
   authorTableName,
-  inquiryTableName,
-  inquiryColumns,
   actionTableName,
   actionColumns,
   systemCodeTableName,

@@ -1,5 +1,7 @@
 'use strict'
 
+// TODO: restrict access to editors
+
 module.exports = async function (fastify, opts) {
   const { log } = fastify
   const genericErrorMsg = {
@@ -85,12 +87,23 @@ module.exports = async function (fastify, opts) {
     }
   })
 
-  fastify.put('/:key/retract', async (req, reply) => {
+  fastify.put('/:key/denyToPublish', async (req, reply) => {
     const { key } = req.params
+    const { message } = req.body
     try {
-      const result = await fastify.data.article.retractArticle(key)
-      if (result) {
-        reply.send(result)
+      const articleSnapshot = await fastify.data.article.retractArticle(key)
+      const messageSent = await fastify.data.support.createMessageAboutArticle(
+        articleSnapshot.author_id,
+        articleSnapshot.id,
+        'deniedToPublish',
+        message
+      )
+      const responsePayload = {
+        article: articleSnapshot,
+        messageToUser: messageSent,
+      }
+      if (articleSnapshot) {
+        reply.send(articleSnapshot)
       } else {
         reply.code(404).send()
       }
