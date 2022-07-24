@@ -69,8 +69,8 @@ module.exports = async function (fastify, opts) {
         content: body.content,
       }
       const result = await fastify.data.article.updateArticle(key, changes)
-      if (result.length > 0) {
-        reply.send(result[0])
+      if (result) {
+        reply.send(result)
       } else {
         reply.code(404).send()
       }
@@ -94,8 +94,8 @@ module.exports = async function (fastify, opts) {
         result = await fastify.data.article.requestToPublishArticle(key)
       }
 
-      if (result.length > 0) {
-        reply.send(result[0])
+      if (result) {
+        reply.send(result)
       } else {
         reply.code(404).send()
       }

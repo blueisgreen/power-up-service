@@ -207,7 +207,7 @@ module.exports = (fastify) => {
         updated_at: knex.fn.now(),
       })
       .returning(articleFullColumns)
-    return result
+    return result[0]
   }
 
   /**
@@ -225,7 +225,7 @@ module.exports = (fastify) => {
         requested_to_publish_at: null,
       })
       .returning(articleInfoColumns)
-    return result
+    return result[0]
   }
 
   /**
@@ -242,7 +242,7 @@ module.exports = (fastify) => {
         requested_to_publish_at: knex.fn.now(),
       })
       .returning(articleInfoColumns)
-    return result
+    return result[0]
   }
 
   /**
@@ -254,13 +254,13 @@ module.exports = (fastify) => {
   const retractArticle = async (articleKey) => {
     log.debug('articleModel.retractArticle')
     const result = await knex(articleTableName)
-      .where('public_id', articleId)
+      .where('public_id', articleKey)
       .update({
         published_at: null,
         requested_to_publish_at: null,
       })
       .returning(articleInfoColumns)
-    return result
+    return result[0]
   }
 
   /**
@@ -277,7 +277,7 @@ module.exports = (fastify) => {
         archived_at: knex.fn.now(),
       })
       .returning(articleInfoColumns)
-    return result
+    return result[0]
   }
 
   /**
@@ -294,7 +294,7 @@ module.exports = (fastify) => {
         archived_at: null,
       })
       .returning(articleInfoColumns)
-    return result
+    return result[0]
   }
 
   /**
