@@ -4,14 +4,23 @@ const inquiryColumns = [
   'inquiries.user_id as userId',
   'inquiries.created_at as createdAt',
   'inquiries.relates_to as relatesTo',
-  'purpose',
-  'message',
+  'inquiries.about_article_id as articleId',
+  'inquiries.purpose',
+  'inquiries.message',
+]
+const articleMessageColumns = [
+  'inquiries.id',
+  'inquiries.created_at as createdAt',
+  'inquiries.purpose',
+  'inquiries.message',
+  'articles.public_id as articleKey',
 ]
 
 module.exports = (fastify) => {
   const { knex, log } = fastify
 
   const getInquiries = async () => {
+    log.debug('supportModel.getInquiries')
     const inquiries = await knex(inquiryTableName)
       .select(inquiryColumns)
       .orderBy('created_at', 'desc')
@@ -19,6 +28,7 @@ module.exports = (fastify) => {
   }
 
   const getInquiriesByUser = async (userPublicId) => {
+    log.debug('supportModel.getInquiriesByUser')
     const inquiries = await knex(inquiryTableName)
       .select(inquiryColumns)
       .join('users', 'users.id', '=', 'inquiries.user_id')
@@ -29,6 +39,7 @@ module.exports = (fastify) => {
   }
 
   const getRelatedInquiries = async (relatedId) => {
+    log.debug('supportModel.getRelatedInquiries')
     const related = await knex(inquiryTableName)
       .select(inquiryColumns)
       .where('relates_to', '=', relatedId)
@@ -37,6 +48,7 @@ module.exports = (fastify) => {
   }
 
   const getInquiry = async (id) => {
+    log.debug('supportModel.getInquiry')
     const inquiry = await knex(inquiryTableName)
       .select(inquiryColumns)
       .where('id', '=', id)
@@ -44,6 +56,7 @@ module.exports = (fastify) => {
   }
 
   const createInquiry = async (inquiry, user_id, relates_to) => {
+    log.debug('supportModel.createInquiry')
     const data = {
       purpose: inquiry.purpose,
       message: inquiry.message,
@@ -66,6 +79,7 @@ module.exports = (fastify) => {
     purpose,
     message
   ) => {
+    log.debug('supportModel.createMessageAboutArticle')
     const data = {
       user_id: toAuthorId,
       about_article_id: articleId,

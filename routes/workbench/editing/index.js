@@ -92,21 +92,13 @@ module.exports = async function (fastify, opts) {
     const { message } = req.body
     try {
       const articleSnapshot = await fastify.data.article.retractArticle(key)
-      const messageSent = await fastify.data.support.createMessageAboutArticle(
+      await fastify.data.support.createMessageAboutArticle(
         articleSnapshot.author_id,
         articleSnapshot.id,
         'deniedToPublish',
         message
       )
-      const responsePayload = {
-        article: articleSnapshot,
-        messageToUser: messageSent,
-      }
-      if (articleSnapshot) {
-        reply.send(articleSnapshot)
-      } else {
-        reply.code(404).send()
-      }
+      reply.send(articleSnapshot)
     } catch (err) {
       fastify.log.error(err)
       reply.code(500).send(genericErrorMsg)
