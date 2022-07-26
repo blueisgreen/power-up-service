@@ -15,7 +15,7 @@ module.exports = fp(async function (fastify, opts) {
   expires.setDate(expires.getDate() + 30)
 
   const domain = process.env.COOKIE_DOMAIN
-  log.debug('===> cookie domain:' + domain)
+  // log.debug('===> cookie domain:' + domain)
 
   const basicOpts = {
     domain,

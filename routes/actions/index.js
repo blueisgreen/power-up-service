@@ -6,11 +6,11 @@ module.exports = async function (fastify, opts) {
    */
   fastify.post('/', async (request, reply) => {
     // FIXME: rethink - do bulk send of actions at key moments and at intervals
-    
+
     // const { actionCode, details } = request.body
     // const tracker = request.tracker
     // const alias = !request.anonymous ? request.userContext.alias : 'unknown'
-    // const userKey = !request.anonymous ? request.userContext.userKey : null
+    // const userKey = !request.anonymous ? request.userContext.who : null
 
     // fastify.log.debug(
     //   `record action: ${actionCode} by ${alias} details: ${JSON.stringify(
