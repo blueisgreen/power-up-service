@@ -10,6 +10,16 @@ module.exports = async function (fastify, opts) {
     const articles = await fastify.data.article.getMyArticles(
       req.userContext.userId
     )
+    const articleIds = articles.map((item) => item.id)
+    const relatedMsgs = await fastify.data.support.findMessagesAboutArticles(
+      req.userContext.userId,
+      articleIds
+    )
+    articles.forEach(art => {
+      if (relatedMsgs.find(msg => msg.articleId === art.id)) {
+        art.hasMessage = true
+      }
+    })
     if (articles) {
       reply.send(articles)
     } else {

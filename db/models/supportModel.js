@@ -73,6 +73,15 @@ module.exports = (fastify) => {
     return inquiryRecord[0]
   }
 
+  const findMessagesAboutArticles = async (userId, articleIds) => {
+    log.debug('supportModel.findMessagesAboutArticles')
+    const records = await knex(inquiryTableName)
+      .select(['id as messageId', 'about_article_id as articleId'])
+      .whereIn('about_article_id', articleIds)
+      .andWhere('user_id', '=', userId)
+    return records
+  }
+
   const createMessageAboutArticle = async (
     toAuthorId,
     articleId,
@@ -99,5 +108,6 @@ module.exports = (fastify) => {
     getInquiry,
     createInquiry,
     createMessageAboutArticle,
+    findMessagesAboutArticles,
   }
 }
