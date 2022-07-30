@@ -9,40 +9,54 @@ module.exports = fp(
 
     fastify.decorateRequest('anonymous', true)
     fastify.decorateRequest('userKey', null)
-    fastify.decorateRequest('tracker', null)
     fastify.decorateRequest('userContext', null)
+    fastify.decorateRequest('tracker', 'coming soon')
 
     fastify.addHook('onRequest', async (request, reply) => {
-      // see if we know who this is
       try {
         await request.jwtVerify()
-        log.debug(`found valid session token ${JSON.stringify(request.user)}`)
+        log.debug(`valid session token ${JSON.stringify(request.user)}`)
         request.anonymous = false
         request.userKey = request.user.user.who
-        log.debug(request.userKey + ' is the public key of the user')
-        request.userContext = await fastify.data.identity.getUserContext(
-          request.user.user.who
+
+        const flattenedRoles = {}
+        request.user.user.roles.forEach((role) => (flattenedRoles[role] = true))
+        const context = await fastify.data.identity.getUserContext(
+          request.user.user.who,
+          flattenedRoles.author
         )
-        log.debug('user ' + request.userContext)
+
+        const whole = Object.assign({}, request.user.user, context, {
+          roles: flattenedRoles,
+        })
+        log.debug('user context:' + JSON.stringify(whole))
+        request.userContext = whole
       } catch (err) {
-        log.debug('session token not found or invalid: ' + err)
-        request.anonymous = true
+        if (err.message.startsWith('No Authorization was found')) {
+          log.debug('Anonymous user')
+        } else {
+          log.error(err)
+        }
       }
 
-      request.tracker = request.cookies.tracker
-      if (!request.tracker) {
-        request.tracker = `tr:${uuidv4()}`
-        reply.setCookie('tracker', request.tracker, fastify.uiCookieOptions)
-      }
+      // FIXME: tracker cookie is not being returned
+    //   request.tracker = request.cookies.tracker
+    //   if (!request.tracker) {
+    //     log.debug('tracker cookie not sent by client')
+    //     // request.tracker = `tr:${uuidv4()}`
+    //     request.tracker = 'boo'
+    //     reply.setCookie('tracker', request.tracker, fastify.uiCookieOptions)
+    //   }
 
-      // leave cookies as a reminder
-      reply.setCookie('touched', new Date(), fastify.uiCookieOptions)
+    //   // leave proof that were we there
+    //   log.debug(`time of previous request was: ${request.cookies.touched}`)
+    //   reply.setCookie('touched', new Date(), fastify.uiCookieOptions)
     })
 
     fastify.decorate('preValidation', async (request, reply) => {
       // TODO: expand to role-based access
-      log.debug('checking for userKey on request')
-      if (!request.userContext.userKey) {
+      log.debug('require known user')
+      if (!request.userContext.who) {
         reply.code(401)
         reply.send('You must be signed in for that')
       }

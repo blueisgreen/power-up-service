@@ -2,9 +2,9 @@
 
 const { test } = require('tap')
 const Fastify = require('fastify')
-const lookups = require('../../plugins/lookupPlugin.js')
+const authorModel = require('../../db/models/authorModel.js')
 
-test('support works standalone', async (t) => {
+test('authorModel creates author', async (t) => {
   const fastify = Fastify()
   fastify.register(lookups)
 

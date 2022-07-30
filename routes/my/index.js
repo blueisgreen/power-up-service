@@ -93,7 +93,7 @@ module.exports = async function (fastify, opts) {
     },
     async (request, reply) => {
       try {
-        await fastify.data.identity.agreeToTerms(request.userKey)
+        await fastify.data.identity.agreeToTerms(request.userContext.who)
         reply.code(204).send()
       } catch (err) {
         fastify.log.error(err)
@@ -129,7 +129,9 @@ module.exports = async function (fastify, opts) {
     async (request, reply) => {
       try {
         fastify.log.debug('user wants to get more email -- well, okay then!')
-        await fastify.data.identity.agreeToEmailComms(request.userKey)
+        await fastify.data.identity.agreeToEmailComms(
+          request.userContext.who
+        )
         reply.code(204).send()
       } catch (err) {
         reply.code(500).send({ error: ERROR_MESSAGE })
@@ -144,7 +146,7 @@ module.exports = async function (fastify, opts) {
     },
     async (request, reply) => {
       const inquiries = await fastify.data.support.getInquiriesByUser(
-        request.userKey
+        request.userContext.who
       )
       reply.send(inquiries)
     }
@@ -170,7 +172,7 @@ module.exports = async function (fastify, opts) {
     },
     async (request, reply) => {
       const roles = await fastify.data.identity.getUserRolesWithPublicId(
-        request.userKey
+        request.userContext.who
       )
       reply.send(roles)
     }

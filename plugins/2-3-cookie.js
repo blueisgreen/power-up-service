@@ -7,22 +7,26 @@ module.exports = fp(async function (fastify, opts) {
   log.info('loading fastify-cookie')
 
   fastify.register(cookiePlugin, {
-    secret: 'chocolateChip', // for cookies signature
+    secret: 'snickerDoodle', // for cookies signature
     parseOptions: {}, // options for parsing cookies
   })
 
-  let expDate = new Date()
-  expDate.setDate(expDate.getDate() + 30)
+  const expires = new Date()
+  expires.setDate(expires.getDate() + 30)
 
-  fastify.decorate('secretCookieOptions', {
+  const domain = process.env.COOKIE_DOMAIN
+  // log.debug('===> cookie domain:' + domain)
+
+  const basicOpts = {
+    domain,
     path: '/',
-    sameSite: 'Strict',
+    sameSite: 'lax',
+    expires,
+  }
+  const secretOpts = Object.assign({}, basicOpts, {
     httpOnly: true,
-    expires: expDate,
   })
-  fastify.decorate('uiCookieOptions', {
-    path: '/',
-    sameSite: 'Strict',
-    expires: expDate,
-  })
+
+  fastify.decorate('uiCookieOptions', basicOpts)
+  fastify.decorate('secretCookieOptions', secretOpts)
 })

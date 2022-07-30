@@ -1,5 +1,7 @@
 'use strict'
 
+// TODO: restrict access to editors
+
 module.exports = async function (fastify, opts) {
   const { log } = fastify
   const genericErrorMsg = {
@@ -7,48 +9,18 @@ module.exports = async function (fastify, opts) {
   }
 
   fastify.get('/', async (req, reply) => {
-    const articles = await fastify.data.article.getMyArticles(
-      req.userContext.userId
-    )
-    const articleIds = articles.map((item) => item.id)
-    const relatedMsgs = await fastify.data.support.findMessagesAboutArticles(
-      req.userContext.userId,
-      articleIds
-    )
-    articles.forEach(art => {
-      if (relatedMsgs.find(msg => msg.articleId === art.id)) {
-        art.hasMessage = true
-      }
-    })
+    const { user, status, limit, offset } = req.query
+    const queryParams = {
+      user,
+      status,
+      limit: limit || 20,
+      offset: offset || 0,
+    }
+    const articles = await fastify.data.article.getArticlesInfoOnly(queryParams)
     if (articles) {
       reply.send(articles)
     } else {
       reply.code(404).send('No articles found')
-    }
-  })
-
-  fastify.get('/full', async (req, reply) => {
-    const articles = await fastify.data.article.getArticlesFullInfo()
-    if (articles) {
-      reply.send(articles)
-    } else {
-      reply.code(404).send('No articles found')
-    }
-  })
-
-  fastify.post('/', async (req, reply) => {
-    const { headline } = req.body
-    const { userId, alias } = req.userContext
-    const byline = alias || 'A. Nonymous'
-    const articleInfo = await fastify.data.article.createArticle(
-      headline,
-      userId,
-      byline
-    )
-    if (articleInfo) {
-      reply.code(201).send(articleInfo)
-    } else {
-      reply.code(500).send(genericErrorMsg)
     }
   })
 
@@ -79,8 +51,8 @@ module.exports = async function (fastify, opts) {
         content: body.content,
       }
       const result = await fastify.data.article.updateArticle(key, changes)
-      if (result) {
-        reply.send(result)
+      if (result.length > 0) {
+        reply.send(result[0])
       } else {
         reply.code(404).send()
       }
@@ -91,8 +63,8 @@ module.exports = async function (fastify, opts) {
   })
 
   fastify.put('/:key/publish', async (req, reply) => {
+    const { key } = req.params
     try {
-      const { key } = req.params
       let result
       if (
         req.userContext.roles.editor ||
@@ -104,8 +76,8 @@ module.exports = async function (fastify, opts) {
         result = await fastify.data.article.requestToPublishArticle(key)
       }
 
-      if (result) {
-        reply.send(result)
+      if (result.length > 0) {
+        reply.send(result[0])
       } else {
         reply.code(404).send()
       }
@@ -115,15 +87,18 @@ module.exports = async function (fastify, opts) {
     }
   })
 
-  fastify.put('/:key/retract', async (req, reply) => {
+  fastify.put('/:key/denyToPublish', async (req, reply) => {
     const { key } = req.params
+    const { message } = req.body
     try {
-      const result = await fastify.data.article.retractArticle(key)
-      if (result) {
-        reply.send(result)
-      } else {
-        reply.code(404).send()
-      }
+      const articleSnapshot = await fastify.data.article.retractArticle(key)
+      await fastify.data.support.createMessageAboutArticle(
+        articleSnapshot.author_id,
+        articleSnapshot.id,
+        'deniedToPublish',
+        message
+      )
+      reply.send(articleSnapshot)
     } catch (err) {
       fastify.log.error(err)
       reply.code(500).send(genericErrorMsg)

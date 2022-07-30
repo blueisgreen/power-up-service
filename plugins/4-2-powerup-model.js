@@ -1,23 +1,26 @@
 'use strict'
 
 const fp = require('fastify-plugin')
-const identityModel = require('../db/access/identityModel')
-const adminModel = require('../db/access/adminModel')
-const supportModel = require('../db/access/supportModel')
-const actionModel = require('../db/access/actionModel')
-const systemCodesModel = require('../db/access/systemCodesModel')
-const workbenchModel = require('../db/access/workbenchModel')
+const actionModel = require('../db/models/actionModel')
+const adminModel = require('../db/models/adminModel')
+const articleModel = require('../db/models/articleModel')
+const authorModel = require('../db/models/authorModel')
+const identityModel = require('../db/models/identityModel')
+const supportModel = require('../db/models/supportModel')
+const systemCodesModel = require('../db/models/systemCodesModel')
 
 module.exports = fp(
   async function (fastify, options, next) {
     fastify.log.info('loading power up data model')
     const data = {
+      action: actionModel(fastify),
       admin: adminModel(fastify),
+      article: articleModel(fastify),
+      author: authorModel(fastify),
       identity: identityModel(fastify),
       support: supportModel(fastify),
-      action: actionModel(fastify),
       systemCodes: systemCodesModel(fastify),
-      workbench: workbenchModel(fastify)
+      workbench: articleModel(fastify)  // TODO: remove after conversion to article
     }
     fastify.decorate('data', data)
     next()
