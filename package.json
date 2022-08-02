@@ -29,6 +29,7 @@
     "@fastify/jwt": "^6.3.1",
     "@fastify/oauth2": "^5.1.0",
     "@fastify/sensible": "^5.1.0",
+    "@fastify/swagger": "^7.0.0",
     "fastify": "^4.3.0",
     "fastify-axios": "^1.2.5",
     "fastify-cli": "^4.4.0",
