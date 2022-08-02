@@ -1,15 +1,14 @@
-'use strict'
-
 const fp = require('fastify-plugin')
+const jwt = require('@fastify/jwt')
 
 /**
  * @see https://github.com/fastify/fastify-jwt
  */
 module.exports = fp(async function (fastify, opts) {
   const { log } = fastify
+  log.debug('loading fastify-jwt')
 
-  log.info('loading fastify-jwt')
-  fastify.register(require('@fastify/jwt'), {
+  fastify.register(jwt, {
     secret: process.env.JWT_SECRET,
     sign: {
       issuer: 'HappySpiritPublishing.com',

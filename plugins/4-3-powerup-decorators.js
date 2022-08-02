@@ -1,11 +1,10 @@
-'use strict'
 const fp = require('fastify-plugin')
 
 module.exports = fp(
   async function (fastify, options, next) {
     const uuidv4 = require('uuid').v4
     const { log } = fastify
-    log.info('loading useful decorators')
+    log.debug('loading useful decorators')
 
     fastify.decorateRequest('anonymous', true)
     fastify.decorateRequest('userKey', null)

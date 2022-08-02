@@ -1,16 +1,15 @@
-'use strict'
-
 const fp = require('fastify-plugin')
+const swagger = require('@fastify/swagger')
 
 module.exports = fp(function (fastify, opts, next) {
-  fastify.log.info('Loading swagger plugin')
-  fastify.register(require('@fastify/swagger'), {
+  fastify.log.debug('Loading swagger plugin')
+  fastify.register(swagger, {
     routePrefix: '/spec',
     swagger: {
       info: {
         title: 'Power Up Magazine service API',
         description: 'Service to support Power Up Magazine.',
-        version: '0.6.0',
+        version: process.env.API_VERSION,
       },
       externalDocs: {
         url: 'https://swagger.io',

@@ -1,5 +1,3 @@
-'use strict'
-
 const fp = require('fastify-plugin')
 const lookups = require('../db/models/lookupPlugin')
 

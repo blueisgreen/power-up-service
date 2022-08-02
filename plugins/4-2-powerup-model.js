@@ -1,5 +1,3 @@
-'use strict'
-
 const fp = require('fastify-plugin')
 const actionModel = require('../db/models/actionModel')
 const adminModel = require('../db/models/adminModel')
@@ -11,7 +9,7 @@ const systemCodesModel = require('../db/models/systemCodesModel')
 
 module.exports = fp(
   async function (fastify, options, next) {
-    fastify.log.info('loading power up data model')
+    fastify.log.debug('loading data models')
     const data = {
       action: actionModel(fastify),
       admin: adminModel(fastify),

@@ -1,14 +1,14 @@
-'use strict'
-
 const fp = require('fastify-plugin')
+const knex = require('fastify-knexjs')
 
 /**
  * @see https://github.com/smartiniOnGitHub/fastify-knexjs
  */
 module.exports = fp(async function (fastify, opts) {
-  fastify.log.info('loading fastify-knexjs')
+  const { log } = fastify
+  log.debug('loading fastify-knexjs')
   fastify.register(
-    require('fastify-knexjs'),
+    knex,
     {
       client: 'pg',
       debug: true,
@@ -19,7 +19,7 @@ module.exports = fp(async function (fastify, opts) {
       },
     },
     (err) => {
-      fastify.log.error(err)
+      log.error(err)
     }
   )
 })
