@@ -1,4 +1,4 @@
-const { articleCover, articleContent, articleAllMeta, articleAll } = require('./schema')
+const { articleCover, articleContent, articleAllPublic } = require('./schema')
 
 /**
  * For read-only access to library of articles by any user. Also
@@ -27,7 +27,7 @@ module.exports = async function (fastify, opts) {
     method: 'GET',
     url: '/published',
     schema: {
-      tags: ['Articles'],
+      tags: ['articles'],
       description: 'Get cover information for published articles.',
       response: {
         200: {
@@ -41,42 +41,19 @@ module.exports = async function (fastify, opts) {
     },
   })
 
-  // TODO: prevent users without permission
-  fastify.route({
-    method: 'POST',
-    url: '/',
-    schema: {
-      tags: ['Articles'],
-      description: 'Create a new article.',
-      response: {
-        200: articleAllMeta,
-      },
-    },
-    handler: async (request, reply) => {
-      const { headline } = request.body
-      const { userId, alias } = request.userContext
-      const byline = alias || 'A. Nonymous'
-      const articleInfo = await fastify.data.article.createArticle(
-        headline,
-        userId,
-        byline
-      )
-      if (articleInfo) {
-        reply.code(201).send(articleInfo)
-      } else {
-        reply.code(500).send(genericErrorMsg)
-      }
-    },
-  })
-
   // TODO: validate parameter in; handle not found out
-
   fastify.route({
     method: 'GET',
     url: '/published/:publicKey',
     schema: {
-      tags: ['Articles'],
+      tags: ['articles'],
       description: 'Get content of published article',
+      params: {
+        type: 'object',
+        properties: {
+          publicKey: { type: 'string' },
+        },
+      },
       response: {
         200: articleContent,
       },
@@ -88,15 +65,22 @@ module.exports = async function (fastify, opts) {
   })
 
   // TODO: handle general errors
+  // FIXME: different subset for published "all" - don't want to show some fields
 
   fastify.route({
     method: 'GET',
     url: '/published/:publicKey/full',
     schema: {
-      tags: ['Articles'],
+      tags: ['articles'],
       description: 'Get everything about published article',
+      params: {
+        type: 'object',
+        properties: {
+          publicKey: { type: 'string' },
+        },
+      },
       response: {
-        200: articleAll,
+        200: articleAllPublic,
       },
     },
     handler: async (request, reply) => {
@@ -104,30 +88,4 @@ module.exports = async function (fastify, opts) {
       return await fastify.data.article.getPublishedArticle(publicKey)
     },
   })
-
-  // fastify.get('/', async (req, reply) => {
-  //   log.debug('get articles.published')
-  //   try {
-  //     const articles = await fastify.data.article.getPublishedArticleCovers()
-  //     reply.send(articles)
-  //   } catch (error) {
-  //     log.error(error)
-  //     reply.code(500).send(genericErrorMsg)
-  //   }
-  // })
-
-  // fastify.get('/:key', async (req, reply) => {
-  //   try {
-  //     const articleKey = req.params.key
-  //     const article = await fastify.data.article.getPublishedArticle(articleKey)
-  //     if (article) {
-  //       reply.send(article)
-  //     } else {
-  //       reply.code(404).send()
-  //     }
-  //   } catch (err) {
-  //     log.error(err)
-  //     reply.code(500).send(genericErrorMsg)
-  //   }
-  // })
 }

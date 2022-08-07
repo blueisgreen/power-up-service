@@ -79,9 +79,18 @@ const articleAll = {
   },
 }
 
+const articleAllPublic = {
+  type: 'object',
+  properties: {
+    ...articleCover.properties,
+    ...articleContent.properties,
+  },
+}
+
 module.exports = {
   articleCover,
   articleContent,
   articleAllMeta,
   articleAll,
+  articleAllPublic,
 }

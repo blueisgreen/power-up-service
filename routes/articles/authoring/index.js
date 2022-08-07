@@ -1,9 +1,9 @@
-const { articleCover } = require('../schema')
+const { articleAllMeta, articleAll } = require('../schema')
 
 module.exports = async function (fastify, opts) {
   const { log } = fastify
   const genericErrorMsg = {
-    error: 'Bad news, kiddies. Something went wrong.',
+    error: 'Yabai! Something went wrong.',
   }
 
   // TODO: prevent users without permission
@@ -19,63 +19,64 @@ module.exports = async function (fastify, opts) {
 
   fastify.route({
     method: 'GET',
-    url: '/bah',
+    url: '/',
     schema: {
-      tags: ['Articles', 'Authoring'],
+      tags: ['articles-authoring'],
       description: 'Get cover information for all articles created by user.',
       response: {
         200: {
           type: 'array',
-          items: articleCover,
+          items: articleAllMeta,
         },
       },
     },
     handler: async (request, reply) => {
-      return await fastify.data.article.getPublishedArticleCovers()
-    },
-  })
-
-  fastify.get('/', async (req, reply) => {
-    const articles = await fastify.data.article.getMyArticles(
-      req.userContext.userId
-    )
-    const articleIds = articles.map((item) => item.id)
-    const relatedMsgs = await fastify.data.support.findMessagesAboutArticles(
-      req.userContext.userId,
-      articleIds
-    )
-    articles.forEach((art) => {
-      if (relatedMsgs.find((msg) => msg.articleId === art.id)) {
-        art.hasMessage = true
+      const { userId } = request.userContext
+      const articles = await fastify.data.article.getMyArticles(userId)
+      const articleIds = articles.map((item) => item.id)
+      const relatedMsgs = await fastify.data.support.findMessagesAboutArticles(
+        userId,
+        articleIds
+      )
+      articles.forEach((art) => {
+        if (relatedMsgs.find((msg) => msg.articleId === art.id)) {
+          art.hasMessage = true
+        }
+      })
+      if (articles) {
+        reply.send(articles)
+      } else {
+        reply.code(404).send('No articles found')
       }
-    })
-    if (articles) {
-      reply.send(articles)
-    } else {
-      reply.code(404).send('No articles found')
-    }
-  })
-
-  fastify.get('/full', async (req, reply) => {
-    const articles = await fastify.data.article.getArticlesFullInfo()
-    if (articles) {
-      reply.send(articles)
-    } else {
-      reply.code(404).send('No articles found')
-    }
+    },
   })
 
   fastify.route({
     method: 'POST',
     url: '/',
     schema: {
-      tags: ['Articles'],
+      tags: ['articles-authoring'],
       description: 'Create a new article.',
-      response: {
-        200: {
-          type: 'array',
-          items: articleCover,
+      body: {
+        type: 'object',
+        required: ['headline'],
+        properties: {
+          headline: {
+            type: 'string',
+            description: 'The title of the article.',
+          },
+          byline: {
+            type: 'string',
+            description: 'Who gets credit for writing the article.',
+          },
+          synopsis: {
+            type: 'string',
+            description: 'Brief summary of what the article is about.',
+          },
         },
+      },
+      response: {
+        200: articleAll,
       },
     },
     handler: async (request, reply) => {
@@ -95,138 +96,215 @@ module.exports = async function (fastify, opts) {
     },
   })
 
-  fastify.post('/redo', async (req, reply) => {
-    const { headline } = req.body
-    const { userId, alias } = req.userContext
-    const byline = alias || 'A. Nonymous'
-    const articleInfo = await fastify.data.article.createArticle(
-      headline,
-      userId,
-      byline
-    )
-    if (articleInfo) {
-      reply.code(201).send(articleInfo)
-    } else {
-      reply.code(500).send(genericErrorMsg)
-    }
+  fastify.route({
+    method: 'GET',
+    url: '/:publicKey',
+    tags: ['articles-authoring'],
+    description: 'Get full article for editing.',
+    schema: {
+      params: {
+        type: 'object',
+        properties: {
+          publicKey: { type: 'string' },
+        },
+      },
+      response: {
+        200: articleAll,
+      },
+    },
+    handler: async (request, reply) => {
+      const { key } = request.params
+      const { userId, roles } = request.userContext
+
+      const article = roles.editor
+        ? await fastify.data.article.getArticleContentForEditor(key)
+        : await fastify.data.article.getArticleContent(key, userId)
+
+      if (article) {
+        reply.send(article)
+      } else {
+        reply.code(404).send()
+      }
+    },
   })
 
-  fastify.get('/:key', async (req, reply) => {
-    const { key } = req.params
-    const article = req.userContext.roles.editor
-      ? await fastify.data.article.getArticleContentForEditor(key)
-      : await fastify.data.article.getArticleContent(
-          key,
-          req.userContext.userId
+  fastify.route({
+    method: 'PUT',
+    url: '/:publicKey',
+    schema: {
+      tags: ['articles-authoring'],
+      description: 'Create a new article.',
+      params: {
+        type: 'object',
+        properties: {
+          publicKey: { type: 'string' },
+        },
+      },
+      body: {
+        type: 'object',
+        properties: {
+          headline: {
+            type: 'string',
+            description: 'The title of the article.',
+          },
+          byline: {
+            type: 'string',
+            description: 'Who gets credit for writing the article.',
+          },
+          synopsis: {
+            type: 'string',
+            description: 'Brief summary of what the article is about.',
+          },
+          content: {
+            type: 'string',
+            description: 'The content of the article (usually quite large).',
+          },
+        },
+      },
+      response: {
+        200: articleAll,
+      },
+    },
+    handler: async (request, reply) => {
+      const { publicKey } = request.params
+      const { headline, byline, coverArtUrl, synopsis, content } = request.body
+      try {
+        const changes = {
+          headline,
+          byline,
+          coverArtUrl,
+          synopsis,
+          content,
+        }
+        const result = await fastify.data.article.updateArticle(
+          publicKey,
+          changes
         )
-    if (article) {
-      reply.send(article)
-    } else {
-      reply.code(404).send()
-    }
+        if (result) {
+          reply.send(result)
+        } else {
+          reply.code(404).send()
+        }
+      } catch (err) {
+        fastify.log.error(err)
+        reply.code(500).send(genericErrorMsg)
+      }
+    },
   })
 
-  fastify.put('/:key', async (req, reply) => {
-    const { params, body } = req
-    const { key } = params
-    try {
-      const changes = {
-        headline: body.headline,
-        byline: body.byline,
-        coverArtUrl: body.coverArtUrl,
-        synopsis: body.synopsis,
-        content: body.content,
+  fastify.route({
+    method: 'PUT',
+    url: '/:publicKey/:action',
+    schema: {
+      tags: ['articles-authoring'],
+      description: 'Create a new article.',
+      params: {
+        type: 'object',
+        properties: {
+          publicKey: { type: 'string' },
+          action: { enum: ['publish', 'retract', 'revive'] },
+        },
+      },
+      response: {
+        200: articleAllMeta,
+      },
+    },
+    handler: async (request, reply) => {
+      try {
+        const { publicKey, action } = request.params
+        const { roles, authorStatus } = request.userContext
+
+        let result = []
+        switch (action) {
+          case 'publish':
+            if (roles.editor || (roles.author && authorStatus === 'trusted')) {
+              result = await fastify.data.article.publishArticle(publicKey)
+            } else {
+              result = await fastify.data.article.requestToPublishArticle(
+                publicKey
+              )
+            }
+            break
+
+          case 'retract':
+            result = await fastify.data.article.retractArticle(publicKey)
+            break
+
+          case 'revive':
+            result = await fastify.data.article.reviveArticle(publicKey)
+            break
+
+          default:
+            log.warn('Unsupported action. Not sure how we got here.')
+            break
+        }
+
+        if (result) {
+          reply.send(result)
+        } else {
+          reply.code(404).send()
+        }
+      } catch (err) {
+        log.error(err)
+        reply.code(500).send(genericErrorMsg)
       }
-      const result = await fastify.data.article.updateArticle(key, changes)
-      if (result) {
-        reply.send(result)
-      } else {
-        reply.code(404).send()
-      }
-    } catch (err) {
-      fastify.log.error(err)
-      reply.code(500).send(genericErrorMsg)
-    }
+    },
   })
 
-  fastify.put('/:key/publish', async (req, reply) => {
-    try {
-      const { key } = req.params
-      let result
-      if (
-        req.userContext.roles.editor ||
-        (req.userContext.roles.author &&
-          req.userContext.authorStatus === 'trusted')
-      ) {
-        result = await fastify.data.article.publishArticle(key)
-      } else {
-        result = await fastify.data.article.requestToPublishArticle(key)
+  fastify.route({
+    method: 'DELETE',
+    url: '/:publicKey',
+    schema: {
+      tags: ['articles-authoring'],
+      description: 'Archive an article.',
+      params: {
+        type: 'object',
+        properties: {
+          publicKey: { type: 'string' },
+        },
+      },
+      response: {
+        200: articleAllMeta,
+      },
+    },
+    handler: async (request, reply) => {
+      const { publicKey } = request.params
+      try {
+        const result = await fastify.data.article.archiveArticle(publicKey)
+        if (result) {
+          reply.send(result)
+        } else {
+          reply.code(404).send()
+        }
+      } catch (err) {
+        log.error(err)
+        reply.code(500).send(genericErrorMsg)
       }
-
-      if (result) {
-        reply.send(result)
-      } else {
-        reply.code(404).send()
-      }
-    } catch (err) {
-      fastify.log.error(err)
-      reply.code(500).send(genericErrorMsg)
-    }
+    },
   })
 
-  fastify.put('/:key/retract', async (req, reply) => {
-    const { key } = req.params
-    try {
-      const result = await fastify.data.article.retractArticle(key)
-      if (result) {
-        reply.send(result)
-      } else {
-        reply.code(404).send()
+  fastify.route({
+    method: 'DELETE',
+    url: '/:publicKey/purge',
+    schema: {
+      tags: ['articles-authoring'],
+      description: 'Delete an article forever. Sayonara.',
+      params: {
+        type: 'object',
+        properties: {
+          publicKey: { type: 'string' },
+        },
+      },
+    },
+    handler: async (request, reply) => {
+      const { publicKey } = request.params
+      try {
+        await fastify.data.article.purgeArticle(publicKey)
+        reply.code(204).send()
+      } catch (err) {
+        log.error(err)
+        reply.code(500).send(genericErrorMsg)
       }
-    } catch (err) {
-      fastify.log.error(err)
-      reply.code(500).send(genericErrorMsg)
-    }
-  })
-
-  fastify.put('/:key/revive', async (req, reply) => {
-    const { key } = req.params
-    try {
-      const result = await fastify.data.article.reviveArticle(key)
-      if (result) {
-        reply.send(result)
-      } else {
-        reply.code(404).send()
-      }
-    } catch (err) {
-      fastify.log.error(err)
-      reply.code(500).send(genericErrorMsg)
-    }
-  })
-
-  fastify.delete('/:key', async (req, reply) => {
-    const { key } = req.params
-    try {
-      const result = await fastify.data.article.archiveArticle(key)
-      if (result) {
-        reply.send(result)
-      } else {
-        reply.code(404).send()
-      }
-    } catch (err) {
-      fastify.log.error(err)
-      reply.code(500).send(genericErrorMsg)
-    }
-  })
-
-  fastify.delete('/:key/purge', async (req, reply) => {
-    const { key } = req.params
-    try {
-      await fastify.data.article.purgeArticle(key)
-      reply.code(204).send()
-    } catch (err) {
-      fastify.log.error(err)
-      reply.code(500).send(genericErrorMsg)
-    }
+    },
   })
 }
