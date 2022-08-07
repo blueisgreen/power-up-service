@@ -1,10 +1,39 @@
-'use strict'
+const { articleCover } = require('../schema')
 
 module.exports = async function (fastify, opts) {
   const { log } = fastify
   const genericErrorMsg = {
     error: 'Bad news, kiddies. Something went wrong.',
   }
+
+  // TODO: prevent users without permission
+
+  // fastify.all(
+  //   '/',
+  //   {
+  //     // FIXME: make sure user is author or editor, and reject if not. also make it clear in request
+  //     preValidation: [fastify.preValidation],
+  //   },
+  //   (request, reply) => {}
+  // )
+
+  fastify.route({
+    method: 'GET',
+    url: '/bah',
+    schema: {
+      tags: ['Articles', 'Authoring'],
+      description: 'Get cover information for all articles created by user.',
+      response: {
+        200: {
+          type: 'array',
+          items: articleCover,
+        },
+      },
+    },
+    handler: async (request, reply) => {
+      return await fastify.data.article.getPublishedArticleCovers()
+    },
+  })
 
   fastify.get('/', async (req, reply) => {
     const articles = await fastify.data.article.getMyArticles(
@@ -15,8 +44,8 @@ module.exports = async function (fastify, opts) {
       req.userContext.userId,
       articleIds
     )
-    articles.forEach(art => {
-      if (relatedMsgs.find(msg => msg.articleId === art.id)) {
+    articles.forEach((art) => {
+      if (relatedMsgs.find((msg) => msg.articleId === art.id)) {
         art.hasMessage = true
       }
     })
@@ -36,7 +65,37 @@ module.exports = async function (fastify, opts) {
     }
   })
 
-  fastify.post('/', async (req, reply) => {
+  fastify.route({
+    method: 'POST',
+    url: '/',
+    schema: {
+      tags: ['Articles'],
+      description: 'Create a new article.',
+      response: {
+        200: {
+          type: 'array',
+          items: articleCover,
+        },
+      },
+    },
+    handler: async (request, reply) => {
+      const { headline } = request.body
+      const { userId, alias } = request.userContext
+      const byline = alias || 'A. Nonymous'
+      const articleInfo = await fastify.data.article.createArticle(
+        headline,
+        userId,
+        byline
+      )
+      if (articleInfo) {
+        reply.code(201).send(articleInfo)
+      } else {
+        reply.code(500).send(genericErrorMsg)
+      }
+    },
+  })
+
+  fastify.post('/redo', async (req, reply) => {
     const { headline } = req.body
     const { userId, alias } = req.userContext
     const byline = alias || 'A. Nonymous'
