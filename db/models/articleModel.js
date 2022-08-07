@@ -2,7 +2,7 @@ const { generateRandomKey } = require('./util')
 
 const articleTableName = 'articles'
 const fullArticleInfoColumns = [
-  'articles.public_id as articleKey',
+  'articles.public_id as publicKey',
   'articles.headline',
   'articles.byline',
   'articles.cover_art_url as coverArtUrl',
@@ -17,7 +17,7 @@ const fullArticleInfoColumns = [
 ]
 const articleInfoColumns = [
   'id',
-  'public_id as articleKey',
+  'public_id as publicKey',
   'author_id',
   'headline',
   'byline',
@@ -30,7 +30,7 @@ const articleInfoColumns = [
   'requested_to_publish_at as requestedToPublishAt',
 ]
 const articleFullColumns = [
-  'public_id as articleKey',
+  'public_id as publicKey',
   'headline',
   'byline',
   'cover_art_url as coverArtUrl',
@@ -42,7 +42,7 @@ const articleFullColumns = [
   'archived_at as archivedAt',
   'requested_to_publish_at as requestedToPublishAt',
 ]
-const articleContentColumns = ['public_id as articleKey', 'content']
+const articleContentColumns = ['public_id as publicKey', 'content']
 
 module.exports = (fastify) => {
   const { knex, log } = fastify
@@ -146,6 +146,21 @@ module.exports = (fastify) => {
     log.debug('articleModel.getPublishedArticle')
     const myArticle = await knex(articleTableName)
       .select(articleFullColumns)
+      .where({ public_id: articleKey })
+      .whereNotNull('articles.published_at')
+    return myArticle.length > 0 ? myArticle[0] : null
+  }
+
+  /**
+   * Get metadata for articles owned by the user, presumed to be an author.
+   *
+   * @param {number} articleKey - system ID of the presumed author with articles
+   * @returns Article full article for readers
+   */
+  const getPublishedContent = async (articleKey) => {
+    log.debug('articleModel.getPublishedArticle')
+    const myArticle = await knex(articleTableName)
+      .select(articleContentColumns)
       .where({ public_id: articleKey })
       .whereNotNull('articles.published_at')
     return myArticle.length > 0 ? myArticle[0] : null
@@ -314,6 +329,7 @@ module.exports = (fastify) => {
     getMyArticles,
     getArticlesInfoOnly,
     getPublishedArticleCovers,
+    getPublishedContent,
     getPublishedArticle,
     getArticleContent,
     getArticleContentForEditor,
