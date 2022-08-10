@@ -57,7 +57,7 @@ module.exports = async function (fastify, opts) {
         reply.code(404).send()
       }
     } catch (err) {
-      fastify.log.error(err)
+      log.error(err)
       reply.code(500).send(genericErrorMsg)
     }
   })
@@ -82,7 +82,7 @@ module.exports = async function (fastify, opts) {
         reply.code(404).send()
       }
     } catch (err) {
-      fastify.log.error(err)
+      log.error(err)
       reply.code(500).send(genericErrorMsg)
     }
   })

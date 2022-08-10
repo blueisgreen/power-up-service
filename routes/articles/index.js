@@ -1,4 +1,9 @@
-const { articleCover, articleContent, articleAllPublic } = require('./schema')
+const {
+  articleCover,
+  articleContent,
+  articleAllPublic,
+  publicKeyParam,
+} = require('./schema')
 
 /**
  * For read-only access to library of articles by any user. Also
@@ -15,6 +20,9 @@ module.exports = async function (fastify, opts) {
     error: 'Bad news, kiddies. Something went wrong with the database.',
   }
 
+  const notFoundMessage = {
+    general: 'We do not seem to have that one.',
+  }
   // fastify.addSchema({
   //   $id: 'http://powerupmagazine.com',
   //   type: 'object',
@@ -41,31 +49,33 @@ module.exports = async function (fastify, opts) {
     },
   })
 
-  // TODO: validate parameter in; handle not found out
   fastify.route({
     method: 'GET',
     url: '/published/:publicKey',
     schema: {
       tags: ['articles'],
       description: 'Get content of published article',
-      params: {
-        type: 'object',
-        properties: {
-          publicKey: { type: 'string' },
-        },
-      },
+      params: publicKeyParam,
       response: {
         200: articleContent,
       },
     },
     handler: async (request, reply) => {
-      const publicKey = request.params.key
-      return await fastify.data.article.getPublishedContent(publicKey)
+      const { publicKey } = request.params
+      try {
+        const article = await fastify.data.article.getPublishedContent(
+          publicKey
+        )
+        if (article) {
+          reply.send(article)
+        } else {
+          return fastify.httpErrors.notFound()
+        }
+      } catch (err) {
+        return fastify.httpErrors.internalServerError()
+      }
     },
   })
-
-  // TODO: handle general errors
-  // FIXME: different subset for published "all" - don't want to show some fields
 
   fastify.route({
     method: 'GET',
@@ -73,19 +83,25 @@ module.exports = async function (fastify, opts) {
     schema: {
       tags: ['articles'],
       description: 'Get everything about published article',
-      params: {
-        type: 'object',
-        properties: {
-          publicKey: { type: 'string' },
-        },
-      },
+      params: publicKeyParam,
       response: {
         200: articleAllPublic,
       },
     },
     handler: async (request, reply) => {
-      const publicKey = request.params.key
-      return await fastify.data.article.getPublishedArticle(publicKey)
+      const { publicKey } = request.params
+      try {
+        const article = await fastify.data.article.getPublishedArticle(
+          publicKey
+        )
+        if (article) {
+          reply.send(article)
+        } else {
+          return fastify.httpErrors.notFound()
+        }
+      } catch (err) {
+        return fastify.httpErrors.internalServerError()
+      }
     },
   })
 }

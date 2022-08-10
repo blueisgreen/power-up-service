@@ -143,6 +143,7 @@ module.exports = (fastify) => {
    * @returns Article full article for readers
    */
   const getPublishedArticle = async (articleKey) => {
+    // FIXME: different subset for published "all" - don't want to show some fields
     log.debug('articleModel.getPublishedArticle')
     const myArticle = await knex(articleTableName)
       .select(articleFullColumns)

@@ -1,4 +1,11 @@
-const { articleAllMeta, articleAll } = require('../schema')
+const {
+  articleAllMeta,
+  articleAll,
+  articleNewIn,
+  articleUpdateIn,
+  publicKeyParam,
+  articleActionParams,
+} = require('../schema')
 
 module.exports = async function (fastify, opts) {
   const { log } = fastify
@@ -21,7 +28,7 @@ module.exports = async function (fastify, opts) {
     method: 'GET',
     url: '/',
     schema: {
-      tags: ['articles-authoring'],
+      tags: ['articles'],
       description: 'Get cover information for all articles created by user.',
       response: {
         200: {
@@ -55,28 +62,11 @@ module.exports = async function (fastify, opts) {
     method: 'POST',
     url: '/',
     schema: {
-      tags: ['articles-authoring'],
+      tags: ['articles'],
       description: 'Create a new article.',
-      body: {
-        type: 'object',
-        required: ['headline'],
-        properties: {
-          headline: {
-            type: 'string',
-            description: 'The title of the article.',
-          },
-          byline: {
-            type: 'string',
-            description: 'Who gets credit for writing the article.',
-          },
-          synopsis: {
-            type: 'string',
-            description: 'Brief summary of what the article is about.',
-          },
-        },
-      },
+      body: articleNewIn,
       response: {
-        200: articleAll,
+        201: articleAll,
       },
     },
     handler: async (request, reply) => {
@@ -99,15 +89,10 @@ module.exports = async function (fastify, opts) {
   fastify.route({
     method: 'GET',
     url: '/:publicKey',
-    tags: ['articles-authoring'],
+    tags: ['articles'],
     description: 'Get full article for editing.',
     schema: {
-      params: {
-        type: 'object',
-        properties: {
-          publicKey: { type: 'string' },
-        },
-      },
+      params: publicKeyParam,
       response: {
         200: articleAll,
       },
@@ -132,35 +117,10 @@ module.exports = async function (fastify, opts) {
     method: 'PUT',
     url: '/:publicKey',
     schema: {
-      tags: ['articles-authoring'],
+      tags: ['articles'],
       description: 'Create a new article.',
-      params: {
-        type: 'object',
-        properties: {
-          publicKey: { type: 'string' },
-        },
-      },
-      body: {
-        type: 'object',
-        properties: {
-          headline: {
-            type: 'string',
-            description: 'The title of the article.',
-          },
-          byline: {
-            type: 'string',
-            description: 'Who gets credit for writing the article.',
-          },
-          synopsis: {
-            type: 'string',
-            description: 'Brief summary of what the article is about.',
-          },
-          content: {
-            type: 'string',
-            description: 'The content of the article (usually quite large).',
-          },
-        },
-      },
+      params: publicKeyParam,
+      body: articleUpdateIn,
       response: {
         200: articleAll,
       },
@@ -196,15 +156,9 @@ module.exports = async function (fastify, opts) {
     method: 'PUT',
     url: '/:publicKey/:action',
     schema: {
-      tags: ['articles-authoring'],
+      tags: ['articles'],
       description: 'Create a new article.',
-      params: {
-        type: 'object',
-        properties: {
-          publicKey: { type: 'string' },
-          action: { enum: ['publish', 'retract', 'revive'] },
-        },
-      },
+      params: articleActionParams,
       response: {
         200: articleAllMeta,
       },
@@ -255,14 +209,9 @@ module.exports = async function (fastify, opts) {
     method: 'DELETE',
     url: '/:publicKey',
     schema: {
-      tags: ['articles-authoring'],
+      tags: ['articles'],
       description: 'Archive an article.',
-      params: {
-        type: 'object',
-        properties: {
-          publicKey: { type: 'string' },
-        },
-      },
+      params: publicKeyParam,
       response: {
         200: articleAllMeta,
       },
@@ -287,20 +236,18 @@ module.exports = async function (fastify, opts) {
     method: 'DELETE',
     url: '/:publicKey/purge',
     schema: {
-      tags: ['articles-authoring'],
+      tags: ['articles'],
       description: 'Delete an article forever. Sayonara.',
-      params: {
-        type: 'object',
-        properties: {
-          publicKey: { type: 'string' },
-        },
+      params: publicKeyParam,
+      response: {
+        204: { type: 'string', default: 'No Content' },
       },
     },
     handler: async (request, reply) => {
       const { publicKey } = request.params
       try {
         await fastify.data.article.purgeArticle(publicKey)
-        reply.code(204).send()
+        return
       } catch (err) {
         log.error(err)
         reply.code(500).send(genericErrorMsg)

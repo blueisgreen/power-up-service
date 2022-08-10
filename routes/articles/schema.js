@@ -87,10 +87,59 @@ const articleAllPublic = {
   },
 }
 
+const articleNewIn = {
+  type: 'object',
+  required: ['headline'],
+  properties: {
+    headline: {
+      type: 'string',
+      description: 'Description that draws readers attention.',
+    },
+    byline: {
+      type: 'string',
+      description: 'Who gets credit for writing the article.',
+    },
+    synopsis: {
+      type: 'string',
+      description: 'Brief summary of what the article is about.',
+    },
+  },
+}
+
+const articleUpdateIn = {
+  type: 'object',
+  properties: {
+    ...articleNewIn.properties,
+    content: {
+      type: 'string',
+      description: 'The content of the article (usually quite large).',
+    },
+  },
+}
+
+const publicKeyParam = {
+  type: 'object',
+  properties: {
+    publicKey: { type: 'string' },
+  },
+}
+
+const articleActionParams = {
+  type: 'object',
+  properties: {
+    publicKey: { type: 'string' },
+    action: { enum: ['publish', 'retract', 'revive'] },
+  },
+}
+
 module.exports = {
   articleCover,
   articleContent,
   articleAllMeta,
   articleAll,
   articleAllPublic,
+  articleNewIn,
+  articleUpdateIn,
+  publicKeyParam,
+  articleActionParams,
 }
