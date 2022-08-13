@@ -128,7 +128,7 @@ const articleActionParams = {
   type: 'object',
   properties: {
     publicKey: { type: 'string' },
-    action: { enum: ['publish', 'retract', 'revive'] },
+    action: { enum: ['publish', 'retract', 'archive', 'revive'] },
   },
 }
 

@@ -53,9 +53,10 @@ module.exports = (fastify) => {
    * @param {string} headline - main title of the article
    * @param {number} authorUserId - system id of article's author
    * @param {string} byline - text description of the author, a.k.a. pen name
+   * @param {string} synopsis - brief description of what the article is about
    * @returns ArticleInfo everything about the article except the content
    */
-  const createArticle = async (headline, authorUserId, byline) => {
+  const createArticle = async (headline, authorUserId, byline, synopsis) => {
     log.debug('articleModel.createArticle')
     const articleKey = generateRandomKey()
     const row = {
@@ -63,6 +64,7 @@ module.exports = (fastify) => {
       headline,
       author_id: authorUserId,
       byline,
+      synopsis,
     }
     try {
       const result = await knex(articleTableName).insert(

@@ -29,7 +29,7 @@ module.exports = async function (fastify, opts) {
         },
       },
     },
-    preHandler: [fastify.guard.role(['author', 'editor'])],
+    preHandler: [fastify.guard.role('author', 'editor')],
     handler: async (request, reply) => {
       const { userId } = request.userContext
       const articles = await fastify.data.article.getMyArticles(userId)
@@ -62,15 +62,16 @@ module.exports = async function (fastify, opts) {
         201: articleAll,
       },
     },
-    preHandler: [fastify.guard.role(['author', 'editor'])],
+    preHandler: [fastify.guard.role('author', 'editor')],
     handler: async (request, reply) => {
-      const { headline } = request.body
+      const { headline, byline, synopsis } = request.body
       const { userId, alias } = request.userContext
-      const byline = alias || 'A. Nonymous'
+      const useByline = byline || alias || 'A. Nonymous'
       const articleInfo = await fastify.data.article.createArticle(
         headline,
         userId,
-        byline
+        useByline,
+        synopsis
       )
       if (articleInfo) {
         reply.code(201).send(articleInfo)
@@ -92,14 +93,14 @@ module.exports = async function (fastify, opts) {
         200: articleAll,
       },
     },
-    preHandler: [fastify.guard.role(['author', 'editor'])],
+    preHandler: [fastify.guard.role('author', 'editor')],
     handler: async (request, reply) => {
-      const { key } = request.params
+      const { publicKey } = request.params
       const { userId, hasRoles } = request.userContext
 
       const article = hasRoles.editor
-        ? await fastify.data.article.getArticleContentForEditor(key)
-        : await fastify.data.article.getArticleContent(key, userId)
+        ? await fastify.data.article.getArticleContentForEditor(publicKey)
+        : await fastify.data.article.getArticleContent(publicKey, userId)
 
       if (article) {
         reply.send(article)
@@ -121,15 +122,14 @@ module.exports = async function (fastify, opts) {
         200: articleAll,
       },
     },
-    preHandler: [fastify.guard.role(['author', 'editor'])],
+    preHandler: [fastify.guard.role('author', 'editor')],
     handler: async (request, reply) => {
       const { publicKey } = request.params
-      const { headline, byline, coverArtUrl, synopsis, content } = request.body
+      const { headline, byline, synopsis, content } = request.body
       try {
         const changes = {
           headline,
           byline,
-          coverArtUrl,
           synopsis,
           content,
         }
@@ -154,13 +154,14 @@ module.exports = async function (fastify, opts) {
     url: '/:publicKey/:action',
     schema: {
       tags: ['articles'],
-      description: 'Create a new article.',
+      description:
+        'Change state of article: publish, retract, archive, revive.',
       params: articleActionParams,
       response: {
         200: articleAllMeta,
       },
     },
-    preHandler: [fastify.guard.role(['author', 'editor'])],
+    preHandler: [fastify.guard.role('author', 'editor')],
     handler: async (request, reply) => {
       try {
         const { publicKey, action } = request.params
@@ -183,6 +184,10 @@ module.exports = async function (fastify, opts) {
 
           case 'retract':
             result = await fastify.data.article.retractArticle(publicKey)
+            break
+
+          case 'archive':
+            result = await fastify.data.article.archiveArticle(publicKey)
             break
 
           case 'revive':
@@ -211,41 +216,13 @@ module.exports = async function (fastify, opts) {
     url: '/:publicKey',
     schema: {
       tags: ['articles'],
-      description: 'Archive an article.',
-      params: publicKeyParam,
-      response: {
-        200: articleAllMeta,
-      },
-    },
-    preHandler: [fastify.guard.role(['author', 'editor'])],
-    handler: async (request, reply) => {
-      const { publicKey } = request.params
-      try {
-        const result = await fastify.data.article.archiveArticle(publicKey)
-        if (result) {
-          reply.send(result)
-        } else {
-          return fastify.httpErrors.notFound()
-        }
-      } catch (err) {
-        log.error(err)
-        return fastify.httpErrors.internalServerError()
-      }
-    },
-  })
-
-  fastify.route({
-    method: 'DELETE',
-    url: '/:publicKey/purge',
-    schema: {
-      tags: ['articles'],
       description: 'Delete an article forever. Sayonara.',
       params: publicKeyParam,
       response: {
         204: { type: 'string', default: 'No Content' },
       },
     },
-    preHandler: [fastify.guard.role(['author', 'editor'])],
+    preHandler: [fastify.guard.role('author', 'editor')],
     handler: async (request, reply) => {
       const { publicKey } = request.params
       try {
