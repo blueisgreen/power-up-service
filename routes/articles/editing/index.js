@@ -67,8 +67,8 @@ module.exports = async function (fastify, opts) {
     try {
       let result
       if (
-        req.userContext.roles.editor ||
-        (req.userContext.roles.author &&
+        req.userContext.hasRoles.editor ||
+        (req.userContext.hasRoles.author &&
           req.userContext.authorStatus === 'trusted')
       ) {
         result = await fastify.data.article.publishArticle(key)

@@ -7,28 +7,20 @@ const {
   articleActionParams,
 } = require('../schema')
 
+/**
+ * For creating, modifying, and managing articles.
+ *
+ * @param {*} fastify
+ * @param {*} opts
+ */
 module.exports = async function (fastify, opts) {
   const { log } = fastify
-  const genericErrorMsg = {
-    error: 'Yabai! Something went wrong.',
-  }
-
-  // TODO: prevent users without permission
-
-  // fastify.all(
-  //   '/',
-  //   {
-  //     // FIXME: make sure user is author or editor, and reject if not. also make it clear in request
-  //     preValidation: [fastify.preValidation],
-  //   },
-  //   (request, reply) => {}
-  // )
 
   fastify.route({
     method: 'GET',
     url: '/',
     schema: {
-      tags: ['articles'],
+      tags: ['articles', 'contribution'],
       description: 'Get cover information for all articles created by user.',
       response: {
         200: {
@@ -37,6 +29,7 @@ module.exports = async function (fastify, opts) {
         },
       },
     },
+    preHandler: [fastify.guard.role(['author', 'editor'])],
     handler: async (request, reply) => {
       const { userId } = request.userContext
       const articles = await fastify.data.article.getMyArticles(userId)
@@ -53,7 +46,7 @@ module.exports = async function (fastify, opts) {
       if (articles) {
         reply.send(articles)
       } else {
-        reply.code(404).send('No articles found')
+        return fastify.httpErrors.notFound()
       }
     },
   })
@@ -69,6 +62,7 @@ module.exports = async function (fastify, opts) {
         201: articleAll,
       },
     },
+    preHandler: [fastify.guard.role(['author', 'editor'])],
     handler: async (request, reply) => {
       const { headline } = request.body
       const { userId, alias } = request.userContext
@@ -81,7 +75,8 @@ module.exports = async function (fastify, opts) {
       if (articleInfo) {
         reply.code(201).send(articleInfo)
       } else {
-        reply.code(500).send(genericErrorMsg)
+        log.error(err)
+        return fastify.httpErrors.internalServerError()
       }
     },
   })
@@ -97,18 +92,19 @@ module.exports = async function (fastify, opts) {
         200: articleAll,
       },
     },
+    preHandler: [fastify.guard.role(['author', 'editor'])],
     handler: async (request, reply) => {
       const { key } = request.params
-      const { userId, roles } = request.userContext
+      const { userId, hasRoles } = request.userContext
 
-      const article = roles.editor
+      const article = hasRoles.editor
         ? await fastify.data.article.getArticleContentForEditor(key)
         : await fastify.data.article.getArticleContent(key, userId)
 
       if (article) {
         reply.send(article)
       } else {
-        reply.code(404).send()
+        return fastify.httpErrors.notFound()
       }
     },
   })
@@ -125,6 +121,7 @@ module.exports = async function (fastify, opts) {
         200: articleAll,
       },
     },
+    preHandler: [fastify.guard.role(['author', 'editor'])],
     handler: async (request, reply) => {
       const { publicKey } = request.params
       const { headline, byline, coverArtUrl, synopsis, content } = request.body
@@ -143,11 +140,11 @@ module.exports = async function (fastify, opts) {
         if (result) {
           reply.send(result)
         } else {
-          reply.code(404).send()
+          return fastify.httpErrors.notFound()
         }
       } catch (err) {
-        fastify.log.error(err)
-        reply.code(500).send(genericErrorMsg)
+        log.error(err)
+        return fastify.httpErrors.internalServerError()
       }
     },
   })
@@ -163,15 +160,19 @@ module.exports = async function (fastify, opts) {
         200: articleAllMeta,
       },
     },
+    preHandler: [fastify.guard.role(['author', 'editor'])],
     handler: async (request, reply) => {
       try {
         const { publicKey, action } = request.params
-        const { roles, authorStatus } = request.userContext
+        const { hasRoles, authorStatus } = request.userContext
 
         let result = []
         switch (action) {
           case 'publish':
-            if (roles.editor || (roles.author && authorStatus === 'trusted')) {
+            if (
+              hasRoles.editor ||
+              (hasRoles.author && authorStatus === 'trusted')
+            ) {
               result = await fastify.data.article.publishArticle(publicKey)
             } else {
               result = await fastify.data.article.requestToPublishArticle(
@@ -196,11 +197,11 @@ module.exports = async function (fastify, opts) {
         if (result) {
           reply.send(result)
         } else {
-          reply.code(404).send()
+          return fastify.httpErrors.notFound()
         }
       } catch (err) {
         log.error(err)
-        reply.code(500).send(genericErrorMsg)
+        return fastify.httpErrors.internalServerError()
       }
     },
   })
@@ -216,6 +217,7 @@ module.exports = async function (fastify, opts) {
         200: articleAllMeta,
       },
     },
+    preHandler: [fastify.guard.role(['author', 'editor'])],
     handler: async (request, reply) => {
       const { publicKey } = request.params
       try {
@@ -223,11 +225,11 @@ module.exports = async function (fastify, opts) {
         if (result) {
           reply.send(result)
         } else {
-          reply.code(404).send()
+          return fastify.httpErrors.notFound()
         }
       } catch (err) {
         log.error(err)
-        reply.code(500).send(genericErrorMsg)
+        return fastify.httpErrors.internalServerError()
       }
     },
   })
@@ -243,6 +245,7 @@ module.exports = async function (fastify, opts) {
         204: { type: 'string', default: 'No Content' },
       },
     },
+    preHandler: [fastify.guard.role(['author', 'editor'])],
     handler: async (request, reply) => {
       const { publicKey } = request.params
       try {
@@ -250,7 +253,7 @@ module.exports = async function (fastify, opts) {
         return
       } catch (err) {
         log.error(err)
-        reply.code(500).send(genericErrorMsg)
+        return fastify.httpErrors.internalServerError()
       }
     },
   })

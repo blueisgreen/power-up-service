@@ -16,24 +16,9 @@ const {
 module.exports = async function (fastify, opts) {
   const { log } = fastify
 
-  const genericErrorMsg = {
-    error: 'Bad news, kiddies. Something went wrong with the database.',
-  }
-
-  const notFoundMessage = {
-    general: 'We do not seem to have that one.',
-  }
-  // fastify.addSchema({
-  //   $id: 'http://powerupmagazine.com',
-  //   type: 'object',
-  //   properties: {
-  //     articleCover,
-  //   },
-  // })
-
   fastify.route({
     method: 'GET',
-    url: '/published',
+    url: '/',
     schema: {
       tags: ['articles'],
       description: 'Get cover information for published articles.',
@@ -45,16 +30,21 @@ module.exports = async function (fastify, opts) {
       },
     },
     handler: async (request, reply) => {
-      return await fastify.data.article.getPublishedArticleCovers()
+      try {
+        return await fastify.data.article.getPublishedArticleCovers()
+      } catch (err) {
+        log.error(err)
+        return fastify.httpErrors.internalServerError()
+      }
     },
   })
 
   fastify.route({
     method: 'GET',
-    url: '/published/:publicKey',
+    url: '/:publicKey',
     schema: {
       tags: ['articles'],
-      description: 'Get content of published article',
+      description: 'Get content of published article.',
       params: publicKeyParam,
       response: {
         200: articleContent,
@@ -72,6 +62,7 @@ module.exports = async function (fastify, opts) {
           return fastify.httpErrors.notFound()
         }
       } catch (err) {
+        log.error(err)
         return fastify.httpErrors.internalServerError()
       }
     },
@@ -79,10 +70,10 @@ module.exports = async function (fastify, opts) {
 
   fastify.route({
     method: 'GET',
-    url: '/published/:publicKey/full',
+    url: '/:publicKey/full',
     schema: {
       tags: ['articles'],
-      description: 'Get everything about published article',
+      description: 'Get everything about published article.',
       params: publicKeyParam,
       response: {
         200: articleAllPublic,
@@ -100,6 +91,7 @@ module.exports = async function (fastify, opts) {
           return fastify.httpErrors.notFound()
         }
       } catch (err) {
+        log.error(err)
         return fastify.httpErrors.internalServerError()
       }
     },
