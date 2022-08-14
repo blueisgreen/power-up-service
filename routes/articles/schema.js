@@ -117,6 +117,16 @@ const articleUpdateIn = {
   },
 }
 
+const articleDenialIn = {
+  type: 'object',
+  properties: {
+    message: {
+      type: 'string',
+      description: 'Explanation of reason for denying request to publish.',
+    },
+  },
+}
+
 const publicKeyParam = {
   type: 'object',
   properties: {
@@ -158,6 +168,7 @@ module.exports = {
   articleAllPublic,
   articleNewIn,
   articleUpdateIn,
+  articleDenialIn,
   publicKeyParam,
   articleActionParams,
   articleFilters,
