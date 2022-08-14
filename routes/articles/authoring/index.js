@@ -227,7 +227,7 @@ module.exports = async function (fastify, opts) {
       const { publicKey } = request.params
       try {
         await fastify.data.article.purgeArticle(publicKey)
-        return
+        reply.code(204)
       } catch (err) {
         log.error(err)
         return fastify.httpErrors.internalServerError()

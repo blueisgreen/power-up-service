@@ -22,7 +22,7 @@ const articleInfoColumns = [
   'headline',
   'byline',
   'cover_art_url as coverArtUrl',
-  'synopsis',
+  'synopsis', 
   'created_at as createdAt',
   'updated_at as updatedAt',
   'published_at as publishedAt',
@@ -58,22 +58,22 @@ module.exports = (fastify) => {
    */
   const createArticle = async (headline, authorUserId, byline, synopsis) => {
     log.debug('articleModel.createArticle')
-    const articleKey = generateRandomKey()
-    const row = {
-      public_id: articleKey,
-      headline,
-      author_id: authorUserId,
-      byline,
-      synopsis,
-    }
     try {
+      const articleKey = generateRandomKey()
+      const row = {
+        public_id: articleKey,
+        headline,
+        author_id: authorUserId,
+        byline,
+        synopsis,
+      }
       const result = await knex(articleTableName).insert(
         row,
         articleInfoColumns
       )
-      return result.length > 0 ? result[0] : null
+      return result[0]
     } catch (err) {
-      fastify.log.error(err)
+      log.error(err)
       return null
     }
   }
