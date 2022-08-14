@@ -1,27 +1,46 @@
-'use strict'
+const { articleAllMeta, articleFilters } = require('../schema')
 
-// TODO: restrict access to editors
-
+/**
+ * Actions that are suitable for an editor.
+ *
+ * @param {*} fastify
+ * @param {*} opts
+ */
 module.exports = async function (fastify, opts) {
   const { log } = fastify
+
   const genericErrorMsg = {
     error: 'Bad news, kiddies. Something went wrong.',
   }
 
-  fastify.get('/', async (req, reply) => {
-    const { user, status, limit, offset } = req.query
-    const queryParams = {
-      user,
-      status,
-      limit: limit || 20,
-      offset: offset || 0,
-    }
-    const articles = await fastify.data.article.getArticlesInfoOnly(queryParams)
-    if (articles) {
+  fastify.route({
+    method: 'GET',
+    url: '/',
+    schema: {
+      tags: ['articles', 'editor'],
+      description:
+        'Get articles that match given filters. Limited to 20 results by default.',
+      query: articleFilters,
+      response: {
+        200: {
+          type: 'array',
+          items: articleAllMeta,
+        },
+      },
+    },
+    preHandler: [fastify.guard.role('editor')],
+    handler: async (request, reply) => {
+      const { status, limit, offset } = request.query
+      const queryParams = {
+        status,
+        limit: limit || 20,
+        offset: offset || 0,
+      }
+      const articles = await fastify.data.article.getArticlesInfoOnly(
+        queryParams
+      )
       reply.send(articles)
-    } else {
-      reply.code(404).send('No articles found')
-    }
+    },
   })
 
   fastify.get('/:key', async (req, reply) => {

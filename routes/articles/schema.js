@@ -132,6 +132,24 @@ const articleActionParams = {
   },
 }
 
+const articleFilters = {
+  type: 'object',
+  properties: {
+    status: { enum: ['pending', 'published', 'archived'] },
+    limit: {
+      type: 'integer',
+      description: 'Maximum number of results to return.',
+      minimum: 0,
+    },
+    offset: {
+      type: 'integer',
+      description:
+        'Number of results to skip over; combine with limit for paging.',
+      minimum: 0,
+    },
+  },
+}
+
 module.exports = {
   articleCover,
   articleContent,
@@ -142,4 +160,5 @@ module.exports = {
   articleUpdateIn,
   publicKeyParam,
   articleActionParams,
+  articleFilters,
 }
