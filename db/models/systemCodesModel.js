@@ -1,4 +1,10 @@
-const { systemCodeTableName, systemCodeColumns } = require('./modelFieldMap')
+const systemCodeTableName = 'system_codes'
+const systemCodeColumns = [
+  'id',
+  'code',
+  'display_name as displayName',
+  'parent_id',
+]
 
 module.exports = (fastify) => {
   const { knex, log } = fastify

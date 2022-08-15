@@ -29,14 +29,6 @@ const actionColumns = [
   'details',
 ]
 
-const systemCodeTableName = 'system_codes'
-const systemCodeColumns = [
-  'id',
-  'code',
-  'display_name as displayName',
-  'parent_id',
-]
-
 module.exports = {
   userColumns,
   userTableName,
@@ -44,6 +36,4 @@ module.exports = {
   authorTableName,
   actionTableName,
   actionColumns,
-  systemCodeTableName,
-  systemCodeColumns,
 }

@@ -22,7 +22,7 @@ const articleInfoColumns = [
   'headline',
   'byline',
   'cover_art_url as coverArtUrl',
-  'synopsis', 
+  'synopsis',
   'created_at as createdAt',
   'updated_at as updatedAt',
   'published_at as publishedAt',
