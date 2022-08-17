@@ -1,4 +1,17 @@
-const { userTableName, userColumns } = require('./modelFieldMap')
+const userTableName = 'users'
+const userColumns = [
+  'id',
+  'public_id as userKey',
+  'alias',
+  'email',
+  'avatar_url as avatarUrl',
+  'created_at as createdAt',
+  'updated_at as updatedAt',
+  'terms_accepted_at as termsAcceptedAt',
+  'cookies_accepted_at as cookiesAcceptedAt',
+  'email_comms_accepted_at as emailCommsAcceptedAt',
+  'account_status_id as accountStatusId',
+]
 
 // TODO: validation: verify that userPublicId parameter is uuid or wrap query in try-catch and handle
 

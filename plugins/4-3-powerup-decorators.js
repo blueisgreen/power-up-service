@@ -56,9 +56,9 @@ module.exports = fp(
     fastify.decorate('preValidation', async (request, reply) => {
       // TODO: expand to role-based access
       log.debug('require known user')
-      if (!request.userContext.who) {
+      if (request.anonymous) {
         reply.code(401)
-        reply.send('You must be signed in for that')
+        reply.send('You must be signed in for that.')
       }
     })
   },
