@@ -57,7 +57,7 @@ module.exports = async function (fastify, opts) {
           publicKey
         )
         if (article) {
-          reply.send(article)
+          return article
         } else {
           return fastify.httpErrors.notFound()
         }
@@ -86,7 +86,7 @@ module.exports = async function (fastify, opts) {
           publicKey
         )
         if (article) {
-          reply.send(article)
+          return article
         } else {
           return fastify.httpErrors.notFound()
         }

@@ -36,7 +36,7 @@ module.exports = async function (fastify, opts) {
       },
     },
     handler: async (request, reply) => {
-      reply.send(fastify.lookups.categoriesForUI)
+      return fastify.lookups.categoriesForUI
     },
   })
 
@@ -58,7 +58,7 @@ module.exports = async function (fastify, opts) {
       const { category } = request.params
       const lookup = fastify.lookups[category]
       if (lookup) {
-        reply.send(lookup)
+        return lookup
       } else {
         return fastify.httpErrors.notFound()
       }
@@ -79,7 +79,7 @@ module.exports = async function (fastify, opts) {
       },
     },
     handler: async (request, reply) => {
-      reply.send(fastify.lookups.socialPlatform)
+      return fastify.lookups.socialPlatform
     },
   })
 
@@ -97,7 +97,7 @@ module.exports = async function (fastify, opts) {
       },
     },
     handler: async (request, reply) => {
-      reply.send(fastify.lookups.userRole)
+      return fastify.lookups.userRole
     },
   })
 }

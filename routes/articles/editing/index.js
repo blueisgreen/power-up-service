@@ -45,7 +45,7 @@ module.exports = async function (fastify, opts) {
         const articles = await fastify.data.article.getArticlesInfoOnly(
           queryParams
         )
-        reply.send(articles)
+        return articles
       } catch (err) {
         log.error(err)
         return fastify.httpErrors.internalServerError()
@@ -80,7 +80,7 @@ module.exports = async function (fastify, opts) {
           'deniedToPublish',
           message
         )
-        reply.send(articleSnapshot)
+        return articleSnapshot
       } catch (err) {
         log.error(err)
         return fastify.httpErrors.internalServerError()

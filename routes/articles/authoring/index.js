@@ -44,7 +44,7 @@ module.exports = async function (fastify, opts) {
         }
       })
       if (articles) {
-        reply.send(articles)
+        return articles
       } else {
         return fastify.httpErrors.notFound()
       }
@@ -103,7 +103,7 @@ module.exports = async function (fastify, opts) {
         : await fastify.data.article.getArticleContent(publicKey, userId)
 
       if (article) {
-        reply.send(article)
+        return article
       } else {
         return fastify.httpErrors.notFound()
       }
@@ -138,7 +138,7 @@ module.exports = async function (fastify, opts) {
           changes
         )
         if (result) {
-          reply.send(result)
+          return result
         } else {
           return fastify.httpErrors.notFound()
         }
@@ -155,7 +155,7 @@ module.exports = async function (fastify, opts) {
     schema: {
       tags: ['articles'],
       description:
-        'Change state of article: publish, retract, archive, revive.',
+        'Change state of article: publish / retract, archive / revive.',
       params: articleActionParams,
       response: {
         200: articleAllMeta,
@@ -200,7 +200,7 @@ module.exports = async function (fastify, opts) {
         }
 
         if (result) {
-          reply.send(result)
+          return result
         } else {
           return fastify.httpErrors.notFound()
         }
@@ -227,7 +227,7 @@ module.exports = async function (fastify, opts) {
       const { publicKey } = request.params
       try {
         await fastify.data.article.purgeArticle(publicKey)
-        reply.code(204)
+        reply.code(204).send()
       } catch (err) {
         log.error(err)
         return fastify.httpErrors.internalServerError()
