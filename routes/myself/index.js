@@ -1,4 +1,8 @@
-const { userSchema, userContextSchema } = require('../users/schema')
+const {
+  userSchema,
+  userContextSchema,
+  userUpdateSchema,
+} = require('../users/schema')
 
 /**
  * For creating and managing one's own user accounts.
@@ -13,8 +17,8 @@ module.exports = async function (fastify, opts) {
     method: 'GET',
     url: '/',
     schema: {
-      tags: ['users'],
-      description: "Get user's own information",
+      tags: ['active-user'],
+      description: "Get user's account information",
       response: {
         200: userSchema,
       },
@@ -27,11 +31,29 @@ module.exports = async function (fastify, opts) {
   })
 
   fastify.route({
+    method: 'PUT',
+    url: '/',
+    schema: {
+      tags: ['active-user'],
+      description: "Update user's account information",
+      body: userUpdateSchema,
+      response: {
+        200: userSchema,
+      },
+    },
+    preHandler: [fastify.preValidation],
+    handler: async (request, reply) => {
+      const { who } = request.userContext
+      return await fastify.data.identity.updateUser(who, request.body)
+    },
+  })
+
+  fastify.route({
     method: 'GET',
     url: '/context',
     schema: {
-      tags: ['users'],
-      description: "Get user's own information",
+      tags: ['active-user'],
+      description: 'Get frequently used information about the user',
       response: {
         200: userContextSchema,
       },

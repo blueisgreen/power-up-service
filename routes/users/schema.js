@@ -90,7 +90,18 @@ const userContextSchema = {
   },
 }
 
+const userUpdateSchema = {
+  type: 'object',
+  properties: {
+    alias: {
+      type: 'string',
+      description: 'Public identity within Power Up.',
+    },
+  },
+}
+
 module.exports = {
   userSchema,
   userContextSchema,
+  userUpdateSchema,
 }

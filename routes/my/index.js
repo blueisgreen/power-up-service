@@ -4,21 +4,7 @@ const ERROR_MESSAGE =
   'Oh my, something went dreadfully wrong. This was not your fault.'
 
 module.exports = async function (fastify, opts) {
-  /**
-   * Get all account information for the logged in user.
-   */
-  fastify.get(
-    '/',
-    {
-      preValidation: fastify.preValidation,
-    },
-    async (request, reply) => {
-      const user = await fastify.data.identity.getUser(
-        request.userKey
-      )
-      reply.send(user)
-    }
-  )
+
   /**
    * Get profile for the logged in user.
    */
@@ -33,18 +19,6 @@ module.exports = async function (fastify, opts) {
         request.userKey
       )
       reply.send(user)
-    }
-  )
-  /**
-   * Get context for the logged in user.
-   */
-  fastify.get(
-    '/context',
-    {
-      preValidation: fastify.preValidation,
-    },
-    async (request, reply) => {
-      reply.send(request.userContext)
     }
   )
   /**
