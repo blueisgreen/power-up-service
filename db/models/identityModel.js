@@ -1,6 +1,6 @@
 const userTableName = 'users'
 const userColumns = [
-  'id',
+  'users.id',
   'public_id as userKey',
   'alias',
   'email',
@@ -10,7 +10,16 @@ const userColumns = [
   'terms_accepted_at as termsAcceptedAt',
   'cookies_accepted_at as cookiesAcceptedAt',
   'email_comms_accepted_at as emailCommsAcceptedAt',
-  'account_status_id as accountStatusId',
+  'system_codes.code as statusKey',
+]
+
+const userContextColumns = [
+  'users.id',
+  'public_id as userKey',
+  'alias',
+  'system_codes.code as statusKey',
+  'pen_name as penName',
+  'authors.status as authorStatus',
 ]
 
 // TODO: validation: verify that userPublicId parameter is uuid or wrap query in try-catch and handle
@@ -18,55 +27,59 @@ const userColumns = [
 module.exports = (fastify) => {
   const { knex, log } = fastify
 
-  const getUser = async (userId) => {
-    log.debug('identityModel.getUser')
+  const __getUserRecord = async (userId) => {
     const userRecord = await knex(userTableName)
       .select(userColumns)
-      .where('id', '=', userId)
+      .where('users.id', '=', userId)
+      .join('system_codes', { 'users.account_status_id': 'system_codes.id' })
     return userRecord.length > 0 ? userRecord[0] : null
   }
 
   /**
-   * Gathers useful user information: userKey, userId, userStatus, roles,
-   * plus authorStatus (if applicable).
+   * Gets user information.
    *
-   * @param {*} userPublicId same as userKey
+   * @param {string} userKey unique public user identifier
+   * @returns UserInfo
+   */
+  const getUser = async (userKey) => {
+    log.debug('identityModel.getUser')
+    const userId = await knex(userTableName)
+      .select('id')
+      .where('public_id', '=', userKey)
+    log.debug(userId)
+    return userId[0] ? __getUserRecord(userId[0].id) : null
+  }
+
+  /**
+   * Returns frequently used subset of user information.
+   *
+   * @param {string} userKey unique public user identifier
    * @returns
    */
-  const getUserContext = async (userKey, isAuthor) => {
+  const getUserContext = async (userKey) => {
     log.debug('identityModel.getUserContext')
 
-    const useful = await knex(userTableName)
-      .select(['users.id as userId', 'system_codes.code as userStatus'])
-      .join('system_codes', 'system_codes.id', 'users.account_status_id')
+    const result = await knex(userTableName)
+      .select(userContextColumns)
+      .join('system_codes', { 'users.account_status_id': 'system_codes.id' })
+      .join('authors', { 'users.id': 'authors.user_id' })
       .where('public_id', '=', userKey)
 
-    if (useful.length === 0) {
-      return null
-    }
+    const userContext = Object.assign({}, result[0])
 
-    const context = useful[0]
+    const roles = await getUserRoles(userContext.id)
+    userContext['hasRole'] = {}
+    roles.map((role) => (userContext.hasRole[role] = true))
 
-    // context.userStatus = fastify.lookups.idToCode(user.accountStatusId)
-
-    if (isAuthor) {
-      const authorInfo = await fastify.data.author.getInfo(context.userId)
-      context.authorStatus = authorInfo.status
-    }
-    return context
+    return userContext
   }
 
-  const getUserWithPublicId = async (userPublicId) => {
-    log.debug('identityModel.getUserWithPublicId')
-    const userRecord = await knex(userTableName)
-      .select(userColumns)
-      .where('public_id', '=', userPublicId)
-    return userRecord.length > 0 ? userRecord[0] : null
-  }
-
-  const findUserWithPublicId = async (userKey, platform) => {
+  /**
+   * 
+   */
+  const findUserOnPlatform = async (userKey, platform) => {
     log.debug(
-      `identityModel.findUserWithPublicId using userKey ${userKey} on platform ${platform}`
+      `identityModel.findUserOnPlatform using userKey ${userKey} on platform ${platform}`
     )
     const platformCode = fastify.lookups.codeLookup('socialPlatform', platform)
     if (!userKey || !platformCode) {
@@ -89,7 +102,7 @@ module.exports = (fastify) => {
       return null
     }
 
-    return getUser(profileRecord[0].userId)
+    return __getUserRecord(profileRecord[0].userId)
   }
 
   const findUserFromSocialProfile = async (platform, profileId) => {
@@ -110,7 +123,7 @@ module.exports = (fastify) => {
       return null
     }
 
-    return getUser(profileRecord[0].userId)
+    return __getUserRecord(profileRecord[0].userId)
   }
 
   // TODO: pull this up out of the model
@@ -145,12 +158,12 @@ module.exports = (fastify) => {
       access_token_exp: accessTokenExpiresIn,
     })
 
-    return getUser(id)
+    return __getUserRecord(id)
   }
 
   // TODO: pull this up out of the model
-  const becomeMember = async (userPublicId, alias, okToTerms, okToCookies) => {
-    log.debug(`identityModel.becomeMember ${userPublicId}, ${alias}`)
+  const becomeMember = async (userKey, alias, okToTerms, okToCookies) => {
+    log.debug(`identityModel.becomeMember ${userKey}, ${alias}`)
     const active = fastify.lookups.codeLookup('accountStatus', 'active')
     const now = new Date()
     const membership = {
@@ -166,7 +179,7 @@ module.exports = (fastify) => {
     }
     const result = await knex(userTableName)
       .returning(userColumns)
-      .where('public_id', '=', userPublicId)
+      .where('public_id', '=', userKey)
       .update(membership)
     const userInfo = result[0]
     if (okToTerms) {
@@ -178,19 +191,19 @@ module.exports = (fastify) => {
   }
 
   // TODO: pull this up out of the model
-  const becomeAuthor = async (userPublicId) => {
+  const becomeAuthor = async (userKey) => {
     log.debug('identityModel.becomeAuthor')
-    const userRecord = await getUserWithPublicId(userPublicId)
+    const userInfo = await getUser(userKey)
 
     const authorRecord = await fastify.data.author.createAuthor(
-      userRecord.id,
-      userRecord.penName
+      userInfo.id,
+      userInfo.penName
     )
-    await grantRoles(userRecord.id, ['author'])
-    const roles = await getUserRoles(userRecord.id)
-    userRecord.author = authorRecord
-    userRecord.roles = roles
-    return userRecord
+    await grantRoles(userInfo.id, ['author'])
+    const roles = await getUserRoles(userInfo.id)
+    userInfo.author = authorRecord
+    userInfo.roles = roles
+    return userInfo
   }
 
   const getUserRoles = async (userId) => {
@@ -258,10 +271,10 @@ module.exports = (fastify) => {
     return true
   }
 
-  const updateUser = async (userPublicId, changes) => {
+  const updateUser = async (userKey, changes) => {
     log.debug('identityModel.updateUser')
     const now = new Date()
-    const userBefore = await getUserWithPublicId(userPublicId)
+    const userBefore = await getUser(userKey)
     const userAfter = Object.assign({}, userBefore, {
       alias: changes.alias,
       email: changes.email,
@@ -278,7 +291,7 @@ module.exports = (fastify) => {
       userAfter.email_comms_accepted_at = now
     }
     const result = await knex(userTableName)
-      .where('public_id', '=', userPublicId)
+      .where('public_id', '=', userKey)
       .update(userAfter, ['id'])
 
     const userId = result[0].id
@@ -288,7 +301,7 @@ module.exports = (fastify) => {
       await grantRoles(userId, ['member'])
     }
 
-    return await getUser(userId)
+    return await __getUserRecord(userId)
   }
 
   const findSessionToken = async (userPublicId) => {
@@ -314,8 +327,7 @@ module.exports = (fastify) => {
   return {
     getUser,
     getUserContext,
-    getUserWithPublicId,
-    findUserWithPublicId,
+    findUserOnPlatform,
     findUserFromSocialProfile,
     registerUser,
     getUserRoles,

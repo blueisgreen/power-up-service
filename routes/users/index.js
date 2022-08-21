@@ -20,7 +20,7 @@ module.exports = async function (fastify, opts) {
     preHandler: [fastify.preValidation],
     handler: async (request, reply) => {
       const { userKey } = request.userContext
-      return fastify.data.user.getUserWithPublicId(userKey)
+      return fastify.data.user.getUser(userKey)
     },
   })
 }

@@ -13,7 +13,7 @@ module.exports = async function (fastify, opts) {
       preValidation: fastify.preValidation,
     },
     async (request, reply) => {
-      const user = await fastify.data.identity.getUserWithPublicId(
+      const user = await fastify.data.identity.getUser(
         request.userKey
       )
       reply.send(user)

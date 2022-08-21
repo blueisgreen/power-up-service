@@ -31,7 +31,7 @@ module.exports = async function (fastify, opts) {
     // user is known; refresh token and cookie, and redirect to landing
 
     // look up social record for given provider
-    const user = await fastify.data.identity.findUserWithPublicId(
+    const user = await fastify.data.identity.findUserOnPlatform(
       request.userKey,
       pid
     )

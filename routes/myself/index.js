@@ -1,4 +1,4 @@
-const { userSchema } = require('../users/schema')
+const { userSchema, userContextSchema } = require('../users/schema')
 
 /**
  * For creating and managing one's own user accounts.
@@ -22,8 +22,24 @@ module.exports = async function (fastify, opts) {
     preHandler: [fastify.preValidation],
     handler: async (request, reply) => {
       const { who } = request.userContext
-      const userInfo = await fastify.data.identity.getUserWithPublicId(who)
-      return userInfo
+      return await fastify.data.identity.getUser(who)
+    },
+  })
+
+  fastify.route({
+    method: 'GET',
+    url: '/context',
+    schema: {
+      tags: ['users'],
+      description: "Get user's own information",
+      response: {
+        200: userContextSchema,
+      },
+    },
+    preHandler: [fastify.preValidation],
+    handler: async (request, reply) => {
+      const { who } = request.userContext
+      return await fastify.data.identity.getUserContext(who)
     },
   })
 }
