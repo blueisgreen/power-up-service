@@ -119,9 +119,32 @@ const selfProfileUpdateSchema = {
   },
 }
 
+const inquirySchema = {
+  type: 'object',
+  parameters: {
+    id: { type: 'integer' },
+    createdAt: { type: 'string', format: 'date-time' },
+    articleId: { type: 'string' },
+    purpose: { type: 'string' },
+    message: { type: 'string' },
+  },
+}
+
+const roleSchema = {
+  type: 'object',
+  parameters: {
+    id: { type: 'integer' },
+    createdAt: { type: 'string', format: 'date-time' },
+    articleId: { type: 'string' },
+    purpose: { type: 'string' },
+    message: { type: 'string' },
+  },
+}
+
 module.exports = {
   selfProfileSchema,
   selfContextSchema,
   selfProfileUpdateSchema,
   agreementsSchema,
+  inquirySchema,
 }
