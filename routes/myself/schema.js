@@ -1,4 +1,4 @@
-const userSchema = {
+const selfProfileSchema = {
   type: 'object',
   properties: {
     userKey: {
@@ -51,7 +51,7 @@ const userSchema = {
   },
 }
 
-const userContextSchema = {
+const selfContextSchema = {
   type: 'object',
   properties: {
     userKey: {
@@ -90,18 +90,38 @@ const userContextSchema = {
   },
 }
 
-const userUpdateSchema = {
+const agreementsSchema = {
+  type: 'object',
+  properties: {
+    acceptTerms: {
+      type: 'boolean',
+      description: 'Indicates when user agrees to our terms of use.',
+    },
+    acceptCookies: {
+      type: 'boolean',
+      description: 'Indicates when user agrees to our use of cookies.',
+    },
+    acceptEmailComms: {
+      type: 'boolean',
+      description: 'Indicates when user agrees to receive email from us.',
+    },
+  },
+}
+
+const selfProfileUpdateSchema = {
   type: 'object',
   properties: {
     alias: {
       type: 'string',
       description: 'Public identity within Power Up.',
     },
+    ...agreementsSchema.properties,
   },
 }
 
 module.exports = {
-  userSchema,
-  userContextSchema,
-  userUpdateSchema,
+  selfProfileSchema,
+  selfContextSchema,
+  selfProfileUpdateSchema,
+  agreementsSchema,
 }

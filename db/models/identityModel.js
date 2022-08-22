@@ -12,7 +12,6 @@ const userColumns = [
   'email_comms_accepted_at as emailCommsAcceptedAt',
   'system_codes.code as statusKey',
 ]
-
 const userContextColumns = [
   'users.id',
   'public_id as userKey',
@@ -75,7 +74,7 @@ module.exports = (fastify) => {
   }
 
   /**
-   * 
+   * TODO: refactor
    */
   const findUserOnPlatform = async (userKey, platform) => {
     log.debug(
@@ -105,6 +104,7 @@ module.exports = (fastify) => {
     return __getUserRecord(profileRecord[0].userId)
   }
 
+  // TODO: refactor
   const findUserFromSocialProfile = async (platform, profileId) => {
     log.debug('identityModel.findUserFromSocialProfile')
 
@@ -241,66 +241,85 @@ module.exports = (fastify) => {
     return true
   }
 
-  const agreeToTerms = async (publicId) => {
+  const agreeToTerms = async (userKey) => {
     log.debug('identityModel.agreeToTerms')
     const now = new Date()
-    await knex(userTableName).where('public_id', '=', publicId).update({
+    await knex(userTableName).where('public_id', '=', userKey).update({
       terms_accepted_at: now,
       updated_at: now,
     })
     return true
   }
 
-  const agreeToCookies = async (publicId) => {
+  const agreeToCookies = async (userKey) => {
     log.debug('identityModel.agreeToCookies')
     const now = new Date()
-    await knex(userTableName).where('public_id', '=', publicId).update({
+    await knex(userTableName).where('public_id', '=', userKey).update({
       cookies_accepted_at: now,
       updated_at: now,
     })
     return true
   }
 
-  const agreeToEmailComms = async (publicId) => {
+  const agreeToEmailComms = async (userKey) => {
     log.debug('identityModel.agreeToEmailComms')
     const now = new Date()
-    await knex(userTableName).where('public_id', '=', publicId).update({
+    await knex(userTableName).where('public_id', '=', userKey).update({
       email_comms_accepted_at: now,
       updated_at: now,
     })
     return true
   }
 
-  const updateUser = async (userKey, changes) => {
+  /**
+   * Updates user information.
+   *
+   * @param {string} userKey unique public user identifier
+   * @param {string} alias how the user wants to be known
+   * @param {boolean} acceptTerms pass when user is accepting terms; ignored if not true or already accepted
+   * @param {boolean} acceptCookies pass to indicate user accepting the use (or not) of cookies
+   * @param {boolean} acceptEmailComms pass to indicate user accepting the receipt (or not) of email communications
+   * @returns UserInfo
+   */
+  const updateUser = async (
+    userKey,
+    alias,
+    acceptTerms,
+    acceptCookies,
+    acceptEmailComms
+  ) => {
     log.debug('identityModel.updateUser')
+    let newMember = false
     const now = new Date()
-    const userBefore = await getUser(userKey)
-    const userAfter = Object.assign({}, userBefore, {
-      alias: changes.alias,
-      email: changes.email,
-      avatar_url: changes.avatarUrl,
+    const beforeUpdate = await getUser(userKey)
+    const changes = {
+      alias,
       updated_at: now,
-    })
-    if (!userBefore.terms_accepted_at && changes.agreeToTerms) {
-      userAfter.terms_accepted_at = now
     }
-    if (!userBefore.cookies_accepted_at && changes.agreeToCookies) {
-      userAfter.cookies_accepted_at = now
+    if (acceptTerms && !beforeUpdate.termsAcceptedAt) {
+      changes.terms_accepted_at = now
+      newMember = true
     }
-    if (!userBefore.email_comms_accepted_at && changes.agreeToEmailComms) {
-      userAfter.email_comms_accepted_at = now
+    if (acceptCookies && !beforeUpdate.cookiesAcceptedAt) {
+      changes.cookies_accepted_at = now
+    }
+    if (acceptCookies === false && beforeUpdate.cookiesAcceptedAt) {
+      changes.cookies_accepted_at = null
+    }
+    if (acceptEmailComms && !beforeUpdate.emailCommsAcceptedAt) {
+      changes.email_comms_accepted_at = now
+    }
+    if (acceptEmailComms === false && beforeUpdate.emailCommsAcceptedAt) {
+      changes.email_comms_accepted_at = null
     }
     const result = await knex(userTableName)
       .where('public_id', '=', userKey)
-      .update(userAfter, ['id'])
-
+      .update(changes, ['id'])
     const userId = result[0].id
 
-    // if (changes.agreeToTerms) {
-    if (true) {
+    if (newMember) {
       await grantRoles(userId, ['member'])
     }
-
     return await __getUserRecord(userId)
   }
 
@@ -313,11 +332,11 @@ module.exports = (fastify) => {
     return result.length ? result[0].auth_token : null
   }
 
-  const setSessionToken = async (userPublicId, sessionToken) => {
+  const setSessionToken = async (userKey, sessionToken) => {
     log.debug('identityModel.setSessionToken')
     await knex('user_sessions')
       .insert({
-        user_public_id: userPublicId,
+        user_public_id: userKey,
         auth_token: sessionToken,
       })
       .onConflict('user_public_id')
