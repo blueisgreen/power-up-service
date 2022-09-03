@@ -23,10 +23,11 @@ module.exports = async function (fastify, opts) {
    */
   fastify.post('/', async (request, reply) => {
     let userId = null
-    if (request.user) {
-      const user = await fastify.data.identity.getUserWithPublicId(
-        request.userKey
-      )
+
+    // FIXME: use all the new tricks
+    const { userContext } = request
+    if (userContext) {
+      const user = await fastify.data.identity.getUser(userContext.who)
       if (user) {
         userId = user.id
       } else {

@@ -2,7 +2,7 @@ const { generateRandomKey } = require('./util')
 
 const articleTableName = 'articles'
 const fullArticleInfoColumns = [
-  'articles.public_id as articleKey',
+  'articles.public_id as publicKey',
   'articles.headline',
   'articles.byline',
   'articles.cover_art_url as coverArtUrl',
@@ -17,7 +17,7 @@ const fullArticleInfoColumns = [
 ]
 const articleInfoColumns = [
   'id',
-  'public_id as articleKey',
+  'public_id as publicKey',
   'author_id',
   'headline',
   'byline',
@@ -30,7 +30,7 @@ const articleInfoColumns = [
   'requested_to_publish_at as requestedToPublishAt',
 ]
 const articleFullColumns = [
-  'public_id as articleKey',
+  'public_id as publicKey',
   'headline',
   'byline',
   'cover_art_url as coverArtUrl',
@@ -42,7 +42,7 @@ const articleFullColumns = [
   'archived_at as archivedAt',
   'requested_to_publish_at as requestedToPublishAt',
 ]
-const articleContentColumns = ['public_id as articleKey', 'content']
+const articleContentColumns = ['public_id as publicKey', 'content']
 
 module.exports = (fastify) => {
   const { knex, log } = fastify
@@ -53,25 +53,27 @@ module.exports = (fastify) => {
    * @param {string} headline - main title of the article
    * @param {number} authorUserId - system id of article's author
    * @param {string} byline - text description of the author, a.k.a. pen name
+   * @param {string} synopsis - brief description of what the article is about
    * @returns ArticleInfo everything about the article except the content
    */
-  const createArticle = async (headline, authorUserId, byline) => {
+  const createArticle = async (headline, authorUserId, byline, synopsis) => {
     log.debug('articleModel.createArticle')
-    const articleKey = generateRandomKey()
-    const row = {
-      public_id: articleKey,
-      headline,
-      author_id: authorUserId,
-      byline,
-    }
     try {
+      const articleKey = generateRandomKey()
+      const row = {
+        public_id: articleKey,
+        headline,
+        author_id: authorUserId,
+        byline,
+        synopsis,
+      }
       const result = await knex(articleTableName).insert(
         row,
         articleInfoColumns
       )
-      return result.length > 0 ? result[0] : null
+      return result[0]
     } catch (err) {
-      fastify.log.error(err)
+      log.error(err)
       return null
     }
   }
@@ -143,9 +145,25 @@ module.exports = (fastify) => {
    * @returns Article full article for readers
    */
   const getPublishedArticle = async (articleKey) => {
+    // FIXME: different subset for published "all" - don't want to show some fields
     log.debug('articleModel.getPublishedArticle')
     const myArticle = await knex(articleTableName)
       .select(articleFullColumns)
+      .where({ public_id: articleKey })
+      .whereNotNull('articles.published_at')
+    return myArticle.length > 0 ? myArticle[0] : null
+  }
+
+  /**
+   * Get metadata for articles owned by the user, presumed to be an author.
+   *
+   * @param {number} articleKey - system ID of the presumed author with articles
+   * @returns Article full article for readers
+   */
+  const getPublishedContent = async (articleKey) => {
+    log.debug('articleModel.getPublishedArticle')
+    const myArticle = await knex(articleTableName)
+      .select(articleContentColumns)
       .where({ public_id: articleKey })
       .whereNotNull('articles.published_at')
     return myArticle.length > 0 ? myArticle[0] : null
@@ -314,6 +332,7 @@ module.exports = (fastify) => {
     getMyArticles,
     getArticlesInfoOnly,
     getPublishedArticleCovers,
+    getPublishedContent,
     getPublishedArticle,
     getArticleContent,
     getArticleContentForEditor,

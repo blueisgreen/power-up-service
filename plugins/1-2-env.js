@@ -1,6 +1,5 @@
-"use strict";
-
-const fp = require("fastify-plugin");
+const fp = require('fastify-plugin')
+const env = require('@fastify/env')
 
 const options = {
   dotenv: true,
@@ -30,6 +29,6 @@ const options = {
  * @see https://github.com/fastify/fastify-env
  */
 module.exports = fp(async function (fastify, opts) {
-  fastify.log.info("loading @fastify/env");
-  fastify.register(require("@fastify/env"), options);
-});
+  fastify.log.debug('loading @fastify/env')
+  fastify.register(env, options)
+})

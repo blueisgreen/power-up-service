@@ -1,4 +1,9 @@
-'use strict'
+const {
+  articleCover,
+  articleContent,
+  articleAllPublic,
+  publicKeyParam,
+} = require('./schema')
 
 /**
  * For read-only access to library of articles by any user. Also
@@ -11,33 +16,84 @@
 module.exports = async function (fastify, opts) {
   const { log } = fastify
 
-  const genericErrorMsg = {
-    error: 'Bad news, kiddies. Something went wrong with the database.',
-  }
-  
-  fastify.get('/', async (req, reply) => {
-    log.debug('get articles.published')
-    try {
-      const articles = await fastify.data.article.getPublishedArticleCovers()
-      reply.send(articles)
-    } catch (error) {
-      log.error(error)
-      reply.code(500).send(genericErrorMsg)
-    }
+  fastify.route({
+    method: 'GET',
+    url: '/',
+    schema: {
+      tags: ['articles'],
+      description: 'Get cover information for published articles.',
+      response: {
+        200: {
+          type: 'array',
+          items: articleCover,
+        },
+      },
+    },
+    handler: async (request, reply) => {
+      try {
+        return await fastify.data.article.getPublishedArticleCovers()
+      } catch (err) {
+        log.error(err)
+        return fastify.httpErrors.internalServerError()
+      }
+    },
   })
 
-  fastify.get('/:key', async (req, reply) => {
-    try {
-      const articleKey = req.params.key
-      const article = await fastify.data.article.getPublishedArticle(articleKey)
-      if (article) {
-        reply.send(article)
-      } else {
-        reply.code(404).send()
+  fastify.route({
+    method: 'GET',
+    url: '/:publicKey',
+    schema: {
+      tags: ['articles'],
+      description: 'Get content of published article.',
+      params: publicKeyParam,
+      response: {
+        200: articleContent,
+      },
+    },
+    handler: async (request, reply) => {
+      const { publicKey } = request.params
+      try {
+        const article = await fastify.data.article.getPublishedContent(
+          publicKey
+        )
+        if (article) {
+          return article
+        } else {
+          return fastify.httpErrors.notFound()
+        }
+      } catch (err) {
+        log.error(err)
+        return fastify.httpErrors.internalServerError()
       }
-    } catch (err) {
-      log.error(err)
-      reply.code(500).send(genericErrorMsg)
-    }
+    },
+  })
+
+  fastify.route({
+    method: 'GET',
+    url: '/:publicKey/full',
+    schema: {
+      tags: ['articles'],
+      description: 'Get everything about published article.',
+      params: publicKeyParam,
+      response: {
+        200: articleAllPublic,
+      },
+    },
+    handler: async (request, reply) => {
+      const { publicKey } = request.params
+      try {
+        const article = await fastify.data.article.getPublishedArticle(
+          publicKey
+        )
+        if (article) {
+          return article
+        } else {
+          return fastify.httpErrors.notFound()
+        }
+      } catch (err) {
+        log.error(err)
+        return fastify.httpErrors.internalServerError()
+      }
+    },
   })
 }
