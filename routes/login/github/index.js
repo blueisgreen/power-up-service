@@ -7,14 +7,17 @@ module.exports = async function (fastify, opts) {
   fastify.get('/callback', async function (request, reply) {
     const authToken =
       await this.githubOAuth2.getAccessTokenFromAuthorizationCodeFlow(request)
-    log.debug(authToken.access_token)
+    log.debug('access token is: ' + authToken.access_token)
+    log.debug(authToken)
+    log.debug(JSON.stringify(authToken.token))
+    log.debug(Object.keys(authToken.token))
 
     // try to get user info from GitHub
     const userInfo = await fastify.axios.request({
       url: 'https://api.github.com/user',
       method: 'get',
       headers: {
-        Authorization: `token ${authToken.access_token}`,
+        Authorization: `token ${authToken.token.access_token}`,
       },
     })
     log.debug(JSON.stringify(userInfo.data))
@@ -46,7 +49,7 @@ module.exports = async function (fastify, opts) {
       'login',
       request.tracker,
       user.userKey,
-      browserContext,
+      browserContext
     )
 
     // refresh token
