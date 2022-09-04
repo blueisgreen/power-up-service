@@ -43,6 +43,7 @@ module.exports = async function (fastify, opts) {
       goTo = 'register'
     }
 
+    log.debug(JSON.stringify(user))
     // record login activity - capture user browser context
     const browserContext = `${request.headers['user-agent']} | ${request.headers['referer']}`
     fastify.data.action.capture(

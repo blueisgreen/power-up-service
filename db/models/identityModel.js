@@ -12,6 +12,18 @@ const userColumns = [
   'email_comms_accepted_at as emailCommsAcceptedAt',
   'system_codes.code as statusKey',
 ]
+const userOnlyColumns = [
+  'id',
+  'public_id as userKey',
+  'alias',
+  'email',
+  'avatar_url as avatarUrl',
+  'created_at as createdAt',
+  'updated_at as updatedAt',
+  'terms_accepted_at as termsAcceptedAt',
+  'cookies_accepted_at as cookiesAcceptedAt',
+  'email_comms_accepted_at as emailCommsAcceptedAt',
+]
 const userContextColumns = [
   'users.id',
   'public_id as userKey',
@@ -27,10 +39,12 @@ module.exports = (fastify) => {
   const { knex, log } = fastify
 
   const __getUserRecord = async (userId) => {
+    log.debug('__getUserRecord with ID ' + userId)
     const userRecord = await knex(userTableName)
-      .select(userColumns)
+      .select(userOnlyColumns)
       .where('users.id', '=', userId)
-      .join('system_codes', { 'users.account_status_id': 'system_codes.id' })
+    // .join('system_codes', { 'users.account_status_id': 'system_codes.id' })
+    log.debug('user: ' + userRecord[0])
     return userRecord.length > 0 ? userRecord[0] : null
   }
 
@@ -64,7 +78,9 @@ module.exports = (fastify) => {
       .join('authors', { 'users.id': 'authors.user_id' })
       .where('public_id', '=', userKey)
 
+    log.debug('context: ' + JSON.stringify(result[0]))
     const userContext = Object.assign({}, result[0])
+    log.debug('userContext: ' + userContext)
 
     const roles = await getUserRoles(userContext.id)
     userContext['hasRole'] = {}
@@ -185,22 +201,21 @@ module.exports = (fastify) => {
     accessTokenExpiresIn = 0
   ) => {
     log.debug('identityModel.registerUser')
-
     const platformId = fastify.lookups.codeLookup('socialPlatform', platform).id
-    const userRecord = await knex(userTableName)
-      .returning(userColumns)
+    const result = await knex(userTableName)
+      .returning(userOnlyColumns)
       .insert({
         public_id: userPublicId,
         alias: socialProfile.name,
         email: socialProfile.email,
         avatar_url: socialProfile.avatar_url || socialProfile.picture,
       })
-
+    const user = result[0]
     log.debug('user record ==V')
-    log.debug(JSON.stringify(userRecord[0]))
-    const id = userRecord[0].id
+    log.debug(JSON.stringify(user))
+
     await knex('social_profiles').insert({
-      user_id: id,
+      user_id: user.id,
       social_id: socialProfile.id || socialProfile.sub,
       social_platform_id: platformId,
       access_token: accessToken,
@@ -208,7 +223,7 @@ module.exports = (fastify) => {
       access_token_exp: accessTokenExpiresIn,
     })
 
-    return __getUserRecord(id)
+    return user
   }
 
   /**
@@ -255,6 +270,8 @@ module.exports = (fastify) => {
     const result = await knex(userTableName)
       .where('public_id', '=', userKey)
       .update(changes, ['id'])
+
+    log.debug(JSON.stringify(result[0]))
     const userId = result[0].id
 
     if (newMember) {
