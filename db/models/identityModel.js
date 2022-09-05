@@ -44,7 +44,7 @@ module.exports = (fastify) => {
       .select(userOnlyColumns)
       .where('users.id', '=', userId)
     // .join('system_codes', { 'users.account_status_id': 'system_codes.id' })
-    log.debug('user: ' + userRecord[0])
+    log.debug('user: ' + JSON.stringify(userRecord[0]))
     return userRecord.length > 0 ? userRecord[0] : null
   }
 
@@ -211,9 +211,6 @@ module.exports = (fastify) => {
         avatar_url: socialProfile.avatar_url || socialProfile.picture,
       })
     const user = result[0]
-    log.debug('user record ==V')
-    log.debug(JSON.stringify(user))
-
     await knex('social_profiles').insert({
       user_id: user.id,
       social_id: socialProfile.id || socialProfile.sub,
@@ -222,7 +219,6 @@ module.exports = (fastify) => {
       social_user_info: socialProfile,
       access_token_exp: accessTokenExpiresIn,
     })
-
     return user
   }
 
@@ -326,7 +322,7 @@ module.exports = (fastify) => {
       membership.cookies_accepted_at = now
     }
     const result = await knex(userTableName)
-      .returning(userColumns)
+      .returning(userOnlyColumns)
       .where('public_id', '=', userKey)
       .update(membership)
     const userInfo = result[0]
