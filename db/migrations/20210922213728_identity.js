@@ -13,18 +13,14 @@ exports.up = function (knex) {
           .uuid('public_id')
           .defaultTo(knex.raw('uuid_generate_v4()'))
           .unique()
-        table.string('alias', 42)
+        table.string('alias', 64).unique()
         table.string('email', 254)
         table.text('avatar_url')
+        table.string('account_status')
         table.timestamps(true, true)
         table.timestamp('terms_accepted_at')
         table.timestamp('cookies_accepted_at')
         table.timestamp('email_comms_accepted_at')
-        table.integer('account_status_id')
-        table
-          .foreign('account_status_id')
-          .references('id')
-          .inTable(SYSTEM_CODES)
       })
       .createTable(SOCIAL_PROFILES, (table) => {
         table.integer('user_id')
@@ -51,7 +47,7 @@ exports.up = function (knex) {
       })
       .createTable(USER_SESSIONS, (table) => {
         table.uuid('user_public_id')
-        table.text('auth_token')  // created and managed by app
+        table.text('auth_token') // created and managed by app
         table.timestamps(true, true)
         table.primary('user_public_id')
         table.foreign('user_public_id').references('public_id').inTable(USERS)
@@ -61,8 +57,8 @@ exports.up = function (knex) {
 
 exports.down = function (knex) {
   return knex.schema
+    .dropTableIfExists(USER_SESSIONS)
     .dropTableIfExists(USER_ROLES)
     .dropTableIfExists(SOCIAL_PROFILES)
-    .dropTableIfExists(USER_SESSIONS)
     .dropTableIfExists(USERS)
 }

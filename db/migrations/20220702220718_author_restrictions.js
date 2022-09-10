@@ -1,21 +1,14 @@
 const AUTHORS = 'authors'
 const SYSTEM_CODES = 'system_codes'
-const ARTICLES = 'articles'
 const USERS = 'users'
 
 exports.up = function (knex) {
   return knex.schema
     .createTable(AUTHORS, function (table) {
-      table.increments()
       table.integer('user_id').references('id').inTable(USERS)
       table.string('pen_name').notNullable()
-      table.string('status')
+      table.string('author_status')
       table.timestamps(true, true)
-    })
-    .then(() => {
-      return knex.schema.alterTable(ARTICLES, function (table) {
-        table.timestamp('requested_to_publish_at')
-      })
     })
     .then(() => {
       return knex(SYSTEM_CODES)
@@ -28,17 +21,17 @@ exports.up = function (knex) {
           return knex(SYSTEM_CODES).insert([
             {
               code: 'untrusted',
-              display_name: 'Not trusted',
+              display_name: 'Requires approval to publish',
               parent_id: categoryId,
             },
             {
               code: 'trusted',
-              display_name: 'Trusted',
+              display_name: 'Trusted to self-publish',
               parent_id: categoryId,
             },
             {
               code: 'blocked',
-              display_name: 'Blocked',
+              display_name: 'Blocked from publishing',
               parent_id: categoryId,
             },
           ])
@@ -54,9 +47,6 @@ exports.down = function (knex) {
 
   return knex.schema
     .dropTableIfExists(AUTHORS)
-    .alterTable(ARTICLES, function (table) {
-      table.dropColumn('requested_to_publish_at')
-    })
     .then(() => {
       return knex(SYSTEM_CODES).where({ code: 'authorStatus' }).del()
     })
