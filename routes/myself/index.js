@@ -1,8 +1,9 @@
 const {
-  selfProfileSchema,
-  selfContextSchema,
-  selfProfileUpdateSchema,
-  agreementsSchema,
+  profileSchema,
+  contextSchema,
+  profileUpdateSchema,
+  settingsSchema,
+  authorUpdateSchema,
   inquirySchema,
 } = require('./schema')
 
@@ -20,26 +21,9 @@ module.exports = async function (fastify, opts) {
     url: '/',
     schema: {
       tags: ['active-user'],
-      description: "Get user's account information",
+      description: 'Get key reference information about the user',
       response: {
-        200: selfProfileSchema,
-      },
-    },
-    preHandler: [fastify.preValidation],
-    handler: async (request, reply) => {
-      const { who } = request.userContext
-      return await fastify.data.identity.getUser(who)
-    },
-  })
-
-  fastify.route({
-    method: 'GET',
-    url: '/context',
-    schema: {
-      tags: ['active-user'],
-      description: 'Get frequently used information about the user',
-      response: {
-        200: selfContextSchema,
+        200: contextSchema,
       },
     },
     preHandler: [fastify.preValidation],
@@ -50,47 +34,78 @@ module.exports = async function (fastify, opts) {
   })
 
   fastify.route({
-    method: 'PUT',
-    url: '/',
+    method: 'POST',
+    url: '/join',
     schema: {
       tags: ['active-user'],
-      description: "Update user's account information",
-      body: selfProfileUpdateSchema,
+      description: 'User request for membership',
+      body: profileUpdateSchema,
       response: {
-        200: selfProfileSchema,
+        200: contextSchema,
       },
     },
     preHandler: [fastify.preValidation],
     handler: async (request, reply) => {
       const { who } = request.userContext
-      const { alias, acceptTerms, acceptCookies, acceptEmailComms } =
-        request.body
-      return await fastify.data.identity.updateUser(
-        who,
-        alias,
-        acceptTerms,
-        acceptCookies,
-        acceptEmailComms
-      )
+      const { alias } = request.body
+      await fastify.data.identity.updateUser(who, alias, 'active')
+      await fastify.data.identity.agreeToTerms(who)
+      await fastify.data.identity.agreeToCookies(who)
+      return await fastify.data.identity.getUserContext(who)
+    },
+  })
+
+  fastify.route({
+    method: 'GET',
+    url: '/profile',
+    schema: {
+      tags: ['active-user'],
+      description: 'Get user account information',
+      response: {
+        200: profileSchema,
+      },
+    },
+    preHandler: [fastify.preValidation],
+    handler: async (request, reply) => {
+      const { who } = request.userContext
+
+      // TODO add author from context
+
+      return await fastify.data.identity.getUser(who)
     },
   })
 
   fastify.route({
     method: 'PUT',
-    url: '/accept',
+    url: '/profile',
     schema: {
       tags: ['active-user'],
-      description: "Update user's account information",
-      body: agreementsSchema,
+      description: 'Update user account information',
+      body: profileUpdateSchema,
+      response: {
+        200: profileSchema,
+      },
     },
     preHandler: [fastify.preValidation],
     handler: async (request, reply) => {
       const { who } = request.userContext
-      const { acceptTerms, acceptCookies, acceptEmailComms } = request.body
+      const { alias } = request.body
+      return await fastify.data.identity.updateUser(who, alias)
+    },
+  })
 
-      if (acceptTerms) {
-        await fastify.data.identity.agreeToTerms(who)
-      }
+  fastify.route({
+    method: 'PUT',
+    url: '/settings',
+    schema: {
+      tags: ['active-user'],
+      description: 'Update agreements and app preferences',
+      body: settingsSchema,
+    },
+    preHandler: [fastify.preValidation],
+    handler: async (request, reply) => {
+      const { who } = request.userContext
+      const { acceptCookies, acceptEmailComms } = request.body
       if (acceptCookies) {
         await fastify.data.identity.agreeToCookies(who)
       }
@@ -102,32 +117,34 @@ module.exports = async function (fastify, opts) {
   })
 
   fastify.route({
-    method: 'GET',
-    url: '/roles',
+    method: 'POST',
+    url: '/apply/author',
     schema: {
-      tags: ['inquiries'],
-      description: "See all of the user's inquiries",
+      tags: ['active-user'],
+      description: 'Apply to become an author',
+      body: authorUpdateSchema,
       response: {
-        200: {
-          type: 'array',
-          items: { type: 'string' },
-        },
+        200: contextSchema,
       },
     },
     preHandler: [fastify.preValidation],
     handler: async (request, reply) => {
-      return await fastify.data.identity.getUserRolesWithPublicId(
-        request.userContext.who
-      )
+      const { who, userId } = request.userContext
+      const { penName } = request.body
+      await fastify.data.identity.createAuthor(who, penName)
+      await grantRoles(userId, ['author'])
+      return await fastify.data.identity.getUserContext(who)
     },
   })
 
+  // TODO: port get author
+  
   fastify.route({
     method: 'GET',
     url: '/inquiries',
     schema: {
       tags: ['inquiries'],
-      description: "See all of the user's inquiries",
+      description: 'See all inquiries related to this user',
       response: {
         200: {
           type: 'array',
@@ -137,9 +154,8 @@ module.exports = async function (fastify, opts) {
     },
     preHandler: [fastify.preValidation],
     handler: async (request, reply) => {
-      return await fastify.data.support.getInquiriesByUser(
-        request.userContext.who
-      )
+      const { who } = request.userContext
+      return await fastify.data.support.getInquiriesByUser(who)
     },
   })
 
@@ -148,7 +164,7 @@ module.exports = async function (fastify, opts) {
     url: '/inquiries/related/:id',
     schema: {
       tags: ['inquiries'],
-      description: 'See related messages',
+      description: 'See message thread',
       response: {
         200: inquirySchema,
       },

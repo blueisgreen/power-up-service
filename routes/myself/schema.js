@@ -1,4 +1,4 @@
-const selfProfileSchema = {
+const profileSchema = {
   type: 'object',
   properties: {
     userKey: {
@@ -48,10 +48,19 @@ const selfProfileSchema = {
       format: 'date-time',
       description: 'When user agreed to receive email from Power Up Magazine.',
     },
+    author: {
+      type: 'object',
+      properties: {
+        penName: {
+          type: 'string',
+          description: 'Name used for attribution on published works.',
+        },
+      },
+    },
   },
 }
 
-const selfContextSchema = {
+const contextSchema = {
   type: 'object',
   properties: {
     userKey: {
@@ -62,7 +71,7 @@ const selfContextSchema = {
       type: 'string',
       description: 'How user wants to be known.',
     },
-    statusKey: {
+    accountStatus: {
       type: 'string',
       description: 'Status of the user account.',
     },
@@ -90,13 +99,9 @@ const selfContextSchema = {
   },
 }
 
-const agreementsSchema = {
+const settingsSchema = {
   type: 'object',
   properties: {
-    acceptTerms: {
-      type: 'boolean',
-      description: 'Indicates when user agrees to our terms of use.',
-    },
     acceptCookies: {
       type: 'boolean',
       description: 'Indicates when user agrees to our use of cookies.',
@@ -108,14 +113,23 @@ const agreementsSchema = {
   },
 }
 
-const selfProfileUpdateSchema = {
+const profileUpdateSchema = {
   type: 'object',
   properties: {
     alias: {
       type: 'string',
       description: 'Public identity within Power Up.',
     },
-    ...agreementsSchema.properties,
+  },
+}
+
+const authorUpdateSchema = {
+  type: 'object',
+  properties: {
+    penName: {
+      type: 'string',
+      description: 'Name to use on published writing.',
+    },
   },
 }
 
@@ -130,21 +144,11 @@ const inquirySchema = {
   },
 }
 
-const roleSchema = {
-  type: 'object',
-  parameters: {
-    id: { type: 'integer' },
-    createdAt: { type: 'string', format: 'date-time' },
-    articleId: { type: 'string' },
-    purpose: { type: 'string' },
-    message: { type: 'string' },
-  },
-}
-
 module.exports = {
-  selfProfileSchema,
-  selfContextSchema,
-  selfProfileUpdateSchema,
-  agreementsSchema,
+  profileSchema,
+  contextSchema,
+  profileUpdateSchema,
+  settingsSchema,
+  authorUpdateSchema,
   inquirySchema,
 }

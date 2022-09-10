@@ -28,7 +28,7 @@ const userContextColumns = [
   'users.id',
   'public_id as userKey',
   'alias',
-  'system_codes.code as statusKey',
+  'system_codes.code as accountStatus',
   'pen_name as penName',
   'authors.status as authorStatus',
 ]
@@ -201,6 +201,9 @@ module.exports = (fastify) => {
     accessTokenExpiresIn = 0
   ) => {
     log.debug('identityModel.registerUser')
+
+    // TODO: use transaction - all or nothing
+    
     const platformId = fastify.lookups.codeLookup('socialPlatform', platform).id
     const result = await knex(userTableName)
       .returning(userOnlyColumns)
@@ -232,36 +235,13 @@ module.exports = (fastify) => {
    * @param {boolean} acceptEmailComms pass to indicate user accepting the receipt (or not) of email communications
    * @returns UserInfo
    */
-  const updateUser = async (
-    userKey,
-    alias,
-    acceptTerms,
-    acceptCookies,
-    acceptEmailComms
-  ) => {
+  const updateUser = async (userKey, alias, accountStatus) => {
     log.debug('identityModel.updateUser')
-    let newMember = false
     const now = new Date()
-    const beforeUpdate = await getUser(userKey)
     const changes = {
       alias,
+      account_status: accountStatus,
       updated_at: now,
-    }
-    if (acceptTerms && !beforeUpdate.termsAcceptedAt) {
-      changes.terms_accepted_at = now
-      newMember = true
-    }
-    if (acceptCookies && !beforeUpdate.cookiesAcceptedAt) {
-      changes.cookies_accepted_at = now
-    }
-    if (acceptCookies === false && beforeUpdate.cookiesAcceptedAt) {
-      changes.cookies_accepted_at = null
-    }
-    if (acceptEmailComms && !beforeUpdate.emailCommsAcceptedAt) {
-      changes.email_comms_accepted_at = now
-    }
-    if (acceptEmailComms === false && beforeUpdate.emailCommsAcceptedAt) {
-      changes.email_comms_accepted_at = null
     }
     const result = await knex(userTableName)
       .where('public_id', '=', userKey)
@@ -269,10 +249,6 @@ module.exports = (fastify) => {
 
     log.debug(JSON.stringify(result[0]))
     const userId = result[0].id
-
-    if (newMember) {
-      await grantRoles(userId, ['member'])
-    }
     return await __getUserRecord(userId)
   }
 
@@ -283,6 +259,8 @@ module.exports = (fastify) => {
       terms_accepted_at: now,
       updated_at: now,
     })
+    // TODO: verify that role only added once despite multiple calls
+    await grantRoles(userId, ['member'])
     return true
   }
 
@@ -306,49 +284,6 @@ module.exports = (fastify) => {
     return true
   }
 
-  const becomeMember = async (userKey, alias, okToTerms, okToCookies) => {
-    log.debug(`identityModel.becomeMember ${userKey}, ${alias}`)
-    const active = fastify.lookups.codeLookup('accountStatus', 'active')
-    const now = new Date()
-    const membership = {
-      alias,
-      updated_at: now,
-      account_status_id: active.id,
-    }
-    if (okToTerms) {
-      membership.terms_accepted_at = now
-    }
-    if (okToCookies) {
-      membership.cookies_accepted_at = now
-    }
-    const result = await knex(userTableName)
-      .returning(userOnlyColumns)
-      .where('public_id', '=', userKey)
-      .update(membership)
-    const userInfo = result[0]
-    if (okToTerms) {
-      await grantRoles(userInfo.id, ['member'])
-      const roles = getUserRoles(userInfo.id)
-      userInfo.roles = roles
-    }
-    return userInfo
-  }
-
-  const becomeAuthor = async (userKey) => {
-    log.debug('identityModel.becomeAuthor')
-    const userInfo = await getUser(userKey)
-
-    const authorRecord = await fastify.data.author.createAuthor(
-      userInfo.id,
-      userInfo.penName
-    )
-    await grantRoles(userInfo.id, ['author'])
-    const roles = await getUserRoles(userInfo.id)
-    userInfo.author = authorRecord
-    userInfo.roles = roles
-    return userInfo
-  }
-
   return {
     getUser,
     getUserContext,
@@ -364,7 +299,5 @@ module.exports = (fastify) => {
     agreeToTerms,
     agreeToCookies,
     agreeToEmailComms,
-    becomeMember,
-    becomeAuthor,
   }
 }
