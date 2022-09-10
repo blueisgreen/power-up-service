@@ -3,6 +3,7 @@ const {
   contextSchema,
   profileUpdateSchema,
   settingsSchema,
+  authorSchema,
   authorUpdateSchema,
   inquirySchema,
 } = require('./schema')

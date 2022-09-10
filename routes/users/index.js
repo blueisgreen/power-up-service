@@ -14,7 +14,10 @@ module.exports = async function (fastify, opts) {
       tags: ['users'],
       description: "Get user's own information",
       response: {
-        200: userSchema,
+        200: {
+          type: 'array',
+          items: userSchema,
+        },
       },
     },
     preHandler: [fastify.preValidation],
