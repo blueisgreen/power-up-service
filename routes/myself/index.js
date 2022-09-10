@@ -68,9 +68,6 @@ module.exports = async function (fastify, opts) {
     preHandler: [fastify.preValidation],
     handler: async (request, reply) => {
       const { who } = request.userContext
-
-      // TODO add author from context
-
       return await fastify.data.identity.getUser(who)
     },
   })
@@ -137,8 +134,23 @@ module.exports = async function (fastify, opts) {
     },
   })
 
-  // TODO: port get author
-  
+  fastify.route({
+    method: 'GET',
+    url: '/profile/author',
+    schema: {
+      tags: ['active-user'],
+      description: 'Get attributes of author profile',
+      response: {
+        200: authorSchema,
+      },
+    },
+    preHandler: [fastify.guard.role('author')],
+    handler: async (request, reply) => {
+      const { who } = request.userContext
+      return await fastify.data.author.getInfo(who)
+    },
+  })
+
   fastify.route({
     method: 'GET',
     url: '/inquiries',

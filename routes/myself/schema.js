@@ -48,15 +48,6 @@ const profileSchema = {
       format: 'date-time',
       description: 'When user agreed to receive email from Power Up Magazine.',
     },
-    author: {
-      type: 'object',
-      properties: {
-        penName: {
-          type: 'string',
-          description: 'Name used for attribution on published works.',
-        },
-      },
-    },
   },
 }
 
@@ -72,14 +63,6 @@ const contextSchema = {
       description: 'How user wants to be known.',
     },
     accountStatus: {
-      type: 'string',
-      description: 'Status of the user account.',
-    },
-    penName: {
-      type: 'string',
-      description: 'Name to use for articles.',
-    },
-    authorStatus: {
       type: 'string',
       description: 'Status of the user account.',
     },
@@ -123,6 +106,30 @@ const profileUpdateSchema = {
   },
 }
 
+const authorSchema = {
+  type: 'object',
+  properties: {
+    penName: {
+      type: 'string',
+      description: 'Name to use on published writing.',
+    },
+    status: {
+      type: 'string',
+      description: 'Publishing status of author',
+    },
+    createdAt: {
+      type: 'string',
+      format: 'date-time',
+      description: 'When user become an author.',
+    },
+    updatedAt: {
+      type: 'string',
+      format: 'date-time',
+      description: 'Time of latest change.',
+    },
+  },
+}
+
 const authorUpdateSchema = {
   type: 'object',
   properties: {
@@ -149,6 +156,7 @@ module.exports = {
   contextSchema,
   profileUpdateSchema,
   settingsSchema,
+  authorSchema,
   authorUpdateSchema,
   inquirySchema,
 }
