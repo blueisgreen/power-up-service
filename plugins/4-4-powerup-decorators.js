@@ -3,7 +3,7 @@ const fp = require('fastify-plugin')
 module.exports = fp(
   async function (fastify, options, next) {
     const { log } = fastify
-    log.debug('loading function to establish user context')
+    log.debug('loading powerup decorators')
     fastify.decorateRequest('anonymous', true)
     fastify.decorateRequest('userContext', null)
 
