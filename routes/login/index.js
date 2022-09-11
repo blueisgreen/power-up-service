@@ -13,6 +13,7 @@ module.exports = async function (fastify, opts) {
       response: {},
     },
     handler: async (request, reply) => {
+      const { pid } = request.query
       if (request.anonymous) {
         // user needs to be authenticated
         reply.redirect(`/login/${pid}`)

@@ -16,17 +16,17 @@ async function powerupAuthPlugin(fastify, options, next) {
       },
     })
   }
-  fastify.decorate('forgeToken', forgeToken, ['jwt'])
+  // fastify.decorate('forgeToken', forgeToken, ['jwt'])
 
   const handleLoginReply = async (reply, userKey, alias, roles, goTo) => {
-    const token = fastify.forgeToken(userKey, alias, roles)
+    const token = fastify.auth.forgeToken(userKey, alias, roles)
     await fastify.data.identity.setSessionToken(user.userKey, token)
     reply.setCookie('token', token, fastify.secretCookieOptions)
     reply.redirect(`${process.env.SPA_LANDING_URL}?goTo=${goTo}&token=${token}`)
   }
-  fastify.decorate('handleLoginReply', handleLoginReply, [
-    'forgeToken',
-  ])
+  // fastify.decorate('handleLoginReply', handleLoginReply, [
+  //   'forgeToken',
+  // ])
 
   /**
    * Common logic to complete login using identity provider
@@ -61,9 +61,12 @@ async function powerupAuthPlugin(fastify, options, next) {
     log.debug(JSON.stringify(user))
 
     // refresh token
-    await fastify.handleLoginReply(reply, userKey, user.alias, roles, goTo)
+    await fastify.auth.handleLoginReply(reply, userKey, user.alias, roles, goTo)
   }
-  fastify.decorate('finishLogin', finishLogin, ['handleLoginReply'])
+  // const auth = {
+  //   finishLogin
+  // }
+  // fastify.decorate('auth.finishLogin', finishLogin, ['handleLoginReply'])
 
   /**
    * For verifying user is not anonymous
@@ -79,8 +82,12 @@ async function powerupAuthPlugin(fastify, options, next) {
   fastify.decorate('preValidation', preValidation)
 
   fastify.decorate('auth', {
+    forgeToken,
+    handleLoginReply,
+    finishLogin,
     preValidation,
   })
+
   next()
 }
 
