@@ -33,8 +33,6 @@ const userContextColumns = [
   'authors.status as authorStatus',
 ]
 
-// TODO: validation: verify that userPublicId parameter is uuid or wrap query in try-catch and handle
-
 module.exports = (fastify) => {
   const { knex, log } = fastify
 
@@ -83,15 +81,16 @@ module.exports = (fastify) => {
     log.debug('userContext: ' + userContext)
 
     const roles = await getUserRoles(userContext.id)
+    userContext.roles = roles
     userContext['hasRole'] = {}
     roles.map((role) => (userContext.hasRole[role] = true))
 
     return userContext
   }
 
-  const findUserOnPlatform = async (userKey, platform) => {
+  const isUserOnPlatform = async (userKey, platform) => {
     log.debug(
-      `identityModel.findUserOnPlatform using userKey ${userKey} on platform ${platform}`
+      `identityModel.isUserOnPlatform using userKey ${userKey} on platform ${platform}`
     )
     const platformCode = fastify.lookups.codeLookup('socialPlatform', platform)
     if (!userKey || !platformCode) {
@@ -107,14 +106,7 @@ module.exports = (fastify) => {
       .where('users.public_id', '=', userKey)
       .andWhere('social_profiles.social_platform_id', '=', platformId)
 
-    if (profileRecord.length < 1) {
-      log.info(
-        `user not found with public ID '${userKey}' on platform '${platform}'`
-      )
-      return null
-    }
-
-    return __getUserRecord(profileRecord[0].userId)
+    return profileRecord.length > 0
   }
 
   const findUserFromSocialProfile = async (platform, profileId) => {
@@ -194,34 +186,40 @@ module.exports = (fastify) => {
   }
 
   const registerUser = async (
-    platform,
+    pid,
     accessToken,
     socialProfile,
-    userPublicId,
+    userKey,
     accessTokenExpiresIn = 0
   ) => {
     log.debug('identityModel.registerUser')
+    try {
+      const platform = fastify.lookups.codeLookup('socialPlatform', pid)
+      await knex.transaction(async (trx) => {
+        const userResult = await knex(userTableName)
+          .returning(userOnlyColumns)
+          .insert({
+            public_id: userKey,
+            alias: socialProfile.name,
+            email: socialProfile.email,
+            avatar_url: socialProfile.avatar_url || socialProfile.picture,
+          })
+          .transacting(trx)
 
-    // TODO: use transaction - all or nothing
-    
-    const platformId = fastify.lookups.codeLookup('socialPlatform', platform).id
-    const result = await knex(userTableName)
-      .returning(userOnlyColumns)
-      .insert({
-        public_id: userPublicId,
-        alias: socialProfile.name,
-        email: socialProfile.email,
-        avatar_url: socialProfile.avatar_url || socialProfile.picture,
+        await knex('social_profiles')
+          .insert({
+            user_id: userResult[0].id,
+            social_id: socialProfile.id || socialProfile.sub,
+            social_platform_id: platform.id,
+            access_token: accessToken,
+            social_user_info: socialProfile,
+            access_token_exp: accessTokenExpiresIn,
+          })
+          .transacting(trx)
       })
-    const user = result[0]
-    await knex('social_profiles').insert({
-      user_id: user.id,
-      social_id: socialProfile.id || socialProfile.sub,
-      social_platform_id: platformId,
-      access_token: accessToken,
-      social_user_info: socialProfile,
-      access_token_exp: accessTokenExpiresIn,
-    })
+    } catch (err) {
+      log.error(err)
+    }
     return user
   }
 
@@ -259,7 +257,6 @@ module.exports = (fastify) => {
       terms_accepted_at: now,
       updated_at: now,
     })
-    // TODO: verify that role only added once despite multiple calls
     await grantRoles(userId, ['member'])
     return true
   }
@@ -287,7 +284,7 @@ module.exports = (fastify) => {
   return {
     getUser,
     getUserContext,
-    findUserOnPlatform,
+    isUserOnPlatform,
     findUserFromSocialProfile,
     findSessionToken,
     setSessionToken,

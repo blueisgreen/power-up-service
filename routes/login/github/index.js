@@ -28,12 +28,12 @@ module.exports = async function (fastify, opts) {
 
     // user not found; set up new user
     if (!user) {
-      const publicId = uuidv4()
+      const userKey = uuidv4()
       user = await fastify.data.identity.registerUser(
         'github',
         accessToken,
         userInfo.data,
-        publicId,
+        userKey,
         authToken.expires_in
       )
       goTo = 'register'
