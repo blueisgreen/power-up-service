@@ -30,19 +30,10 @@ module.exports = async function (fastify, opts) {
         return
       }
       log.debug('we know who this is')
+      fastify.auth.handleLoginReply(reply, userKey, alias, roles, 'home')
 
       // TODO: check for expirations; refresh auth tokens
-
-      const token = fastify.jwt.sign({
-        user: {
-          who: userKey,
-          alias,
-          roles,
-        },
-      })
-      await fastify.data.identity.setSessionToken(userKey, token)
-      reply.setCookie('token', token, fastify.secretCookieOptions)
-      reply.redirect(`${process.env.SPA_LANDING_URL}?goTo=home&token=${token}`)
+      // TODO: track login - see auth plugin for related TODO
     },
   })
 }

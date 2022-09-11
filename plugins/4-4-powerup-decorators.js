@@ -3,10 +3,11 @@ const fp = require('fastify-plugin')
 module.exports = fp(
   async function (fastify, options, next) {
     const { log } = fastify
-    log.debug('loading useful decorators')
+    log.debug('loading function to establish user context')
     fastify.decorateRequest('anonymous', true)
     fastify.decorateRequest('userContext', null)
 
+    // somehow decorate and call from there; makes room in onRequest for series of calls
     fastify.addHook('onRequest', async (request, reply) => {
       try {
         await request.jwtVerify()
@@ -24,13 +25,17 @@ module.exports = fp(
       }
     })
 
-    fastify.decorate('preValidation', async (request, reply) => {
-      log.debug('require known user')
-      if (request.anonymous) {
-        reply.code(401)
-        reply.send('You must be signed in for that.')
-      }
-    })
+    // TODO: rethink tracking based on how cookies are (not) working
+    // record login activity - capture user browser context
+    // const browserContext = `${request.headers['user-agent']} | ${request.headers['referer']}`
+    // fastify.data.action.capture(
+    //   'login',
+    //   request.tracker,
+    //   user.userKey,
+    //   browserContext
+    // )
+
+    next()
   },
   {
     fastify: '4.x',

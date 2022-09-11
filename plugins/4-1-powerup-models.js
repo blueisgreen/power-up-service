@@ -9,7 +9,7 @@ const systemCodesModel = require('../db/models/systemCodesModel')
 
 module.exports = fp(
   async function (fastify, options, next) {
-    fastify.log.debug('loading data models')
+    fastify.log.debug('loading power up data models')
     const data = {
       action: actionModel(fastify),
       admin: adminModel(fastify),
@@ -18,7 +18,6 @@ module.exports = fp(
       identity: identityModel(fastify),
       support: supportModel(fastify),
       systemCodes: systemCodesModel(fastify),
-      workbench: articleModel(fastify)  // TODO: remove after conversion to article
     }
     fastify.decorate('data', data)
     next()
