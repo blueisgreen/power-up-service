@@ -21,6 +21,7 @@ module.exports = async function (fastify, opts) {
 
     return await fastify.auth.finishLogin(reply, {
       pid: 'github',
+      socialId: userInfo.data.id,
       accessToken,
       tokenExpiration: authToken.expires_in,
       socialUserInfo: userInfo.data,

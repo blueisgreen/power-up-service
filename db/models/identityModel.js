@@ -193,6 +193,7 @@ module.exports = (fastify) => {
     accessTokenExpiresIn = 0
   ) => {
     log.debug('identityModel.registerUser')
+    let user
     try {
       const platform = fastify.lookups.codeLookup('socialPlatform', pid)
       await knex.transaction(async (trx) => {
@@ -206,9 +207,10 @@ module.exports = (fastify) => {
           })
           .transacting(trx)
 
+        user = userResult[0]
         await knex('social_profiles')
           .insert({
-            user_id: userResult[0].id,
+            user_id: user.id,
             social_id: socialProfile.id || socialProfile.sub,
             social_platform_id: platform.id,
             access_token: accessToken,

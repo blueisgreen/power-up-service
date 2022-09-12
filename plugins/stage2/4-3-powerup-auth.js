@@ -1,4 +1,5 @@
 const fp = require('fastify-plugin')
+const uuidv4 = require('uuid').v4
 
 async function powerupAuthPlugin(fastify, options, next) {
   const { log } = fastify
@@ -20,7 +21,7 @@ async function powerupAuthPlugin(fastify, options, next) {
 
   const handleLoginReply = async (reply, userKey, alias, roles, goTo) => {
     const token = fastify.auth.forgeToken(userKey, alias, roles)
-    await fastify.data.identity.setSessionToken(user.userKey, token)
+    await fastify.data.identity.setSessionToken(userKey, token)
     reply.setCookie('token', token, fastify.secretCookieOptions)
     reply.redirect(`${process.env.SPA_LANDING_URL}?goTo=${goTo}&token=${token}`)
   }
@@ -32,7 +33,6 @@ async function powerupAuthPlugin(fastify, options, next) {
    * Common logic to complete login using identity provider
    */
   const finishLogin = async (reply, fromAuthProvider) => {
-    const uuidv4 = require('uuid').v4
     const { pid, socialId, accessToken, tokenExpiration, socialUserInfo } =
       fromAuthProvider
 
@@ -58,15 +58,16 @@ async function powerupAuthPlugin(fastify, options, next) {
       )
       goTo = 'register'
     }
-    log.debug(JSON.stringify(user))
 
-    // refresh token
-    await fastify.auth.handleLoginReply(reply, userKey, user.alias, roles, goTo)
+    const roles = await fastify.data.identity.getUserRoles(user.id)
+    await fastify.auth.handleLoginReply(
+      reply,
+      user.userKey,
+      user.alias,
+      roles,
+      goTo
+    )
   }
-  // const auth = {
-  //   finishLogin
-  // }
-  // fastify.decorate('auth.finishLogin', finishLogin, ['handleLoginReply'])
 
   /**
    * For verifying user is not anonymous
