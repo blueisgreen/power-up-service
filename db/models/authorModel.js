@@ -1,7 +1,7 @@
 const authorTableName = 'authors'
 const authorColumns = [
   'pen_name as penName',
-  'status',
+  'author_status as authorStatus',
   'created_at as createdAt',
   'updated_at as updatedAt',
 ]
@@ -17,7 +17,7 @@ module.exports = (fastify) => {
       .insert({
         user_id: userId,
         pen_name: penName,
-        status: status,
+        author_status: status,
       })
     return authorRecord
   }

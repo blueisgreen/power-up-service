@@ -5,19 +5,7 @@ const userColumns = [
   'alias',
   'email',
   'avatar_url as avatarUrl',
-  'created_at as createdAt',
-  'updated_at as updatedAt',
-  'terms_accepted_at as termsAcceptedAt',
-  'cookies_accepted_at as cookiesAcceptedAt',
-  'email_comms_accepted_at as emailCommsAcceptedAt',
-  'system_codes.code as statusKey',
-]
-const userOnlyColumns = [
-  'id',
-  'public_id as userKey',
-  'alias',
-  'email',
-  'avatar_url as avatarUrl',
+  'account_status as accountStatus',
   'created_at as createdAt',
   'updated_at as updatedAt',
   'terms_accepted_at as termsAcceptedAt',
@@ -28,7 +16,7 @@ const userContextColumns = [
   'users.id',
   'public_id as userKey',
   'alias',
-  'system_codes.code as accountStatus',
+  'account_status as accountStatus',
   'pen_name as penName',
   'authors.status as authorStatus',
 ]
@@ -39,9 +27,8 @@ module.exports = (fastify) => {
   const __getUserRecord = async (userId) => {
     log.debug('__getUserRecord with ID ' + userId)
     const userRecord = await knex(userTableName)
-      .select(userOnlyColumns)
+      .select(userColumns)
       .where('users.id', '=', userId)
-    // .join('system_codes', { 'users.account_status_id': 'system_codes.id' })
     log.debug('user: ' + JSON.stringify(userRecord[0]))
     return userRecord.length > 0 ? userRecord[0] : null
   }
@@ -72,7 +59,6 @@ module.exports = (fastify) => {
 
     const result = await knex(userTableName)
       .select(userContextColumns)
-      .join('system_codes', { 'users.account_status_id': 'system_codes.id' })
       .join('authors', { 'users.id': 'authors.user_id' })
       .where('public_id', '=', userKey)
 
@@ -198,7 +184,7 @@ module.exports = (fastify) => {
       const platform = fastify.lookups.codeLookup('socialPlatform', pid)
       await knex.transaction(async (trx) => {
         const userResult = await knex(userTableName)
-          .returning(userOnlyColumns)
+          .returning(userColumns)
           .insert({
             public_id: userKey,
             alias: socialProfile.name,

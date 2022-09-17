@@ -27,7 +27,7 @@ module.exports = async function (fastify, opts) {
         200: contextSchema,
       },
     },
-    preHandler: [fastify.preValidation],
+    preHandler: [fastify.auth.preValidation],
     handler: async (request, reply) => {
       const { who } = request.userContext
       return await fastify.data.identity.getUserContext(who)
@@ -45,7 +45,7 @@ module.exports = async function (fastify, opts) {
         200: contextSchema,
       },
     },
-    preHandler: [fastify.preValidation],
+    preHandler: [fastify.auth.preValidation],
     handler: async (request, reply) => {
       const { who } = request.userContext
       const { alias } = request.body
@@ -66,7 +66,7 @@ module.exports = async function (fastify, opts) {
         200: profileSchema,
       },
     },
-    preHandler: [fastify.preValidation],
+    preHandler: [fastify.auth.preValidation],
     handler: async (request, reply) => {
       const { who } = request.userContext
       return await fastify.data.identity.getUser(who)
@@ -84,7 +84,7 @@ module.exports = async function (fastify, opts) {
         200: profileSchema,
       },
     },
-    preHandler: [fastify.preValidation],
+    preHandler: [fastify.auth.preValidation],
     handler: async (request, reply) => {
       const { who } = request.userContext
       const { alias } = request.body
@@ -100,7 +100,7 @@ module.exports = async function (fastify, opts) {
       description: 'Update agreements and app preferences',
       body: settingsSchema,
     },
-    preHandler: [fastify.preValidation],
+    preHandler: [fastify.auth.preValidation],
     handler: async (request, reply) => {
       const { who } = request.userContext
       const { acceptCookies, acceptEmailComms } = request.body
@@ -125,7 +125,7 @@ module.exports = async function (fastify, opts) {
         200: contextSchema,
       },
     },
-    preHandler: [fastify.preValidation],
+    preHandler: [fastify.auth.preValidation],
     handler: async (request, reply) => {
       const { who, userId } = request.userContext
       const { penName } = request.body
@@ -165,7 +165,7 @@ module.exports = async function (fastify, opts) {
         },
       },
     },
-    preHandler: [fastify.preValidation],
+    preHandler: [fastify.auth.preValidation],
     handler: async (request, reply) => {
       const { who } = request.userContext
       return await fastify.data.support.getInquiriesByUser(who)
@@ -182,7 +182,7 @@ module.exports = async function (fastify, opts) {
         200: inquirySchema,
       },
     },
-    preHandler: [fastify.preValidation],
+    preHandler: [fastify.auth.preValidation],
     handler: async (request, reply) => {
       return await fastify.data.support.getRelatedInquiries(request.params.id)
     },
