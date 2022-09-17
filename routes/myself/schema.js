@@ -113,7 +113,7 @@ const authorSchema = {
       type: 'string',
       description: 'Name to use on published writing.',
     },
-    status: {
+    authorStatus: {
       type: 'string',
       description: 'Publishing status of author',
     },

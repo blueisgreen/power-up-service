@@ -19,6 +19,8 @@ module.exports = (fastify) => {
         pen_name: penName,
         author_status: status,
       })
+      .onConflict()
+      .ignore()
     return authorRecord
   }
 

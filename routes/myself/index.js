@@ -52,7 +52,6 @@ module.exports = async function (fastify, opts) {
       await fastify.data.identity.agreeToTerms(userKey)
       await fastify.data.identity.agreeToCookies(userKey)
       await fastify.data.identity.grantRoles(userId, ['member'])
-
       return await fastify.data.identity.getUserContext(userKey)
     },
   })
@@ -117,7 +116,7 @@ module.exports = async function (fastify, opts) {
 
   fastify.route({
     method: 'POST',
-    url: '/apply/author',
+    url: '/author',
     schema: {
       tags: ['active-user'],
       description: 'Apply to become an author',
@@ -130,8 +129,8 @@ module.exports = async function (fastify, opts) {
     handler: async (request, reply) => {
       const { userKey, userId } = request.userContext
       const { penName } = request.body
-      await fastify.data.identity.createAuthor(userKey, penName)
-      await grantRoles(userId, ['author'])
+      await fastify.data.author.createAuthor(userId, penName)
+      await fastify.data.identity.grantRoles(userId, ['author'])
       return await fastify.data.identity.getUserContext(userKey)
     },
   })
@@ -148,8 +147,8 @@ module.exports = async function (fastify, opts) {
     },
     preHandler: [fastify.guard.role('author')],
     handler: async (request, reply) => {
-      const { userKey } = request.userContext
-      return await fastify.data.author.getInfo(userKey)
+      const { userId } = request.userContext
+      return await fastify.data.author.getInfo(userId)
     },
   })
 

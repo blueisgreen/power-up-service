@@ -15,8 +15,10 @@ module.exports = fp(
         request.anonymous = false
         const { userKey } = request.user.user
         if (!userKey) {
-          reply.code(403).send('Invalid token; re-authenticate yourself, please.')
-          return;
+          reply
+            .code(403)
+            .send('Invalid token; re-authenticate yourself, please.')
+          return
         }
         request.userContext = await fastify.data.identity.getUserContext(
           userKey

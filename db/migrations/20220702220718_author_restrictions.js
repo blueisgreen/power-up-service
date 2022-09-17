@@ -5,7 +5,7 @@ const USERS = 'users'
 exports.up = function (knex) {
   return knex.schema
     .createTable(AUTHORS, function (table) {
-      table.integer('user_id').references('id').inTable(USERS)
+      table.integer('user_id').references('id').inTable(USERS).unique()
       table.string('pen_name').notNullable()
       table.string('author_status')
       table.timestamps(true, true)
