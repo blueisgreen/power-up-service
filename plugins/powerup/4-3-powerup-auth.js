@@ -11,8 +11,8 @@ async function powerupAuthPlugin(fastify, options, next) {
   const forgeToken = (userKey, alias, roles) => {
     return fastify.jwt.sign({
       user: {
-        who: userKey,
-        alias: alias,
+        userKey,
+        alias,
         roles,
       },
     })

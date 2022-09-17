@@ -46,12 +46,12 @@ module.exports = async function (fastify, opts) {
     },
     preHandler: [fastify.auth.preValidation],
     handler: async (request, reply) => {
-      const { who } = request.userContext
+      const { userKey } = request.userContext
       const { alias } = request.body
-      await fastify.data.identity.updateUser(who, alias, 'active')
-      await fastify.data.identity.agreeToTerms(who)
-      await fastify.data.identity.agreeToCookies(who)
-      return await fastify.data.identity.getUserContext(who)
+      await fastify.data.identity.updateUser(userKey, alias, 'active')
+      await fastify.data.identity.agreeToTerms(userKey)
+      await fastify.data.identity.agreeToCookies(userKey)
+      return await fastify.data.identity.getUserContext(userKey)
     },
   })
 
@@ -67,8 +67,8 @@ module.exports = async function (fastify, opts) {
     },
     preHandler: [fastify.auth.preValidation],
     handler: async (request, reply) => {
-      const { who } = request.userContext
-      return await fastify.data.identity.getUser(who)
+      const { userKey } = request.userContext
+      return await fastify.data.identity.getUser(userKey)
     },
   })
 
@@ -85,9 +85,9 @@ module.exports = async function (fastify, opts) {
     },
     preHandler: [fastify.auth.preValidation],
     handler: async (request, reply) => {
-      const { who } = request.userContext
+      const { userKey } = request.userContext
       const { alias } = request.body
-      return await fastify.data.identity.updateUser(who, alias)
+      return await fastify.data.identity.updateUser(userKey, alias)
     },
   })
 
@@ -101,13 +101,13 @@ module.exports = async function (fastify, opts) {
     },
     preHandler: [fastify.auth.preValidation],
     handler: async (request, reply) => {
-      const { who } = request.userContext
+      const { userKey } = request.userContext
       const { acceptCookies, acceptEmailComms } = request.body
       if (acceptCookies) {
-        await fastify.data.identity.agreeToCookies(who)
+        await fastify.data.identity.agreeToCookies(userKey)
       }
       if (acceptEmailComms) {
-        await fastify.data.identity.agreeToEmailComms(who)
+        await fastify.data.identity.agreeToEmailComms(userKey)
       }
       reply.code(204).send()
     },
@@ -126,11 +126,11 @@ module.exports = async function (fastify, opts) {
     },
     preHandler: [fastify.auth.preValidation],
     handler: async (request, reply) => {
-      const { who, userId } = request.userContext
+      const { userKey, userId } = request.userContext
       const { penName } = request.body
-      await fastify.data.identity.createAuthor(who, penName)
+      await fastify.data.identity.createAuthor(userKey, penName)
       await grantRoles(userId, ['author'])
-      return await fastify.data.identity.getUserContext(who)
+      return await fastify.data.identity.getUserContext(userKey)
     },
   })
 
@@ -146,8 +146,8 @@ module.exports = async function (fastify, opts) {
     },
     preHandler: [fastify.guard.role('author')],
     handler: async (request, reply) => {
-      const { who } = request.userContext
-      return await fastify.data.author.getInfo(who)
+      const { userKey } = request.userContext
+      return await fastify.data.author.getInfo(userKey)
     },
   })
 
@@ -166,8 +166,8 @@ module.exports = async function (fastify, opts) {
     },
     preHandler: [fastify.auth.preValidation],
     handler: async (request, reply) => {
-      const { who } = request.userContext
-      return await fastify.data.support.getInquiriesByUser(who)
+      const { userKey } = request.userContext
+      return await fastify.data.support.getInquiriesByUser(userKey)
     },
   })
 

@@ -10,7 +10,7 @@ module.exports = async function (fastify, opts) {
     // const { actionCode, details } = request.body
     // const tracker = request.tracker
     // const alias = !request.anonymous ? request.userContext.alias : 'unknown'
-    // const userKey = !request.anonymous ? request.userContext.who : null
+    // const userKey = !request.anonymous ? request.userContext.userKey : null
 
     // fastify.log.debug(
     //   `record action: ${actionCode} by ${alias} details: ${JSON.stringify(

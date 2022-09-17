@@ -13,8 +13,8 @@ module.exports = fp(
         await request.jwtVerify()
         log.debug('found session token:' + JSON.stringify(request.user))
         request.anonymous = false
-        const { who } = request.user.user
-        request.userContext = await fastify.data.identity.getUserContext(who)
+        const { userKey } = request.user.user
+        request.userContext = await fastify.data.identity.getUserContext(userKey)
       } catch (err) {
         if (err.message.startsWith('No Authorization was found')) {
           log.debug('anonymous user')

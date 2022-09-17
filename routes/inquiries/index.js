@@ -27,7 +27,7 @@ module.exports = async function (fastify, opts) {
     // FIXME: use all the new tricks
     const { userContext } = request
     if (userContext) {
-      const user = await fastify.data.identity.getUser(userContext.who)
+      const user = await fastify.data.identity.getUser(userContext.userKey)
       if (user) {
         userId = user.id
       } else {

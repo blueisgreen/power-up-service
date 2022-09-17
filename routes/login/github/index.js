@@ -9,6 +9,7 @@ module.exports = async function (fastify, opts) {
     const authToken =
       await this.githubOAuth2.getAccessTokenFromAuthorizationCodeFlow(request)
     const accessToken = authToken.token.access_token
+    log.debug(accessToken)
 
     // try to get user info from GitHub
     const userInfo = await fastify.axios.request({
