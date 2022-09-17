@@ -14,7 +14,13 @@ module.exports = fp(
         log.debug('found session token:' + JSON.stringify(request.user))
         request.anonymous = false
         const { userKey } = request.user.user
-        request.userContext = await fastify.data.identity.getUserContext(userKey)
+        if (!userKey) {
+          reply.code(403).send('Invalid token; re-authenticate yourself, please.')
+          return;
+        }
+        request.userContext = await fastify.data.identity.getUserContext(
+          userKey
+        )
       } catch (err) {
         if (err.message.startsWith('No Authorization was found')) {
           log.debug('anonymous user')

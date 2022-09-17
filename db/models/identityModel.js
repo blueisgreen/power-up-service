@@ -13,7 +13,7 @@ const userColumns = [
   'email_comms_accepted_at as emailCommsAcceptedAt',
 ]
 const userContextColumns = [
-  'users.id',
+  'users.id as userId',
   'public_id as userKey',
   'alias',
   'account_status as accountStatus',
@@ -62,7 +62,7 @@ module.exports = (fastify) => {
     log.debug('result: ' + JSON.stringify(result))
     log.debug('userContext: ' + JSON.stringify(userContext))
 
-    const roles = await getUserRoles(userContext.id)
+    const roles = await getUserRoles(userContext.userId)
     userContext.roles = roles
     userContext['hasRole'] = {}
     roles.map((role) => (userContext.hasRole[role] = true))
@@ -242,7 +242,6 @@ module.exports = (fastify) => {
       terms_accepted_at: now,
       updated_at: now,
     })
-    await grantRoles(userId, ['member'])
     return true
   }
 

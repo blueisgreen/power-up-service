@@ -46,11 +46,13 @@ module.exports = async function (fastify, opts) {
     },
     preHandler: [fastify.auth.preValidation],
     handler: async (request, reply) => {
-      const { userKey } = request.userContext
+      const { userKey, userId } = request.userContext
       const { alias } = request.body
       await fastify.data.identity.updateUser(userKey, alias, 'active')
       await fastify.data.identity.agreeToTerms(userKey)
       await fastify.data.identity.agreeToCookies(userKey)
+      await fastify.data.identity.grantRoles(userId, ['member'])
+
       return await fastify.data.identity.getUserContext(userKey)
     },
   })
