@@ -31,7 +31,7 @@ module.exports = async function (fastify, opts) {
         return
       }
       log.debug('we know who this is')
-      fastify.auth.handleLoginReply(reply, userKey, alias, roles, 'home')
+      await fastify.auth.handleLoginReply(reply, userKey, alias, roles, 'home')
 
       // TODO: check for expirations; refresh auth tokens
       // TODO: track login - see auth plugin for related TODO
