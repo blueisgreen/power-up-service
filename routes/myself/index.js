@@ -29,8 +29,7 @@ module.exports = async function (fastify, opts) {
     },
     preHandler: [fastify.auth.preValidation],
     handler: async (request, reply) => {
-      const { who } = request.userContext
-      return await fastify.data.identity.getUserContext(who)
+      return request.userContext
     },
   })
 

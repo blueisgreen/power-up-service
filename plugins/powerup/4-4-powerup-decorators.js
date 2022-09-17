@@ -15,7 +15,6 @@ module.exports = fp(
         request.anonymous = false
         const { who } = request.user.user
         request.userContext = await fastify.data.identity.getUserContext(who)
-        log.debug('user context: ' + JSON.stringify(request.userContext))
       } catch (err) {
         if (err.message.startsWith('No Authorization was found')) {
           log.debug('anonymous user')

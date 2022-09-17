@@ -17,8 +17,6 @@ const userContextColumns = [
   'public_id as userKey',
   'alias',
   'account_status as accountStatus',
-  'pen_name as penName',
-  'authors.status as authorStatus',
 ]
 
 module.exports = (fastify) => {
@@ -55,22 +53,19 @@ module.exports = (fastify) => {
    * @returns
    */
   const getUserContext = async (userKey) => {
-    log.debug('identityModel.getUserContext')
+    log.debug('identityModel.getUserContext: userKey=' + userKey)
 
     const result = await knex(userTableName)
       .select(userContextColumns)
-      .join('authors', { 'users.id': 'authors.user_id' })
       .where('public_id', '=', userKey)
-
-    log.debug('context: ' + JSON.stringify(result[0]))
-    const userContext = Object.assign({}, result[0])
-    log.debug('userContext: ' + userContext)
+    const userContext = result[0]
 
     const roles = await getUserRoles(userContext.id)
     userContext.roles = roles
     userContext['hasRole'] = {}
     roles.map((role) => (userContext.hasRole[role] = true))
 
+    log.debug('userContext: ' + JSON.stringify(userContext))
     return userContext
   }
 
