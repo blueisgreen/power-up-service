@@ -165,15 +165,16 @@ module.exports = async function (fastify, opts) {
     handler: async (request, reply) => {
       try {
         const { articleKey, action } = request.params
-        const { hasRole, authorStatus } = request.userContext
+        const { userId, hasRole } = request.userContext
 
         let result = []
         switch (action) {
           case 'publish':
-            if (
+            const authorRecord = await fastify.data.author.getInfo(userId)
+            const isTrusted =
               hasRole.editor ||
-              (hasRole.author && authorStatus === 'trusted')
-            ) {
+              (hasRole.author && authorRecord.authorStatus === 'trusted')
+            if (isTrusted) {
               result = await fastify.data.article.publishArticle(articleKey)
             } else {
               result = await fastify.data.article.requestToPublishArticle(

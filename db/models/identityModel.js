@@ -59,15 +59,13 @@ module.exports = (fastify) => {
       .select(userContextColumns)
       .where('public_id', '=', userKey)
     const userContext = result[0]
-    log.debug('result: ' + JSON.stringify(result))
-    log.debug('userContext: ' + JSON.stringify(userContext))
 
     const roles = await getUserRoles(userContext.userId)
     userContext.roles = roles
     userContext['hasRole'] = {}
     roles.map((role) => (userContext.hasRole[role] = true))
 
-    log.debug('userContext w roles: ' + JSON.stringify(userContext))
+    log.debug('userContext: ' + JSON.stringify(userContext))
     return userContext
   }
 
