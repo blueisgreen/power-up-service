@@ -41,7 +41,7 @@ module.exports = async function (fastify, opts) {
 
   fastify.route({
     method: 'GET',
-    url: '/:publicKey',
+    url: '/:articleKey',
     schema: {
       tags: ['articles'],
       description: 'Get content of published article.',
@@ -51,10 +51,10 @@ module.exports = async function (fastify, opts) {
       },
     },
     handler: async (request, reply) => {
-      const { publicKey } = request.params
+      const { articleKey } = request.params
       try {
         const article = await fastify.data.article.getPublishedContent(
-          publicKey
+          articleKey
         )
         if (article) {
           return article
@@ -70,7 +70,7 @@ module.exports = async function (fastify, opts) {
 
   fastify.route({
     method: 'GET',
-    url: '/:publicKey/full',
+    url: '/:articleKey/full',
     schema: {
       tags: ['articles'],
       description: 'Get everything about published article.',
@@ -80,10 +80,10 @@ module.exports = async function (fastify, opts) {
       },
     },
     handler: async (request, reply) => {
-      const { publicKey } = request.params
+      const { articleKey } = request.params
       try {
         const article = await fastify.data.article.getPublishedArticle(
-          publicKey
+          articleKey
         )
         if (article) {
           return article

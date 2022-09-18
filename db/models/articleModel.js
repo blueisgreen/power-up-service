@@ -2,7 +2,7 @@ const { generateRandomKey } = require('./util')
 
 const articleTableName = 'articles'
 const fullArticleInfoColumns = [
-  'articles.public_id as publicKey',
+  'articles.public_id as articleKey',
   'articles.headline',
   'articles.byline',
   'articles.cover_art_url as coverArtUrl',
@@ -17,7 +17,7 @@ const fullArticleInfoColumns = [
 ]
 const articleInfoColumns = [
   'id',
-  'public_id as publicKey',
+  'public_id as articleKey',
   'author_id',
   'headline',
   'byline',
@@ -30,7 +30,7 @@ const articleInfoColumns = [
   'requested_to_publish_at as requestedToPublishAt',
 ]
 const articleFullColumns = [
-  'public_id as publicKey',
+  'public_id as articleKey',
   'headline',
   'byline',
   'cover_art_url as coverArtUrl',
@@ -42,7 +42,7 @@ const articleFullColumns = [
   'archived_at as archivedAt',
   'requested_to_publish_at as requestedToPublishAt',
 ]
-const articleContentColumns = ['public_id as publicKey', 'content']
+const articleContentColumns = ['public_id as articleKey', 'content']
 
 module.exports = (fastify) => {
   const { knex, log } = fastify

@@ -2,7 +2,7 @@ const articleCover = {
   type: 'object',
   required: ['publicKey', 'headline'],
   properties: {
-    publicKey: {
+    articleKey: {
       type: 'string',
       description: 'Unique identifier for the article.',
     },
@@ -34,7 +34,7 @@ const articleCover = {
 const articleContent = {
   type: 'object',
   properties: {
-    publicKey: {
+    articleKey: {
       type: 'string',
       description: 'Unique identifier for the article.',
     },
@@ -131,14 +131,14 @@ const articleDenialIn = {
 const publicKeyParam = {
   type: 'object',
   properties: {
-    publicKey: { type: 'string' },
+    articleKey: { type: 'string' },
   },
 }
 
 const articleActionParams = {
   type: 'object',
   properties: {
-    publicKey: { type: 'string' },
+    articleKey: { type: 'string' },
     action: { enum: ['publish', 'retract', 'archive', 'revive'] },
   },
 }
