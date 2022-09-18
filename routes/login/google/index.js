@@ -18,7 +18,7 @@ module.exports = async function (fastify, opts) {
       },
       json: true,
     })
-    log.debug(userInfo)
+    log.debug(userInfo.data)
 
     return await fastify.auth.finishLogin(reply, {
       pid: 'google',

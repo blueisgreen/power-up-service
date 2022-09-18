@@ -1,6 +1,6 @@
 const articleCover = {
   type: 'object',
-  required: ['publicKey', 'headline'],
+  required: ['articleKey', 'headline'],
   properties: {
     articleKey: {
       type: 'string',
