@@ -1,6 +1,9 @@
 module.exports = (fastify) => {
   const { knex, log } = fastify
 
+  /**
+   * Returns an array of the given user's role codes
+   */
   const getRoles = async (userKey) => {
     log.debug('userRoleModel.getRoles')
     const rolesForUser = await knex('user_roles')
@@ -12,14 +15,14 @@ module.exports = (fastify) => {
     return roles
   }
 
-  const addRoles = async (userKey, role) => {
+  const addRole = async (userKey, role) => {
     log.debug('userRoleModel.addRoles')
     const userResult = await knex('users')
       .select('id')
       .where({ public_id: userKey })
     const userId = userResult[0].id
     const roleId = fastify.lookups.codeLookup('role', role).id
-    const results = await knex('user_roles')
+    await knex('user_roles')
       .insert({
         user_id: userId,
         role_id: roleId,
@@ -28,7 +31,7 @@ module.exports = (fastify) => {
       .ignore()
   }
 
-  const removeRoles = async (userKey, role) => {
+  const removeRole = async (userKey, role) => {
     log.debug('userRoleModel.removeRoles')
     const userResult = await knex('users')
       .select('id')
@@ -40,7 +43,7 @@ module.exports = (fastify) => {
 
   return {
     getRoles,
-    addRoles,
-    removeRoles,
+    addRole,
+    removeRole,
   }
 }

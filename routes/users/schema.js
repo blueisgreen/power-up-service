@@ -100,8 +100,27 @@ const userUpdateSchema = {
   },
 }
 
+const userRoleSchema = {
+  type: 'array',
+  items: {
+    type: 'string',
+  },
+}
+
+const publicKeyParam = {
+  type: 'object',
+  properties: {
+    userKey: {
+      type: 'string',
+      description: 'Public unique key of user',
+    },
+  },
+}
+
 module.exports = {
   userSchema,
   userContextSchema,
   userUpdateSchema,
+  userRoleSchema,
+  publicKeyParam,
 }

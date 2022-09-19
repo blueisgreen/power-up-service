@@ -85,9 +85,9 @@ module.exports = async function (fastify, opts) {
   fastify.route({
     method: 'GET',
     url: '/:articleKey',
-    tags: ['articles'],
-    description: 'Get full article for editing.',
     schema: {
+      tags: ['articles'],
+      description: 'Get full article for editing.',
       params: publicKeyParam,
       response: {
         200: articleAll,

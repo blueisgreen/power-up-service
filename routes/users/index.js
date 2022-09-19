@@ -1,4 +1,4 @@
-const { userSchema } = require('./schema')
+const { userSchema, publicKeyParam, userRoleSchema } = require('./schema')
 
 /**
  * For creating and managing user accounts.
@@ -12,7 +12,7 @@ module.exports = async function (fastify, opts) {
     url: '/',
     schema: {
       tags: ['users'],
-      description: "Gets all Power Up users",
+      description: 'Gets all Power Up users',
       response: {
         200: {
           type: 'array',
@@ -23,6 +23,24 @@ module.exports = async function (fastify, opts) {
     preHandler: [fastify.guard.role('admin')],
     handler: async (request, reply) => {
       return fastify.data.user.getAllUsers()
+    },
+  })
+
+  fastify.route({
+    method: 'GET',
+    url: '/:userKey/roles',
+    schema: {
+      tags: ['users'],
+      description: 'Gets all Power Up users',
+      params: publicKeyParam,
+      response: {
+        200: userRoleSchema,
+      },
+    },
+    preHandler: [fastify.guard.role('admin')],
+    handler: async (request, reply) => {
+      const { userKey } = request.params
+      return fastify.data.userRole.getRoles(userKey)
     },
   })
 }
