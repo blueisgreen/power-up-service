@@ -1,4 +1,4 @@
-const { generateRandomKey } = require('../models/util')
+const { generateRandomKey } = require('../util')
 
 const ARTICLES = 'articles'
 const INQUIRIES = 'inquiries'

@@ -1,12 +1,18 @@
-const { actionColumns } = require('./modelFieldMap')
-const { dateIsValid } = require('../../util/helpers')
+const { dateIsValid } = require('../util')
 
+const actionTableName = 'actions'
+const actionColumns = [
+  'created_at as createdAt',
+  'action_code as actionCode',
+  'user_public_id as userKey',
+  'details',
+]
 module.exports = (fastify) => {
   const { knex, log } = fastify
 
   const capture = async (code, tracker, userKey, details) => {
     log.debug('actionModel.capture')
-    await knex('actions').insert({
+    await knex(actionTableName).insert({
       action_code: code,
       tracker: tracker,
       user_public_id: userKey,
@@ -46,7 +52,7 @@ module.exports = (fastify) => {
 
     const { start, end, user, action, limit, offset } = queryParams
 
-    const results = await knex('actions')
+    const results = await knex(actionTableName)
       .select(actionColumns)
       .orderBy('created_at', 'desc')
       .limit(limit)
@@ -69,6 +75,16 @@ module.exports = (fastify) => {
 
     return results
   }
+
+  // TODO: implement with paging - merge into above
+  // const getUserActions = async () => {
+  //   log.debug('userModel.getActions')
+  //   const results = await knex(actionTableName)
+  //     .select(actionColumns)
+  //     .orderBy('createdAt', 'desc')
+  //     .limit(100)
+  //   return results
+  // }
 
   return {
     capture,
