@@ -19,7 +19,7 @@ const userSchema = {
       format: 'uri',
       description: 'URL of image for user.',
     },
-    statusKey: {
+    accountStatus: {
       type: 'string',
       description: 'Status of the user account.',
     },

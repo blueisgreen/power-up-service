@@ -1,6 +1,6 @@
 const userTableName = 'users'
 const userColumns = [
-  'users.id',
+  'id',
   'public_id as userKey',
   'alias',
   'email',
@@ -12,19 +12,15 @@ const userColumns = [
   'cookies_accepted_at as cookiesAcceptedAt',
   'email_comms_accepted_at as emailCommsAcceptedAt',
 ]
-const userContextColumns = [
-  'users.id as userId',
-  'public_id as userKey',
-  'alias',
-  'account_status as accountStatus',
-]
 
 module.exports = (fastify) => {
   const { knex, log } = fastify
 
   const getAllUsers = async () => {
-    log.debug('userModel.getAll')
-    const users = await knex(userTableName).select(userColumns).orderBy('alias')
+    log.debug('userModel.getAllUsers')
+    const users = await knex(userTableName)
+      .select(userColumns)
+      .orderBy('created_at', 'desc')
     return users
   }
 
@@ -38,6 +34,7 @@ module.exports = (fastify) => {
   const getUserDetails = async (userKey) => {
     log.debug('userModel.getUserDetails')
     // TODO: implement
+    // include user fields, roles, fields for roles (such as author)
     const users = await knex(userTableName).select(userColumns).orderBy('alias')
     return users
   }

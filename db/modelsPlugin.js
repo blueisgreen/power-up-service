@@ -1,5 +1,4 @@
 const actionModel = require('./models/actionModel')
-// const adminModel = require('./models/adminModel')
 const articleModel = require('./models/articleModel')
 const authorModel = require('./models/authorModel')
 const identityModel = require('./models/identityModel')
@@ -12,7 +11,6 @@ module.exports = async function (fastify, options, next) {
   fastify.log.debug('loading power up data models')
   const data = {
     action: actionModel(fastify),
-    // admin: adminModel(fastify),
     article: articleModel(fastify),
     author: authorModel(fastify),
     identity: identityModel(fastify),

@@ -12,7 +12,7 @@ module.exports = async function (fastify, opts) {
     url: '/',
     schema: {
       tags: ['users'],
-      description: "Get user's own information",
+      description: "Gets all Power Up users",
       response: {
         200: {
           type: 'array',
@@ -22,8 +22,7 @@ module.exports = async function (fastify, opts) {
     },
     preHandler: [fastify.guard.role('admin')],
     handler: async (request, reply) => {
-      const { userKey } = request.userContext
-      return fastify.data.user.getUser(userKey)
+      return fastify.data.user.getAllUsers()
     },
   })
 }
