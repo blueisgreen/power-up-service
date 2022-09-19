@@ -35,8 +35,10 @@ module.exports = (fastify) => {
     log.debug('userModel.getUserDetails')
     // TODO: implement
     // include user fields, roles, fields for roles (such as author)
-    const users = await knex(userTableName).select(userColumns).orderBy('alias')
-    return users
+    const user = await knex(userTableName)
+      .where({ public_id: userKey })
+      .select(userColumns)
+    return user[0]
   }
 
   const updateUserDetails = async (userKey, updates) => {

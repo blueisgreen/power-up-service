@@ -1,4 +1,4 @@
-const userSchema = {
+const userRefSchema = {
   type: 'object',
   properties: {
     userKey: {
@@ -9,6 +9,22 @@ const userSchema = {
       type: 'string',
       description: 'How user wants to be known.',
     },
+    accountStatus: {
+      type: 'string',
+      description: 'Status of the user account.',
+    },
+    createdAt: {
+      type: 'string',
+      format: 'date-time',
+      description: 'When user record was created.',
+    },
+  },
+}
+
+const userSchema = {
+  type: 'object',
+  properties: {
+    ...userRefSchema.properties,
     email: {
       type: 'string',
       format: 'email',
@@ -18,15 +34,6 @@ const userSchema = {
       type: 'string',
       format: 'uri',
       description: 'URL of image for user.',
-    },
-    accountStatus: {
-      type: 'string',
-      description: 'Status of the user account.',
-    },
-    createdAt: {
-      type: 'string',
-      format: 'date-time',
-      description: 'When user record was created.',
     },
     updatedAt: {
       type: 'string',
@@ -118,6 +125,7 @@ const publicKeyParam = {
 }
 
 module.exports = {
+  userRefSchema,
   userSchema,
   userContextSchema,
   userUpdateSchema,
