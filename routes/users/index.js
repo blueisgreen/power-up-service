@@ -74,7 +74,29 @@ module.exports = async function (fastify, opts) {
       if (details === null) {
         return fastify.httpErrors.notFound()
       }
-      return details
+      return fastify.httpErrors.notImplemented()
+    },
+  })
+
+  fastify.route({
+    method: 'PUT',
+    url: '/:userKey/:action',
+    schema: {
+      tags: ['users'],
+      description: 'Change state of account: suspend, activate, etc.',
+      params: publicKeyParam,
+      response: {
+        200: userSchema,
+      },
+    },
+    preHandler: [fastify.guard.role('admin')],
+    handler: async (request, reply) => {
+      const { userKey } = request.params
+      const details = await fastify.data.user.getUserDetails(userKey)
+      if (details === null) {
+        return fastify.httpErrors.notFound()
+      }
+      return fastify.httpErrors.notImplemented()
     },
   })
 
@@ -96,7 +118,7 @@ module.exports = async function (fastify, opts) {
       if (details === null) {
         return fastify.httpErrors.notFound()
       }
-      return details
+      return fastify.httpErrors.notImplemented()
     },
   })
 

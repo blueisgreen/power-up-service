@@ -10,11 +10,10 @@ const actionColumns = [
 module.exports = (fastify) => {
   const { knex, log } = fastify
 
-  const capture = async (code, tracker, userKey, details) => {
+  const capture = async (userKey, code, details) => {
     log.debug('actionModel.capture')
     await knex(actionTableName).insert({
       action_code: code,
-      tracker: tracker,
       user_public_id: userKey,
       details,
     })
@@ -75,16 +74,6 @@ module.exports = (fastify) => {
 
     return results
   }
-
-  // TODO: implement with paging - merge into above
-  // const getUserActions = async () => {
-  //   log.debug('userModel.getActions')
-  //   const results = await knex(actionTableName)
-  //     .select(actionColumns)
-  //     .orderBy('createdAt', 'desc')
-  //     .limit(100)
-  //   return results
-  // }
 
   return {
     capture,

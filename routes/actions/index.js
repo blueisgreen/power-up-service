@@ -1,54 +1,55 @@
-'use strict'
+const { actionSchema, postActionBody, actionFilters } = require('./schema.js')
 
 module.exports = async function (fastify, opts) {
-  /**
-   * Record an action.
-   */
-  fastify.post('/', async (request, reply) => {
-    // FIXME: rethink - do bulk send of actions at key moments and at intervals
+  const { log } = fastify
 
-    // const { actionCode, details } = request.body
-    // const tracker = request.tracker
-    // const alias = !request.anonymous ? request.userContext.alias : 'unknown'
-    // const userKey = !request.anonymous ? request.userContext.userKey : null
-
-    // fastify.log.debug(
-    //   `record action: ${actionCode} by ${alias} details: ${JSON.stringify(
-    //     details
-    //   )}`
-    // )
-
-    // fastify.log.debug(
-    //   `${request.headers['user-agent']} | ${request.headers['referer']}`
-    // )
-
-    // fastify.data.action.capture(actionCode, tracker, userKey, details)
-    reply.code(204).send()
+  fastify.route({
+    method: 'GET',
+    url: '/',
+    schema: {
+      tags: ['action'],
+      description: 'Search action log',
+      query: actionFilters,
+      response: {
+        200: {
+          type: 'array',
+          items: actionSchema,
+        },
+      },
+    },
+    handler: async (request, reply) => {
+      const { start, end, user, action, limit, offset } = request.query
+      const queryParams = {
+        start,
+        end,
+        user,
+        action,
+        limit: limit || 100,
+        offset: offset || 0,
+      }
+      const actions = await fastify.data.action.getActions(queryParams)
+      return actions
+    },
   })
 
-  /**
-   * Browse user action log.
-   * By default, return all rows starting now and going backward in time.
-   *
-   * Query options:
-   * Filter by user key.
-   * Filter by action code.
-   * Filter by date: start and end ('YYYY-MM-DD'), which can be open ended.
-   *
-   * Specify limit: 100 by default.
-   * Specify offset: 0 by default.
-   */
-  fastify.get('/', async (request, reply) => {
-    const { start, end, user, action, limit, offset } = request.query
-    const queryParams = {
-      start,
-      end,
-      user,
-      action,
-      limit: limit || 100,
-      offset: offset || 0,
-    }
-    const actions = await fastify.data.action.getActions(queryParams)
-    reply.send(actions)
+  fastify.route({
+    method: 'POST',
+    url: '/',
+    schema: {
+      tags: ['action'],
+      description: 'Record an action',
+      body: postActionBody,
+    },
+    handler: async (request, reply) => {
+      const { actionCode, details } = request.body
+      const userKey = request.anonymous ? null : request.userContext.userKey
+
+      fastify.data.action.capture(
+        userKey,
+        actionCode,
+        details
+      )
+      reply.code(204)
+    },
   })
 }

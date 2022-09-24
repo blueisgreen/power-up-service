@@ -5,7 +5,7 @@ module.exports = function (fastify, options, next) {
     method: 'GET',
     url: '/',
     schema: {
-      tags: ['ping'],
+      tags: ['system'],
       description: 'Endpoint to check if service responds',
       response: {
         200: {
