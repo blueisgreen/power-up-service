@@ -3,6 +3,7 @@ const {
   userSchema,
   publicKeyParam,
   userRoleSchema,
+  addRoleSchema,
 } = require('./schema')
 
 /**
@@ -12,12 +13,14 @@ const {
  * @param {*} opts
  */
 module.exports = async function (fastify, opts) {
+  const { log } = fastify
+
   fastify.route({
     method: 'GET',
     url: '/',
     schema: {
       tags: ['users'],
-      description: 'Gets all Power Up users',
+      description: 'Gets all users',
       response: {
         200: {
           type: 'array',
@@ -36,7 +39,7 @@ module.exports = async function (fastify, opts) {
     url: '/:userKey',
     schema: {
       tags: ['users'],
-      description: 'Gets all Power Up users',
+      description: 'Gets specific user',
       params: publicKeyParam,
       response: {
         200: userSchema,
@@ -45,8 +48,55 @@ module.exports = async function (fastify, opts) {
     preHandler: [fastify.guard.role('admin')],
     handler: async (request, reply) => {
       const { userKey } = request.params
-      // TODO: handle not found with 404
-      return fastify.data.user.getUserDetails(userKey)
+      const details = await fastify.data.user.getUserDetails(userKey)
+      if (details === null) {
+        return fastify.httpErrors.notFound()
+      }
+      return details
+    },
+  })
+
+  fastify.route({
+    method: 'PUT',
+    url: '/:userKey',
+    schema: {
+      tags: ['users'],
+      description: 'Gets specific user',
+      params: publicKeyParam,
+      response: {
+        200: userSchema,
+      },
+    },
+    preHandler: [fastify.guard.role('admin')],
+    handler: async (request, reply) => {
+      const { userKey } = request.params
+      const details = await fastify.data.user.getUserDetails(userKey)
+      if (details === null) {
+        return fastify.httpErrors.notFound()
+      }
+      return details
+    },
+  })
+
+  fastify.route({
+    method: 'DELETE',
+    url: '/:userKey',
+    schema: {
+      tags: ['users'],
+      description: 'Gets specific user',
+      params: publicKeyParam,
+      response: {
+        200: userSchema,
+      },
+    },
+    preHandler: [fastify.guard.role('admin')],
+    handler: async (request, reply) => {
+      const { userKey } = request.params
+      const details = await fastify.data.user.getUserDetails(userKey)
+      if (details === null) {
+        return fastify.httpErrors.notFound()
+      }
+      return details
     },
   })
 
@@ -64,7 +114,53 @@ module.exports = async function (fastify, opts) {
     preHandler: [fastify.guard.role('admin')],
     handler: async (request, reply) => {
       const { userKey } = request.params
-      return fastify.data.userRole.getRoles(userKey)
+      return await fastify.data.userRole.getRoles(userKey)
+    },
+  })
+
+  fastify.route({
+    method: 'PUT',
+    url: '/:userKey/roles',
+    schema: {
+      tags: ['users'],
+      description: 'Gets all Power Up users',
+      params: publicKeyParam,
+      body: addRoleSchema,
+      response: {
+        200: userRoleSchema,
+      },
+    },
+    preHandler: [fastify.guard.role('admin')],
+    handler: async (request, reply) => {
+      const { userKey } = request.params
+      const { roles } = request.body
+      roles.forEach(async (role) => {
+        await fastify.data.userRole.addRole(userKey, role)
+      })
+      return await fastify.data.userRole.getRoles(userKey)
+    },
+  })
+
+  fastify.route({
+    method: 'DELETE',
+    url: '/:userKey/roles',
+    schema: {
+      tags: ['users'],
+      description: 'Gets all Power Up users',
+      params: publicKeyParam,
+      body: addRoleSchema,
+      response: {
+        200: userRoleSchema,
+      },
+    },
+    preHandler: [fastify.guard.role('admin')],
+    handler: async (request, reply) => {
+      const { userKey } = request.params
+      const { roles } = request.body
+      roles.forEach(async (role) => {
+        await fastify.data.userRole.removeRole(userKey, role)
+      })
+      return await fastify.data.userRole.getRoles(userKey)
     },
   })
 }

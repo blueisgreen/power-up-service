@@ -1,3 +1,6 @@
+const accountStatus = { enum: ['active', 'suspended', 'canceled', 'archived'] }
+const authorStatus = { enum: ['entrusted', 'trusted', 'blocked'] }
+
 const userRefSchema = {
   type: 'object',
   properties: {
@@ -9,10 +12,7 @@ const userRefSchema = {
       type: 'string',
       description: 'How user wants to be known.',
     },
-    accountStatus: {
-      type: 'string',
-      description: 'Status of the user account.',
-    },
+    accountStatus,
     createdAt: {
       type: 'string',
       format: 'date-time',
@@ -69,18 +69,12 @@ const userContextSchema = {
       type: 'string',
       description: 'How user wants to be known.',
     },
-    statusKey: {
-      type: 'string',
-      description: 'Status of the user account.',
-    },
+    accountStatus,
     penName: {
       type: 'string',
       description: 'Name to use for articles.',
     },
-    authorStatus: {
-      type: 'string',
-      description: 'Status of the user account.',
-    },
+    authorStatus,
     hasRole: {
       type: 'object',
       description: 'Makes it easy to check for roles',
@@ -124,6 +118,27 @@ const publicKeyParam = {
   },
 }
 
+const userFilters = {
+  type: 'object',
+  properties: {
+    role: {
+      type: 'string',
+      description: 'Users having specified role',
+    },
+    accountStatus,
+    limit: {
+      type: 'integer',
+      description: 'Maximum number of results to return.',
+      minimum: 0,
+    },
+    offset: {
+      type: 'integer',
+      description:
+        'Number of results to skip over; combine with limit for paging.',
+      minimum: 0,
+    },
+  },
+}
 module.exports = {
   userRefSchema,
   userSchema,
@@ -131,4 +146,5 @@ module.exports = {
   userUpdateSchema,
   userRoleSchema,
   publicKeyParam,
+  userFilters,
 }

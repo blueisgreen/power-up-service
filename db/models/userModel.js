@@ -1,4 +1,11 @@
 const userTableName = 'users'
+const userRefColumns = [
+  'id',
+  'public_id as userKey',
+  'alias',
+  'account_status as accountStatus',
+  'created_at as createdAt',
+]
 const userColumns = [
   'id',
   'public_id as userKey',
@@ -19,7 +26,7 @@ module.exports = (fastify) => {
   const getAllUsers = async () => {
     log.debug('userModel.getAllUsers')
     const users = await knex(userTableName)
-      .select(userColumns)
+      .select(userRefColumns)
       .orderBy('created_at', 'desc')
     return users
   }
@@ -27,25 +34,26 @@ module.exports = (fastify) => {
   const getWithFilters = async () => {
     log.debug('userModel.getWithFilters')
     // TODO: implement
-    const users = await knex(userTableName).select(userColumns).orderBy('alias')
+    const users = await knex(userTableName)
+      .select(userRefColumns)
+      .orderBy('created_at', 'desc')
     return users
   }
 
   const getUserDetails = async (userKey) => {
-    log.debug('userModel.getUserDetails')
-    // TODO: implement
-    // include user fields, roles, fields for roles (such as author)
-    const user = await knex(userTableName)
+    log.debug('userModel.getUserDetails for ' + userKey)
+    const userRecord = await knex(userTableName)
       .where({ public_id: userKey })
       .select(userColumns)
-    return user[0]
+    if (userRecord.length === 0) {
+      return null
+    }
+    return userRecord[0]
   }
 
   const updateUserDetails = async (userKey, updates) => {
     log.debug('userModel.updateUser')
     // TODO: implement
-    const users = await knex(userTableName).select(userColumns).orderBy('alias')
-    return users
   }
 
   const suspend = async (userKey) => {
@@ -61,10 +69,8 @@ module.exports = (fastify) => {
   }
 
   const archive = async (userKey, updates) => {
-    // TODO: how different from suspend? build user state map
     log.debug('userModel.archive')
-    const users = await knex(userTableName).select(userColumns).orderBy('alias')
-    return users
+    // TODO: how different from suspend? build user state map
   }
 
   return {
