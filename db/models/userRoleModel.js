@@ -21,7 +21,7 @@ module.exports = (fastify) => {
       .select('id')
       .where({ public_id: userKey })
     const userId = userResult[0].id
-    const roleId = fastify.lookups.codeLookup('role', role).id
+    const roleId = fastify.lookups.codeLookup('userRole', role).id
     await knex('user_roles')
       .insert({
         user_id: userId,
@@ -37,7 +37,7 @@ module.exports = (fastify) => {
       .select('id')
       .where({ public_id: userKey })
     const userId = userResult[0].id
-    const roleId = fastify.lookups.codeLookup('role', role).id
+    const roleId = fastify.lookups.codeLookup('userRole', role).id
     await knex('user_roles').where({ user_id: userId, role_id: roleId }).del()
   }
 

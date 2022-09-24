@@ -134,9 +134,10 @@ module.exports = async function (fastify, opts) {
     handler: async (request, reply) => {
       const { userKey } = request.params
       const { roles } = request.body
-      roles.forEach(async (role) => {
+      await roles.reduce(async (memo, role) => {
+        await memo
         await fastify.data.userRole.addRole(userKey, role)
-      })
+      }, undefined)
       return await fastify.data.userRole.getRoles(userKey)
     },
   })
@@ -157,9 +158,10 @@ module.exports = async function (fastify, opts) {
     handler: async (request, reply) => {
       const { userKey } = request.params
       const { roles } = request.body
-      roles.forEach(async (role) => {
+      await roles.reduce(async (memo, role) => {
+        await memo
         await fastify.data.userRole.removeRole(userKey, role)
-      })
+      }, undefined)
       return await fastify.data.userRole.getRoles(userKey)
     },
   })
