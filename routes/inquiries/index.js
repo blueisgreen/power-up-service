@@ -1,70 +1,41 @@
-'use strict'
+const inquirySchema = {
+  type: 'object',
+  properties: {
+    createdAt: {
+      type: 'string',
+      format: 'date-time',
+      description: 'When action record created.',
+    },
+    purpose: {
+      type: 'string',
+      description: 'Public key of the actor.',
+    },
+    message: {
+      type: 'string',
+      description: 'Details of the action.',
+    },
+  },
+}
 
 module.exports = async function (fastify, opts) {
-  /**
-   * Get all inquiries.
-   */
-  fastify.get('/', async (request, reply) => {
-    const inquiries = await fastify.data.support.getInquiries()
-    reply.send(inquiries)
-  })
+  const { log } = fastify
 
-  /**
-   * Get inquiries for a given user.
-   */
-  fastify.get('/user/:id', async (request, reply) => {
-    const id = request.params.id
-    const inquiries = await fastify.data.support.getInquiriesByUser(id)
-    reply.send(inquiries)
-  })
-
-  /**
-   * Create an inquiry.
-   */
-  fastify.post('/', async (request, reply) => {
-    let userId = null
-    if (request.user) {
-      const user = await fastify.data.identity.getUserWithPublicId(
-        request.userKey
-      )
-      if (user) {
-        userId = user.id
-      } else {
-        console.log('weird, logged in user not found')
-      }
-    }
-    fastify.log.debug(JSON.stringify(request.body))
-    const inquiry = await fastify.data.support.createInquiry(
-      request.body,
-      userId
-    )
-    reply.send(inquiry)
-  })
-
-  /**
-   * Get a specific inquiry.
-   */
-  fastify.get('/:id', async (request, reply) => {
-    const inquiry = await fastify.data.support.getInquiry(request.params.id)
-    if (!inquiry) {
-      reply.code(404).send()
-    }
-    reply.send(inquiry)
-  })
-
-  /**
-   * Get responses to a given inquiry.
-   */
-  fastify.get(
-    '/related/:id',
-    {
-      preValidation: fastify.preValidation,
+  fastify.route({
+    method: 'GET',
+    url: '/',
+    schema: {
+      tags: ['inquiries'],
+      description: 'Messages between user and Customer Support',
+      response: {
+        200: {
+          type: 'array',
+          items: inquirySchema,
+        },
+      },
     },
-    async (request, reply) => {
-      const inquiries = await fastify.data.support.getRelatedInquiries(
-        request.params.id
-      )
-      reply.send(inquiries)
-    }
-  )
+    preHandler: [fastify.guard.role('admin')],
+    handler: async (request, reply) => {
+      return await fastify.data.support.getInquiries()
+    },
+  })
 }

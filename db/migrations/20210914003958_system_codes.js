@@ -2,7 +2,7 @@ exports.up = function (knex) {
   return knex.schema
     .createTable('system_codes', function (table) {
       table.increments()
-      table.string('code').notNullable()
+      table.string('code', 32).notNullable()
       table.string('display_name').notNullable()
       table.integer('parent_id').references('id').inTable('system_codes').onDelete('CASCADE')
     })

@@ -2,7 +2,7 @@
 
 const { test } = require('tap')
 const Fastify = require('fastify')
-const lookups = require('../../plugins/lookupPlugin.js')
+const lookups = require('../../db/lookupPlugin.js')
 
 test('support works standalone', async (t) => {
   const fastify = Fastify()

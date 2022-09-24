@@ -1,6 +1,5 @@
-'use strict'
-
 const fp = require('fastify-plugin')
+const helmet = require('@fastify/helmet')
 
 /**
  * This plugin handles things in the header.
@@ -8,10 +7,10 @@ const fp = require('fastify-plugin')
  * @see https://github.com/fastify/fastify-helmet
  */
 module.exports = fp(async function (fastify, opts) {
-  fastify.log.info('loading fastify-helmet')
+  fastify.log.debug('loading fastify-helmet')
   fastify.register(
-    require('@fastify/helmet'),
+    helmet,
     // Example disables the `contentSecurityPolicy` middleware but keeps the rest.
-    { contentSecurityPolicy: false }
+    { global: true }
   )
 })

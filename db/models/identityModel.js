@@ -1,59 +1,77 @@
-const { userTableName, userColumns } = require('./modelFieldMap')
-
-// TODO: validation: verify that userPublicId parameter is uuid or wrap query in try-catch and handle
+const userTableName = 'users'
+const userColumns = [
+  'users.id',
+  'public_id as userKey',
+  'alias',
+  'email',
+  'avatar_url as avatarUrl',
+  'account_status as accountStatus',
+  'created_at as createdAt',
+  'updated_at as updatedAt',
+  'terms_accepted_at as termsAcceptedAt',
+  'cookies_accepted_at as cookiesAcceptedAt',
+  'email_comms_accepted_at as emailCommsAcceptedAt',
+]
+const userContextColumns = [
+  'users.id as userId',
+  'public_id as userKey',
+  'alias',
+  'account_status as accountStatus',
+]
 
 module.exports = (fastify) => {
   const { knex, log } = fastify
 
-  const getUser = async (userId) => {
-    log.debug('identityModel.getUser')
+  const __getUserRecord = async (userId) => {
+    log.debug('__getUserRecord with ID ' + userId)
     const userRecord = await knex(userTableName)
       .select(userColumns)
-      .where('id', '=', userId)
+      .where('users.id', '=', userId)
+    log.debug('user: ' + JSON.stringify(userRecord[0]))
     return userRecord.length > 0 ? userRecord[0] : null
   }
 
   /**
-   * Gathers useful user information: userKey, userId, userStatus, roles,
-   * plus authorStatus (if applicable).
+   * Gets user information.
    *
-   * @param {*} userPublicId same as userKey
+   * @param {string} userKey unique public user identifier
+   * @returns UserInfo
+   */
+  const getUser = async (userKey) => {
+    log.debug('identityModel.getUser')
+    const userId = await knex(userTableName)
+      .select('id')
+      .where('public_id', '=', userKey)
+    log.debug(userId)
+    return userId[0] ? __getUserRecord(userId[0].id) : null
+  }
+
+  /**
+   * Returns frequently used subset of user information.
+   *
+   * @param {string} userKey unique public user identifier
    * @returns
    */
-  const getUserContext = async (userKey, isAuthor) => {
-    log.debug('identityModel.getUserContext')
+  const getUserContext = async (userKey) => {
+    log.debug('identityModel.getUserContext: userKey=' + userKey)
 
-    const useful = await knex(userTableName)
-      .select(['users.id as userId', 'system_codes.code as userStatus'])
-      .join('system_codes', 'system_codes.id', 'users.account_status_id')
+    const result = await knex(userTableName)
+      .select(userContextColumns)
       .where('public_id', '=', userKey)
+    const userContext = result[0]
 
-    if (useful.length === 0) {
-      return null
-    }
+    const roles = await getUserRoles(userContext.userId)
+    userContext.roles = roles
+    userContext['hasRole'] = {}
+    roles.map((role) => (userContext.hasRole[role] = true))
 
-    const context = useful[0]
-
-    // context.userStatus = fastify.lookups.idToCode(user.accountStatusId)
-
-    if (isAuthor) {
-      const authorInfo = await fastify.data.author.getInfo(context.userId)
-      context.authorStatus = authorInfo.status
-    }
-    return context
+    log.debug('userContext: ' + JSON.stringify(userContext))
+    return userContext
   }
 
-  const getUserWithPublicId = async (userPublicId) => {
-    log.debug('identityModel.getUserWithPublicId')
-    const userRecord = await knex(userTableName)
-      .select(userColumns)
-      .where('public_id', '=', userPublicId)
-    return userRecord.length > 0 ? userRecord[0] : null
-  }
-
-  const findUserWithPublicId = async (userKey, platform) => {
+  const isUserOnPlatform = async (userKey, platform) => {
     log.debug(
-      `identityModel.findUserWithPublicId using userKey ${userKey} on platform ${platform}`
+      `identityModel.isUserOnPlatform using userKey ${userKey} on platform ${platform}`
     )
     const platformCode = fastify.lookups.codeLookup('socialPlatform', platform)
     if (!userKey || !platformCode) {
@@ -69,14 +87,7 @@ module.exports = (fastify) => {
       .where('users.public_id', '=', userKey)
       .andWhere('social_profiles.social_platform_id', '=', platformId)
 
-    if (profileRecord.length < 1) {
-      log.info(
-        `user not found with public ID '${userKey}' on platform '${platform}'`
-      )
-      return null
-    }
-
-    return getUser(profileRecord[0].userId)
+    return profileRecord.length > 0
   }
 
   const findUserFromSocialProfile = async (platform, profileId) => {
@@ -97,87 +108,27 @@ module.exports = (fastify) => {
       return null
     }
 
-    return getUser(profileRecord[0].userId)
+    return __getUserRecord(profileRecord[0].userId)
   }
 
-  // TODO: pull this up out of the model
-  const registerUser = async (
-    platform,
-    accessToken,
-    socialProfile,
-    userPublicId,
-    accessTokenExpiresIn = 0
-  ) => {
-    log.debug('identityModel.registerUser')
+  const findSessionToken = async (userPublicId) => {
+    log.debug('identityModel.findSessionToken')
+    const result = await knex('user_sessions')
+      .select('auth_token')
+      .where('user_public_id', '=', userPublicId)
 
-    const platformId = fastify.lookups.codeLookup('socialPlatform', platform).id
-    const userRecord = await knex(userTableName)
-      .returning(userColumns)
+    return result.length ? result[0].auth_token : null
+  }
+
+  const setSessionToken = async (userKey, sessionToken) => {
+    log.debug('identityModel.setSessionToken')
+    await knex('user_sessions')
       .insert({
-        public_id: userPublicId,
-        alias: socialProfile.name,
-        email: socialProfile.email,
-        avatar_url: socialProfile.avatar_url || socialProfile.picture,
+        user_public_id: userKey,
+        auth_token: sessionToken,
       })
-
-    log.debug('user record ==V')
-    log.debug(JSON.stringify(userRecord[0]))
-    const id = userRecord[0].id
-    await knex('social_profiles').insert({
-      user_id: id,
-      social_id: socialProfile.id || socialProfile.sub,
-      social_platform_id: platformId,
-      access_token: accessToken,
-      social_user_info: socialProfile,
-      access_token_exp: accessTokenExpiresIn,
-    })
-
-    return getUser(id)
-  }
-
-  // TODO: pull this up out of the model
-  const becomeMember = async (userPublicId, alias, okToTerms, okToCookies) => {
-    log.debug(`identityModel.becomeMember ${userPublicId}, ${alias}`)
-    const active = fastify.lookups.codeLookup('accountStatus', 'active')
-    const now = new Date()
-    const membership = {
-      alias,
-      updated_at: now,
-      account_status_id: active.id,
-    }
-    if (okToTerms) {
-      membership.terms_accepted_at = now
-    }
-    if (okToCookies) {
-      membership.cookies_accepted_at = now
-    }
-    const result = await knex(userTableName)
-      .returning(userColumns)
-      .where('public_id', '=', userPublicId)
-      .update(membership)
-    const userInfo = result[0]
-    if (okToTerms) {
-      await grantRoles(userInfo.id, ['member'])
-      const roles = getUserRoles(userInfo.id)
-      userInfo.roles = roles
-    }
-    return userInfo
-  }
-
-  // TODO: pull this up out of the model
-  const becomeAuthor = async (userPublicId) => {
-    log.debug('identityModel.becomeAuthor')
-    const userRecord = await getUserWithPublicId(userPublicId)
-
-    const authorRecord = await fastify.data.author.createAuthor(
-      userRecord.id,
-      userRecord.penName
-    )
-    await grantRoles(userRecord.id, ['author'])
-    const roles = await getUserRoles(userRecord.id)
-    userRecord.author = authorRecord
-    userRecord.roles = roles
-    return userRecord
+      .onConflict('user_public_id')
+      .merge()
   }
 
   const getUserRoles = async (userId) => {
@@ -215,106 +166,117 @@ module.exports = (fastify) => {
     return true
   }
 
-  const agreeToTerms = async (publicId) => {
+  const registerUser = async (
+    pid,
+    accessToken,
+    socialProfile,
+    userKey,
+    accessTokenExpiresIn = 0
+  ) => {
+    log.debug('identityModel.registerUser')
+    let user
+    try {
+      const platform = fastify.lookups.codeLookup('socialPlatform', pid)
+      await knex.transaction(async (trx) => {
+        const userResult = await knex(userTableName)
+          .returning(userColumns)
+          .insert({
+            public_id: userKey,
+            alias: socialProfile.name,
+            email: socialProfile.email,
+            avatar_url: socialProfile.avatar_url || socialProfile.picture,
+          })
+          .transacting(trx)
+
+        user = userResult[0]
+        await knex('social_profiles')
+          .insert({
+            user_id: user.id,
+            social_id: socialProfile.id || socialProfile.sub,
+            social_platform_id: platform.id,
+            access_token: accessToken,
+            social_user_info: socialProfile,
+            access_token_exp: accessTokenExpiresIn,
+          })
+          .transacting(trx)
+      })
+    } catch (err) {
+      log.error(err)
+    }
+    return user
+  }
+
+  /**
+   * Updates user information.
+   *
+   * @param {string} userKey unique public user identifier
+   * @param {string} alias how the user wants to be known
+   * @param {boolean} acceptTerms pass when user is accepting terms; ignored if not true or already accepted
+   * @param {boolean} acceptCookies pass to indicate user accepting the use (or not) of cookies
+   * @param {boolean} acceptEmailComms pass to indicate user accepting the receipt (or not) of email communications
+   * @returns UserInfo
+   */
+  const updateUser = async (userKey, alias, accountStatus) => {
+    log.debug('identityModel.updateUser')
+    const now = new Date()
+    const changes = {
+      alias,
+      account_status: accountStatus,
+      updated_at: now,
+    }
+    const result = await knex(userTableName)
+      .where('public_id', '=', userKey)
+      .update(changes, ['id'])
+
+    log.debug(JSON.stringify(result[0]))
+    const userId = result[0].id
+    return await __getUserRecord(userId)
+  }
+
+  const agreeToTerms = async (userKey) => {
     log.debug('identityModel.agreeToTerms')
     const now = new Date()
-    await knex(userTableName).where('public_id', '=', publicId).update({
+    await knex(userTableName).where('public_id', '=', userKey).update({
       terms_accepted_at: now,
       updated_at: now,
     })
     return true
   }
 
-  const agreeToCookies = async (publicId) => {
+  const agreeToCookies = async (userKey) => {
     log.debug('identityModel.agreeToCookies')
     const now = new Date()
-    await knex(userTableName).where('public_id', '=', publicId).update({
+    await knex(userTableName).where('public_id', '=', userKey).update({
       cookies_accepted_at: now,
       updated_at: now,
     })
     return true
   }
 
-  const agreeToEmailComms = async (publicId) => {
+  const agreeToEmailComms = async (userKey) => {
     log.debug('identityModel.agreeToEmailComms')
     const now = new Date()
-    await knex(userTableName).where('public_id', '=', publicId).update({
+    await knex(userTableName).where('public_id', '=', userKey).update({
       email_comms_accepted_at: now,
       updated_at: now,
     })
     return true
   }
 
-  const updateUser = async (userPublicId, changes) => {
-    log.debug('identityModel.updateUser')
-    const now = new Date()
-    const userBefore = await getUserWithPublicId(userPublicId)
-    const userAfter = Object.assign({}, userBefore, {
-      alias: changes.alias,
-      email: changes.email,
-      avatar_url: changes.avatarUrl,
-      updated_at: now,
-    })
-    if (!userBefore.terms_accepted_at && changes.agreeToTerms) {
-      userAfter.terms_accepted_at = now
-    }
-    if (!userBefore.cookies_accepted_at && changes.agreeToCookies) {
-      userAfter.cookies_accepted_at = now
-    }
-    if (!userBefore.email_comms_accepted_at && changes.agreeToEmailComms) {
-      userAfter.email_comms_accepted_at = now
-    }
-    const result = await knex(userTableName)
-      .where('public_id', '=', userPublicId)
-      .update(userAfter, ['id'])
-
-    const userId = result[0].id
-
-    // if (changes.agreeToTerms) {
-    if (true) {
-      await grantRoles(userId, ['member'])
-    }
-
-    return await getUser(userId)
-  }
-
-  const findSessionToken = async (userPublicId) => {
-    log.debug('identityModel.findSessionToken')
-    const result = await knex('user_sessions')
-      .select('auth_token')
-      .where('user_public_id', '=', userPublicId)
-
-    return result.length ? result[0].auth_token : null
-  }
-
-  const setSessionToken = async (userPublicId, sessionToken) => {
-    log.debug('identityModel.setSessionToken')
-    await knex('user_sessions')
-      .insert({
-        user_public_id: userPublicId,
-        auth_token: sessionToken,
-      })
-      .onConflict('user_public_id')
-      .merge()
-  }
-
   return {
     getUser,
     getUserContext,
-    getUserWithPublicId,
-    findUserWithPublicId,
+    isUserOnPlatform,
     findUserFromSocialProfile,
-    registerUser,
+    findSessionToken,
+    setSessionToken,
     getUserRoles,
     getUserRolesWithPublicId,
     grantRoles,
-    becomeMember,
-    becomeAuthor,
+    registerUser,
+    updateUser,
     agreeToTerms,
     agreeToCookies,
     agreeToEmailComms,
-    updateUser,
-    findSessionToken,
-    setSessionToken,
   }
 }

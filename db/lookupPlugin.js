@@ -1,3 +1,5 @@
+const { default: fastifyAutoload } = require("@fastify/autoload")
+
 /**
  * Cache system codes for quick access. Also provide helpers
  * for converting between codes and database IDs.
@@ -7,6 +9,7 @@
  * @param {*} next
  */
 module.exports = async function (fastify, options, next) {
+  fastify.log.debug('loading power up lookups')
   const codes = await fastify.data.systemCodes.getAllCodes()
   fastify.decorate('lookups', await buildLookups(codes))
   next()
@@ -69,9 +72,6 @@ module.exports = async function (fastify, options, next) {
       const catCode = cat.code
       lookups[catCode] = mapToUI(byCatAndCode[catCode].all)
     })
-
-    fastify.log.debug('== show lookups structure ==')
-    fastify.log.debug(JSON.stringify(lookups))
 
     return lookups
   }

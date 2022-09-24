@@ -1,12 +1,11 @@
 const fp = require('fastify-plugin')
-const cookiePlugin = require('@fastify/cookie')
+const cookie = require('@fastify/cookie')
 
 module.exports = fp(async function (fastify, opts) {
   const { log } = fastify
+  log.debug('loading fastify-cookie')
 
-  log.info('loading fastify-cookie')
-
-  fastify.register(cookiePlugin, {
+  fastify.register(cookie, {
     secret: 'snickerDoodle', // for cookies signature
     parseOptions: {}, // options for parsing cookies
   })
@@ -15,8 +14,6 @@ module.exports = fp(async function (fastify, opts) {
   expires.setDate(expires.getDate() + 30)
 
   const domain = process.env.COOKIE_DOMAIN
-  // log.debug('===> cookie domain:' + domain)
-
   const basicOpts = {
     domain,
     path: '/',

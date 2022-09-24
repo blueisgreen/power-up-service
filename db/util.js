@@ -1,3 +1,14 @@
+const generateRandomKey = (length = 12) => {
+  let result = ''
+  const spectrum =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  var spectrumLength = spectrum.length
+  for (var i = 0; i < length; i++) {
+    result += spectrum.charAt(Math.floor(Math.random() * spectrumLength))
+  }
+  return result
+}
+
 function dateIsValid(dateStr) {
   // format looks correct
   const regex = /^\d{4}-\d{2}-\d{2}$/
@@ -17,5 +28,6 @@ function dateIsValid(dateStr) {
 }
 
 module.exports = {
-  dateIsValid
+  generateRandomKey,
+  dateIsValid,
 }

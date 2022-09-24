@@ -1,71 +1,40 @@
-'use strict'
-
-const GOTO_HOME = 'home'
-const GOTO_REGISTER = 'register'
-const supportedIdentityProviders = ['github', 'google', 'linkedin']
-
-const isProviderSupported = (pid) => {
-  return supportedIdentityProviders.includes(pid)
-}
+const { loginParams } = require('./schema')
 
 module.exports = async function (fastify, opts) {
-  fastify.get('/', async function (request, reply) {
-    const { log } = fastify
-    const pid = request.query.pid
+  const { log } = fastify
 
-    if (!isProviderSupported(pid)) {
-      // FIXME: would be best to redirect to main URL; or don't redirect in the first place by handling this as an API call
-      log.warn(`login attempted with unsupported identity provider ${pid}`)
-      reply.code(401)
-      reply.send("I hear you knocking, but you can't come in.")
-      return
-    }
+  fastify.route({
+    method: 'GET',
+    url: '/',
+    schema: {
+      tags: ['authentication'],
+      description: 'ID user and establish session.',
+      query: loginParams,
+      response: {},
+    },
+    handler: async (request, reply) => {
+      const { pid } = request.query
+      if (request.anonymous) {
+        // user needs to be authenticated
+        reply.redirect(`/login/${pid}`)
+        return
+      }
 
-    // no go - unknown user and requesting ID provider that is not supported
-    if (request.anonymous) {
-      // redirect to login route for provider
-      reply.redirect(`/login/${pid}`)
-      return
-    }
+      const { userKey, alias, roles } = request.userContext
+      const foundOnPlatform = await fastify.data.identity.isUserOnPlatform(
+        userKey,
+        pid
+      )
+      if (!foundOnPlatform) {
+        // user needs to be authenticated by requested auth platform
+        reply.redirect(`/login/${pid}`)
+        return
+      }
+      log.debug('we know who this is')
+      await fastify.auth.handleLoginReply(reply, userKey, alias, roles, 'home')
 
-    // user is known; refresh token and cookie, and redirect to landing
-
-    // look up social record for given provider
-    const user = await fastify.data.identity.findUserWithPublicId(
-      request.userKey,
-      pid
-    )
-
-    // first time with this identity provider?
-    if (!user) {
-      reply.redirect(`/login/${pid}`)
-      return
-    }
-
-    log.debug('able to skip identity provider')
-
-    // record login activity - capture user browser context
-    const browserContext = `${request.headers['user-agent']} | ${request.headers['referer']}`
-    fastify.data.action.capture(
-      'login',
-      request.tracker,
-      user.userKey,
-      browserContext
-    )
-
-    // refresh token
-    const roles = await fastify.data.identity.getUserRoles(user.id)
-    const token = fastify.jwt.sign({
-      user: {
-        who: user.userKey,
-        alias: user.alias,
-        roles,
-      },
-    })
-    await fastify.data.identity.setSessionToken(user.userKey, token)
-    reply.setCookie('token', token, fastify.secretCookieOptions)
-    reply.redirect(`${process.env.SPA_LANDING_URL}?goTo=home&token=${token}`)
+      // TODO: check for expirations; refresh auth tokens
+      // TODO: track login - see auth plugin for related TODO
+    },
   })
 }
-
-// TODO: handle return-to route name from client and redirect back to that - keep user in place
