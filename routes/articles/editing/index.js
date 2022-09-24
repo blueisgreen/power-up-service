@@ -18,7 +18,7 @@ module.exports = async function (fastify, opts) {
     method: 'GET',
     url: '/',
     schema: {
-      tags: ['editor'],
+      tags: ['articles'],
       description:
         'Get articles that match given filters. Limited to 20 results by default.',
       query: articleFilters,
@@ -53,7 +53,7 @@ module.exports = async function (fastify, opts) {
     method: 'PUT',
     url: '/:publicKey/deny-to-publish',
     schema: {
-      tags: ['editor'],
+      tags: ['articles'],
       description:
         'Deny a pending request to publish article, and leave a message to explain why.',
       params: publicKeyParam,

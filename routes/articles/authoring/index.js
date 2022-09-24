@@ -20,7 +20,7 @@ module.exports = async function (fastify, opts) {
     method: 'GET',
     url: '/',
     schema: {
-      tags: ['contributor'],
+      tags: ['articles'],
       description: 'Get cover information for all articles created by user.',
       response: {
         200: {
@@ -55,7 +55,7 @@ module.exports = async function (fastify, opts) {
     method: 'POST',
     url: '/',
     schema: {
-      tags: ['contributor'],
+      tags: ['articles'],
       description: 'Create a new article.',
       body: articleNewIn,
       response: {
@@ -114,7 +114,7 @@ module.exports = async function (fastify, opts) {
     method: 'PUT',
     url: '/:articleKey',
     schema: {
-      tags: ['contributor'],
+      tags: ['articles'],
       description: 'Create a new article.',
       params: publicKeyParam,
       body: articleUpdateIn,
@@ -153,7 +153,7 @@ module.exports = async function (fastify, opts) {
     method: 'PUT',
     url: '/:articleKey/:action',
     schema: {
-      tags: ['contributor'],
+      tags: ['articles'],
       description:
         'Change state of article: publish / retract, archive / revive.',
       params: articleActionParams,
@@ -216,7 +216,7 @@ module.exports = async function (fastify, opts) {
     method: 'DELETE',
     url: '/:articleKey',
     schema: {
-      tags: ['contributor'],
+      tags: ['articles'],
       description: 'Delete an article forever. Sayonara.',
       params: publicKeyParam,
       response: {
