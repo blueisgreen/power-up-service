@@ -14,15 +14,11 @@ const {
 module.exports = async function (fastify, opts) {
   const { log } = fastify
 
-  const genericErrorMsg = {
-    error: 'Bad news, kiddies. Something went wrong.',
-  }
-
   fastify.route({
     method: 'GET',
     url: '/',
     schema: {
-      tags: ['articles', 'editor'],
+      tags: ['editor'],
       description:
         'Get articles that match given filters. Limited to 20 results by default.',
       query: articleFilters,
@@ -57,7 +53,7 @@ module.exports = async function (fastify, opts) {
     method: 'PUT',
     url: '/:publicKey/deny-to-publish',
     schema: {
-      tags: ['articles', 'editor'],
+      tags: ['editor'],
       description:
         'Deny a pending request to publish article, and leave a message to explain why.',
       params: publicKeyParam,
